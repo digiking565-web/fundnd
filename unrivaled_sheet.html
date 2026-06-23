@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Unrivaled — Character Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink-void: #0A0A12;
+  --ink-deep: #12121E;
+  --ink-panel: #1A1A2E;
+  --ink-mist: #1E1E32;
+  --ink-field: #242438;
+  --gold-bright: #FFD700;
+  --gold-warm: #C8A97E;
+  --gold-pale: #E8C97A;
+  --blood-red: #8B1A1A;
+  --blood-light: #B22222;
+  --parchment: #F5E6C8;
+  --ink-blue: #6AB0DE;
+  --border: #2A2A4A;
+  --border-gold: #3A3020;
+  --green-low: #1A2A1A;
+  --purple-low: #1E0A3A;
+}
+[data-theme="crimson"] {
+  --ink-void: #120808; --ink-deep: #1E0E0E; --ink-panel: #2A1414; --ink-mist: #321818; --ink-field: #3A1E1E;
+  --gold-bright: #FF4444; --gold-warm: #C87070; --gold-pale: #E88A8A; --blood-red: #DD2222; --blood-light: #FF4444;
+  --parchment: #F5D0D0; --border: #4A2A2A; --border-gold: #3A1818; --green-low: #2A1A1A; --purple-low: #2A0A0A;
+}
+[data-theme="emerald"] {
+  --ink-void: #060E08; --ink-deep: #0E1E14; --ink-panel: #142A1A; --ink-mist: #18321E; --ink-field: #1E3A24;
+  --gold-bright: #44DD66; --gold-warm: #70C88A; --gold-pale: #8AE8A0; --blood-red: #1A6B2A; --blood-light: #22AA44;
+  --parchment: #D0F5D8; --border: #2A4A2E; --border-gold: #183A20; --green-low: #1A3A1A; --purple-low: #0A2A0A;
+}
+[data-theme="arcane"] {
+  --ink-void: #0A060E; --ink-deep: #140E1E; --ink-panel: #1E142E; --ink-mist: #241838; --ink-field: #2E1E42;
+  --gold-bright: #B06AFF; --gold-warm: #9878C8; --gold-pale: #B88AE8; --blood-red: #6A2AAA; --blood-light: #8844DD;
+  --parchment: #E0D0F5; --border: #3A2A4A; --border-gold: #2A183A; --green-low: #1A1A2A; --purple-low: #2A0A4A;
+}
+[data-theme="frost"] {
+  --ink-void: #060A12; --ink-deep: #0E141E; --ink-panel: #141E2E; --ink-mist: #182438; --ink-field: #1E2A42;
+  --gold-bright: #6AB0FF; --gold-warm: #7899C8; --gold-pale: #8AB0E8; --blood-red: #1A4A8B; --blood-light: #2266BB;
+  --parchment: #D0E0F5; --border: #2A3A4A; --border-gold: #18283A; --green-low: #1A2A3A; --purple-low: #0A1A3A;
+}
+[data-theme="parchment"] {
+  --ink-void: #F5E6C8; --ink-deep: #EDDCB8; --ink-panel: #E8D4AA; --ink-mist: #DCC89A; --ink-field: #D0BC8A;
+  --gold-bright: #5A4020; --gold-warm: #7A6040; --gold-pale: #6A5030; --blood-red: #8B3A1A; --blood-light: #A04A2A;
+  --parchment: #2A1A0A; --border: #B0A080; --border-gold: #8A7A5A; --green-low: #D0C8A0; --purple-low: #C8B890;
+}
+.theme-dot {
+  width: 16px; height: 16px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; transition: border-color 0.2s, transform 0.15s;
+}
+.theme-dot:hover { transform: scale(1.2); }
+.theme-dot.active { border-color: var(--parchment); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink-void);
+  color: var(--parchment);
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 16px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Ink canvas background */
+#ink-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.03;
+}
+
+.app { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 12px 40px; }
+
+/* ── HEADER ── */
+.header {
+  text-align: center;
+  padding: 28px 0 16px;
+  border-bottom: 1px solid var(--border-gold);
+  position: relative;
+}
+.header-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(22px, 4vw, 38px);
+  font-weight: 900;
+  color: var(--gold-bright);
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 40px rgba(255,215,0,0.3);
+}
+.header-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: var(--gold-warm);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.save-indicator {
+  position: absolute; right: 0; top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px; color: #555; font-family: 'Cinzel', serif;
+  letter-spacing: 0.1em;
+  transition: color 0.3s;
+}
+.save-indicator.saved { color: #4A8A4A; }
+
+/* ── IDENTITY BAR ── */
+.identity-bar {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.identity-field { display: flex; flex-direction: column; gap: 3px; }
+.identity-field label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gold-warm);
+  text-transform: uppercase;
+}
+.identity-field input {
+  background: var(--ink-field);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--parchment);
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  padding: 6px 8px;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+.identity-field input:focus {
+  outline: none;
+  border-color: var(--gold-warm);
+  background: var(--ink-mist);
+}
+
+/* ── STAT BAR ── */
+.stat-bar {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.stat-bubble {
+  background: var(--ink-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  text-align: center;
+  padding: 10px 6px;
+  position: relative;
+}
+.stat-bubble.computed { border-color: var(--blood-red); }
+.stat-bubble .val {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold-pale);
+  line-height: 1;
+}
+.stat-bubble .lbl {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--gold-warm);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.stat-bubble.editable .val {
+  background: transparent;
+  border: none;
+  color: var(--gold-pale);
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  font-weight: 700;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+}
+.stat-bubble.editable .val:focus { outline: none; color: var(--gold-bright); }
+.hp-tracker {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.hp-tracker input {
+  background: transparent; border: none;
+  color: var(--gold-pale); font-family: 'Cinzel', serif;
+  font-size: 20px; font-weight: 700;
+  width: 45px; text-align: center;
+}
+.hp-tracker input:focus { outline: none; color: var(--gold-bright); }
+.hp-tracker span { color: var(--gold-warm); font-size: 16px; }
+
+/* ── TABS ── */
+.tabs {
+  display: flex; gap: 2px;
+  padding: 10px 0 0;
+  border-bottom: 2px solid var(--border-gold);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+.tab-btn:hover { color: var(--gold-warm); }
+.tab-btn.active {
+  color: var(--gold-bright);
+  border-bottom-color: var(--gold-bright);
+}
+
+/* ── PANELS ── */
+.panel { display: none; padding: 16px 0; animation: inkBleed 0.3s ease; }
+.panel.active { display: block; }
+@keyframes inkBleed {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SECTION HEADERS ── */
+.section-header {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold-warm);
+  border-bottom: 1px solid var(--border-gold);
+  padding-bottom: 6px;
+  margin: 20px 0 12px;
+}
+.section-header:first-child { margin-top: 0; }
+
+/* ── GRID LAYOUTS ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--ink-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px;
+}
+.card-red { border-color: var(--blood-red); }
+.card-gold { border-color: var(--border-gold); }
+
+/* ── ABILITY SCORES ── */
+.ability-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.ability-block {
+  background: var(--ink-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  padding: 10px 4px;
+}
+.ability-name {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gold-warm);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.ability-score {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold-pale);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: center;
+  line-height: 1;
+}
+.ability-score:focus { outline: none; color: var(--gold-bright); }
+.ability-mod {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gold-warm);
+  margin-top: 4px;
+  background: var(--ink-mist);
+  border-radius: 4px;
+  padding: 2px 0;
+}
+.ability-mod-label {
+  font-size: 8px;
+  color: #555;
+  letter-spacing: 0.15em;
+  margin-top: 2px;
+}
+
+/* ── SKILLS ── */
+.skills-list { display: flex; flex-direction: column; gap: 2px; }
+.skill-row {
+  display: grid;
+  grid-template-columns: 24px 24px 1fr 50px;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--ink-deep);
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+.skill-row:hover { border-color: var(--border); }
+.skill-row.proficient { background: #16161E; }
+.skill-row.expert { background: #1A1A12; border-color: var(--border-gold); }
+.prof-toggle {
+  width: 18px; height: 18px;
+  border: 1px solid #333;
+  border-radius: 3px;
+  cursor: pointer;
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  color: transparent;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.prof-toggle.prof { border-color: var(--gold-warm); color: var(--gold-warm); background: rgba(200,169,126,0.1); }
+.prof-toggle.expert { border-color: var(--gold-bright); color: var(--gold-bright); background: rgba(255,215,0,0.15); }
+.skill-name {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--parchment);
+}
+.skill-ability {
+  font-size: 10px;
+  color: #555;
+  font-family: 'Cinzel', serif;
+}
+.skill-bonus {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold-pale);
+  text-align: right;
+}
+.skill-row.expert .skill-bonus { color: var(--gold-bright); }
+
+/* ── SAVING THROWS ── */
+.saves-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.save-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px;
+  background: var(--ink-deep);
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+.save-row.proficient { border-color: var(--blood-red); }
+.save-prof-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1px solid #333;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.save-prof-dot.active { background: var(--blood-red); border-color: var(--blood-red); }
+.save-name { flex: 1; font-size: 13px; color: var(--parchment); }
+.save-bonus {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold-pale);
+}
+.save-row.proficient .save-bonus { color: var(--blood-light); }
+
+/* ── FOCUS POINTS ── */
+.fp-tracker {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 12px;
+  background: var(--ink-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 8px;
+}
+.fp-pip {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-warm);
+  cursor: pointer;
+  background: rgba(200,169,126,0.15);
+  transition: all 0.15s;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.fp-pip::after {
+  content: '';
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--gold-bright);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.fp-pip.used {
+  border-color: #333;
+  background: transparent;
+}
+.fp-pip.used::after { opacity: 0; }
+.fp-pip:not(.used)::after { opacity: 1; }
+.fp-pip:hover { transform: scale(1.1); }
+
+/* ── DEATH SAVES ── */
+.death-saves {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.death-save-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.death-save-row label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  width: 60px;
+}
+.death-save-row.success label { color: #4A8A4A; }
+.death-save-row.failure label { color: var(--blood-red); }
+.death-pip {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid #333;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.death-save-row.success .death-pip.filled { background: #4A8A4A; border-color: #4A8A4A; }
+.death-save-row.failure .death-pip.filled { background: var(--blood-red); border-color: var(--blood-red); }
+
+/* ── TECHNIQUES ── */
+.technique-card {
+  background: var(--ink-panel);
+  border: 1px solid var(--blood-red);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.technique-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(139,26,26,0.2);
+  cursor: pointer;
+  user-select: none;
+}
+.technique-name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-bright);
+}
+.technique-cost {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  color: var(--gold-warm);
+  letter-spacing: 0.1em;
+}
+.technique-body {
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--parchment);
+  display: none;
+}
+.technique-body.open { display: block; }
+.technique-body strong { color: var(--gold-pale); }
+.technique-body em { color: var(--gold-warm); font-style: normal; }
+
+/* ── SEALS ── */
+.seal-slot-tracker {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 10px;
+  background: var(--ink-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+.seal-slot {
+  width: 36px; height: 36px;
+  border: 2px solid var(--gold-warm);
+  border-radius: 4px;
+  cursor: pointer;
+  background: rgba(200,169,126,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  transition: all 0.15s;
+  position: relative;
+}
+.seal-slot.used {
+  border-color: #333;
+  background: transparent;
+  color: transparent;
+}
+.seal-slot:not(.used)::before { content: '✦'; color: var(--gold-bright); }
+.seal-slot.used::before { content: '○'; color: #333; }
+
+.seal-card {
+  background: var(--ink-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+.seal-card-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+}
+.seal-card-name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-pale);
+  flex: 1;
+}
+.seal-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+.seal-tag.war { background: rgba(139,26,26,0.4); color: #D44; border: 1px solid var(--blood-red); }
+.seal-tag.support { background: rgba(74,28,107,0.4); color: #A86ADE; border: 1px solid #4A1C6B; }
+.seal-tag.normal { color: #888; }
+.seal-tag.greater { color: var(--gold-warm); }
+.seal-tag.colossal { color: var(--gold-bright); }
+.seal-prepared-toggle {
+  width: 22px; height: 22px;
+  border: 1px solid #444;
+  border-radius: 3px;
+  cursor: pointer;
+  background: transparent;
+  font-size: 12px;
+  color: transparent;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.seal-prepared-toggle.prepared {
+  border-color: var(--gold-bright);
+  background: rgba(255,215,0,0.15);
+  color: var(--gold-bright);
+}
+.seal-desc { font-size: 13px; color: #AAA; line-height: 1.5; }
+
+/* ── FEATURES ── */
+.feature-card {
+  background: var(--ink-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.feature-card.locked { opacity: 0.4; filter: grayscale(0.5); }
+.feature-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.feature-level-badge {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--blood-red);
+  color: var(--parchment);
+  flex-shrink: 0;
+}
+.feature-level-badge.unlocked { background: rgba(139,26,26,0.3); border: 1px solid var(--blood-red); }
+.feature-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-pale);
+  flex: 1;
+}
+.feature-chevron {
+  color: #555; font-size: 12px; transition: transform 0.2s;
+}
+.feature-header.open .feature-chevron { transform: rotate(180deg); }
+.feature-body {
+  padding: 0 14px 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #CCC;
+  display: none;
+}
+.feature-body.open { display: block; }
+.feature-body strong { color: var(--gold-pale); }
+.feature-body ul { margin: 6px 0 6px 16px; }
+.feature-body li { margin-bottom: 4px; }
+
+/* ── INVENTORY ── */
+.currency-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.currency-block {
+  background: var(--ink-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  text-align: center;
+  padding: 10px 6px;
+}
+.currency-block label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gold-warm);
+  display: block;
+  margin-bottom: 4px;
+}
+.currency-block input {
+  background: transparent;
+  border: none;
+  color: var(--gold-pale);
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 700;
+  width: 100%;
+  text-align: center;
+}
+.currency-block input:focus { outline: none; color: var(--gold-bright); }
+
+.item-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 80px 80px auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--ink-deep);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+.item-row input, .item-row select {
+  background: transparent;
+  border: none;
+  color: var(--parchment);
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  width: 100%;
+}
+.item-row input:focus, .item-row select:focus { outline: none; }
+.item-row select { color: var(--gold-warm); font-size: 12px; }
+.item-header {
+  display: grid;
+  grid-template-columns: 1fr 60px 80px 80px auto;
+  gap: 8px;
+  padding: 4px 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: #555;
+  text-transform: uppercase;
+}
+.btn-remove {
+  background: transparent;
+  border: 1px solid var(--blood-red);
+  color: var(--blood-red);
+  border-radius: 3px;
+  width: 22px; height: 22px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.btn-remove:hover { background: var(--blood-red); color: white; }
+
+/* ── BUTTONS ── */
+.btn {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--ink-panel);
+  color: var(--gold-warm);
+}
+.btn:hover { border-color: var(--gold-warm); color: var(--gold-bright); }
+.btn-primary {
+  background: rgba(139,26,26,0.3);
+  border-color: var(--blood-red);
+  color: var(--parchment);
+}
+.btn-primary:hover { background: rgba(139,26,26,0.5); }
+.btn-sm { padding: 5px 10px; font-size: 10px; }
+
+/* ── INPUTS ── */
+.field-group { margin-bottom: 12px; }
+.field-group label {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gold-warm);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.field-group input, .field-group textarea, .field-group select {
+  width: 100%;
+  background: var(--ink-field);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--parchment);
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  padding: 8px 10px;
+  transition: border-color 0.2s;
+}
+.field-group input:focus, .field-group textarea:focus, .field-group select:focus {
+  outline: none;
+  border-color: var(--gold-warm);
+}
+.field-group textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+.field-group select { color: var(--parchment); }
+.field-group select option { background: var(--ink-panel); }
+
+/* ── FEAT CARDS ── */
+.feat-card {
+  background: var(--ink-panel);
+  border: 1px solid var(--purple-low);
+  border-left: 3px solid #6A3ADE;
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.feat-name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-pale);
+  flex: 1;
+}
+.feat-desc { font-size: 13px; color: #AAA; margin-top: 4px; line-height: 1.5; }
+
+/* ── CROWN TRACKER ── */
+.crown-tracker {
+  background: var(--ink-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 8px;
+  padding: 16px;
+}
+.crown-wins-display {
+  font-family: 'Cinzel', serif;
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--gold-bright);
+  text-align: center;
+  text-shadow: 0 0 30px rgba(255,215,0,0.4);
+  line-height: 1;
+}
+.crown-milestone-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+}
+.crown-milestone-row.active {
+  background: rgba(255,215,0,0.05);
+  border-color: var(--border-gold);
+}
+.crown-milestone-row.unlocked {
+  background: rgba(74,138,74,0.1);
+  border-color: #2A4A2A;
+}
+.milestone-wins {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-warm);
+  text-align: center;
+}
+.milestone-name { font-size: 13px; color: var(--parchment); }
+.milestone-tier {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.1em;
+}
+
+/* ── CALLIGRAPHY TABLE ── */
+.calli-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.calli-table th {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-warm);
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-gold);
+}
+.calli-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--parchment);
+}
+.calli-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+.calli-table td:first-child { font-family: 'Cinzel', serif; font-weight: 600; color: var(--gold-pale); }
+.ep-val { color: var(--gold-bright); font-weight: 600; font-family: 'Cinzel', serif; }
+
+/* ── MISC ── */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.text-gold { color: var(--gold-warm); }
+.text-bright { color: var(--gold-bright); }
+.text-red { color: var(--blood-light); }
+.text-dim { color: #555; font-size: 12px; }
+.flex-row { display: flex; gap: 8px; align-items: center; }
+.flex-row.wrap { flex-wrap: wrap; }
+.ml-auto { margin-left: auto; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+
+/* ── EXPORT BAR ── */
+.export-bar {
+  display: flex; gap: 8px; align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+}
+.export-bar .text-dim { margin-right: auto; }
+
+/* ── NOTES ── */
+.note-section { margin-bottom: 16px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .ability-grid { grid-template-columns: repeat(3, 1fr); }
+  .stat-bar { grid-template-columns: repeat(3, 1fr); }
+  .identity-bar { grid-template-columns: 1fr 1fr; }
+  .saves-grid { grid-template-columns: 1fr 1fr; }
+  .currency-row { grid-template-columns: repeat(3, 1fr); }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .item-row { grid-template-columns: 1fr auto; }
+  .item-row input[placeholder="Qty"], .item-row input[placeholder="Weight"], .item-row input[placeholder="Value"], .item-row select { display: none; }
+}
+</style>
+</head>
+<body>
+<canvas id="ink-canvas"></canvas>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-title">⚔ THE UNRIVALED ⚔</div>
+    <div class="header-subtitle">Above hell, heaven, and earth, your blade is…</div>
+    <div class="save-indicator" id="save-indicator">● Auto-saved</div>
+    <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);display:flex;gap:5px;align-items:center;">
+      <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.15em;color:#555;margin-right:4px;">THEME</span>
+      <div class="theme-dot" style="background:#FFD700;" onclick="setSheetTheme('')" title="Gold"></div>
+      <div class="theme-dot" style="background:#FF4444;" onclick="setSheetTheme('crimson')" title="Crimson"></div>
+      <div class="theme-dot" style="background:#44DD66;" onclick="setSheetTheme('emerald')" title="Emerald"></div>
+      <div class="theme-dot" style="background:#B06AFF;" onclick="setSheetTheme('arcane')" title="Arcane"></div>
+      <div class="theme-dot" style="background:#6AB0FF;" onclick="setSheetTheme('frost')" title="Frost"></div>
+      <div class="theme-dot" style="background:#C8A060;" onclick="setSheetTheme('parchment')" title="Parchment"></div>
+    </div>
+  </div>
+
+  <!-- IDENTITY BAR -->
+  <div class="identity-bar">
+    <div class="identity-field">
+      <label>Character Name</label>
+      <input type="text" id="char-name" placeholder="Name">
+    </div>
+    <div class="identity-field">
+      <label>Level</label>
+      <input type="number" id="char-level" value="3" min="1" max="20">
+    </div>
+    <div class="identity-field">
+      <label>Race</label>
+      <input type="text" id="char-race" placeholder="Race">
+    </div>
+    <div class="identity-field">
+      <label>Background</label>
+      <input type="text" id="char-background" placeholder="Background">
+    </div>
+    <div class="identity-field">
+      <label>Alignment</label>
+      <input type="text" id="char-alignment" placeholder="Alignment">
+    </div>
+    <div class="identity-field">
+      <label>Player</label>
+      <input type="text" id="char-player" placeholder="Player name">
+    </div>
+  </div>
+
+  <!-- STAT BAR -->
+  <div class="stat-bar">
+    <div class="stat-bubble computed">
+      <div class="val" id="display-ac">—</div>
+      <div class="lbl">Armor Class</div>
+    </div>
+    <div class="stat-bubble">
+      <div class="hp-tracker">
+        <input type="number" id="hp-current" value="28" style="width:45px">
+        <span>/</span>
+        <input type="number" id="hp-max-override" min="1" placeholder="—" title="Override max HP (leave blank for average)" style="width:40px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--gold-pale);font-family:'Cinzel',serif;font-size:20px;font-weight:700;text-align:center;" oninput="updateMaxHPOverride(this.value)">
+      </div>
+      <div class="lbl">Hit Points</div>
+    </div>
+    <div class="stat-bubble">
+      <div class="val" id="display-temp-hp">0</div>
+      <div class="lbl">Temp HP</div>
+    </div>
+    <div class="stat-bubble computed">
+      <div class="val" id="display-fp">—</div>
+      <div class="lbl">Focus Points</div>
+    </div>
+    <div class="stat-bubble computed">
+      <div class="val" id="display-pb">+2</div>
+      <div class="lbl">Prof Bonus</div>
+    </div>
+    <div class="stat-bubble computed">
+      <div class="val" id="display-speed">30</div>
+      <div class="lbl">Speed (ft)</div>
+    </div>
+  </div>
+
+  <!-- TEMP HP EDITOR -->
+  <div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;">TEMP HP</span>
+    <input type="number" id="temp-hp-input" value="0" min="0"
+      style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:14px;padding:3px 8px;width:70px;">
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;">INITIATIVE</span>
+    <span id="display-initiative" style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold-pale);">+3</span>
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;margin-left:12px;">FP SAVE DC</span>
+    <span id="display-fp-dc" style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold-pale);">15</span>
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;margin-left:12px;">MM DIE</span>
+    <span id="display-mm" style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold-pale);">1d4</span>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="switchTab('abilities')">Abilities & Skills</button>
+    <button class="tab-btn" onclick="switchTab('combat')">Combat</button>
+    <button class="tab-btn" onclick="switchTab('seals')">Seals</button>
+    <button class="tab-btn" onclick="switchTab('features')">Features</button>
+    <button class="tab-btn" onclick="switchTab('inventory')">Inventory</button>
+    <button class="tab-btn" onclick="switchTab('notes')">Notes & Feats</button>
+  </div>
+
+  <!-- ════ OVERVIEW PANEL ════ -->
+  <div class="panel active" id="panel-overview">
+    <div class="grid-2">
+      <div>
+        <div class="section-header">Quick Reference</div>
+        <div class="card card-red mb-8">
+          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;color:var(--gold-warm);margin-bottom:8px;">UNARMORED DEFENSE</div>
+          <div style="font-size:14px;color:var(--parchment);">AC = 10 + DEX mod + WIS mod</div>
+          <div style="font-size:12px;color:#666;margin-top:4px;">No armor or shield required</div>
+        </div>
+        <div class="card mb-8">
+          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;color:var(--gold-warm);margin-bottom:8px;">PROFICIENCY BONUS</div>
+          <div style="font-size:22px;font-family:'Cinzel',serif;color:var(--gold-bright);" id="qr-pb">+2</div>
+        </div>
+        <div class="card mb-8">
+          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;color:var(--gold-warm);margin-bottom:8px;">SAVING THROW PROFICIENCIES</div>
+          <div style="font-size:14px;color:var(--parchment);">✦ Wisdom &nbsp;&nbsp; ✦ Dexterity</div>
+        </div>
+        <div class="card">
+          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;color:var(--gold-warm);margin-bottom:8px;">CALM WITHIN THE STORM</div>
+          <div style="font-size:13px;color:var(--parchment);line-height:1.6;">
+            2 adjacent hostiles → <strong style="color:var(--gold-pale);">+1 AC</strong><br>
+            3+ adjacent hostiles → <strong style="color:var(--gold-pale);">+2 AC</strong>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-header">Death Saves & Conditions</div>
+        <div class="card mb-8">
+          <div class="death-saves">
+            <div class="death-save-row success">
+              <label>SUCCESSES</label>
+              <div class="death-pip" onclick="toggleDeathSave(this,'s',0)"></div>
+              <div class="death-pip" onclick="toggleDeathSave(this,'s',1)"></div>
+              <div class="death-pip" onclick="toggleDeathSave(this,'s',2)"></div>
+            </div>
+            <div class="death-save-row failure">
+              <label>FAILURES</label>
+              <div class="death-pip" onclick="toggleDeathSave(this,'f',0)"></div>
+              <div class="death-pip" onclick="toggleDeathSave(this,'f',1)"></div>
+              <div class="death-pip" onclick="toggleDeathSave(this,'f',2)"></div>
+            </div>
+          </div>
+          <button class="btn btn-sm" style="margin-top:10px;" onclick="resetDeathSaves()">Reset</button>
+        </div>
+        <div class="section-header">Active Conditions</div>
+        <div class="card mb-8" id="conditions-card">
+          <div id="conditions-list" style="margin-bottom:8px;"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <select id="condition-select" style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-family:'Crimson Text',serif;font-size:13px;padding:4px 8px;">
+              <option value="">Add condition…</option>
+              <option>Blinded</option><option>Charmed</option><option>Deafened</option>
+              <option>Exhaustion 1</option><option>Exhaustion 2</option><option>Exhaustion 3</option>
+              <option>Frightened</option><option>Grappled</option><option>Incapacitated</option>
+              <option>Invisible</option><option>Paralyzed</option><option>Petrified</option>
+              <option>Poisoned</option><option>Prone</option><option>Restrained</option>
+              <option>Stunned</option><option>Unconscious</option>
+            </select>
+            <button class="btn btn-sm" onclick="addCondition()">Add</button>
+          </div>
+        </div>
+        <div class="section-header">Passive Stats</div>
+        <div class="card">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:var(--gold-warm);">PASSIVE PERCEPTION</div>
+              <div style="font-family:'Cinzel',serif;font-size:22px;color:var(--gold-pale);" id="passive-perc">—</div>
+            </div>
+            <div>
+              <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:var(--gold-warm);">PASSIVE INSIGHT</div>
+              <div style="font-family:'Cinzel',serif;font-size:22px;color:var(--gold-pale);" id="passive-insight">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ ABILITIES & SKILLS PANEL ════ -->
+  <div class="panel" id="panel-abilities">
+    <div class="section-header">Ability Scores — click a score to edit</div>
+    <div class="ability-grid" id="ability-grid">
+      <!-- Generated by JS -->
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="section-header">Saving Throws</div>
+        <div class="saves-grid" id="saves-grid"><!-- JS --></div>
+
+        <div class="section-header" style="margin-top:16px;">Misc Proficiencies</div>
+        <div class="card">
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:var(--gold-warm);margin-bottom:8px;">TOOL PROFICIENCIES</div>
+          <div id="tool-profs-list" style="margin-bottom:8px;"></div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="tool-prof-input" placeholder="Add tool proficiency…"
+              style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-family:'Crimson Text',serif;font-size:14px;padding:5px 8px;flex:1;">
+            <button class="btn btn-sm" onclick="addToolProf()">Add</button>
+          </div>
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:var(--gold-warm);margin:12px 0 8px;">LANGUAGES</div>
+          <div id="languages-list" style="margin-bottom:8px;"></div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="language-input" placeholder="Add language…"
+              style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-family:'Crimson Text',serif;font-size:14px;padding:5px 8px;flex:1;">
+            <button class="btn btn-sm" onclick="addLanguage()">Add</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-header">Skills — click ○ for Prof, click again for Expertise</div>
+        <div class="skills-list" id="skills-list"><!-- JS --></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ COMBAT PANEL ════ -->
+  <div class="panel" id="panel-combat">
+    <div class="grid-2">
+      <div>
+        <div class="section-header">Focus Points</div>
+        <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.1em;color:var(--gold-warm);margin-bottom:8px;">
+          Click to spend/restore — <span id="fp-remaining-label">8</span> / <span id="fp-total-label">8</span> remaining
+        </div>
+        <div class="fp-tracker" id="fp-pips"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn btn-sm" onclick="restoreAllFP()">Long Rest (Full)</button>
+          <button class="btn btn-sm" onclick="restoreHalfFP()">Short Rest (Half)</button>
+        </div>
+
+        <div class="section-header" style="margin-top:16px;">Muscle Memory</div>
+        <div class="card card-red">
+          <div style="text-align:center;">
+            <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;color:var(--gold-warm);margin-bottom:6px;">CURRENT DIE</div>
+            <div style="font-family:'Cinzel',serif;font-size:40px;font-weight:900;color:var(--gold-bright);" id="combat-mm-die">1d4</div>
+            <div style="font-size:12px;color:#666;margin-top:4px;">Bonus damage on all sword attacks</div>
+          </div>
+          <div class="divider"></div>
+          <div style="font-size:12px;color:#888;line-height:1.6;">
+            <strong style="color:var(--gold-warm);">Off-hand:</strong> Same die until level 5, then one tier lower<br>
+            <strong style="color:var(--gold-warm);">Progression:</strong> 1d4 (lv1) → 1d6 (lv5) → 1d8 (lv9) → 1d10 (lv13) → 1d12 (lv17)
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top:16px;">Weapons</div>
+        <div id="weapons-list" style="margin-bottom:8px;"></div>
+        <button class="btn btn-sm" onclick="addWeapon()">+ Add Weapon</button>
+      </div>
+      <div>
+        <div class="section-header">Focus Techniques</div>
+        <div class="technique-card">
+          <div class="technique-header" onclick="toggleTechnique(this)">
+            <span class="technique-name">Imitation Cut</span>
+            <span class="technique-cost">1 FP • Bonus Action</span>
+            <span style="color:#555;font-size:12px;margin-left:8px;">▼</span>
+          </div>
+          <div class="technique-body">
+            Target makes <strong>WIS save (DC <span class="fp-dc-inline">15</span>)</strong>.<br>
+            <em>Failure:</em> Can't take reactions, disadvantage on next attack, your next hit deals <strong>+MM die psychic</strong>.<br>
+            <em>Success:</em> Immune for 1 minute.
+          </div>
+        </div>
+        <div class="technique-card">
+          <div class="technique-header" onclick="toggleTechnique(this)">
+            <span class="technique-name">Parry</span>
+            <span class="technique-cost">1 FP • Reaction</span>
+            <span style="color:#555;font-size:12px;margin-left:8px;">▼</span>
+          </div>
+          <div class="technique-body">
+            When attacked: <strong>AC bonus = ½ MM die (rounded down) + PB</strong> until your next turn.<br>
+            Bonus reduces by 1 per blocked attack. Applies to triggering attack.<br>
+            <em>If attack misses</em> → may spend <strong>1 FP to Riposte</strong>: melee attack with advantage, +PB damage. Once/round.
+          </div>
+        </div>
+        <div class="technique-card">
+          <div class="technique-header" onclick="toggleTechnique(this)">
+            <span class="technique-name">Slackened Form, Swift Step</span>
+            <span class="technique-cost">1 FP • Bonus Action</span>
+            <span style="color:#555;font-size:12px;margin-left:8px;">▼</span>
+          </div>
+          <div class="technique-body">
+            Move full speed in a straight line:<br>
+            • No opportunity attacks<br>
+            • Ignores difficult terrain<br>
+            • May pass through hostile spaces<br>
+            • Must end in unoccupied space<br>
+            <em>If you end within 5 ft of a creature</em> → <strong>advantage on first attack this turn</strong>.
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top:8px;">Niten Ichi-Ryū Stances</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button class="btn" id="stance-single" onclick="setStance('single')" style="flex:1;">Single-Blade</button>
+          <button class="btn" id="stance-dual" onclick="setStance('dual')" style="flex:1;">Dual-Blade</button>
+        </div>
+        <div id="stance-content" class="card" style="font-size:13px;line-height:1.7;color:#CCC;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ SEALS PANEL ════ -->
+  <div class="panel" id="panel-seals">
+    <div class="grid-2">
+      <div>
+        <div class="section-header">Seal Slots</div>
+        <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.1em;color:#555;margin-bottom:8px;">
+          Slots Known: <span id="seals-known">8</span> &nbsp;|&nbsp;
+          War Prepared: <span id="war-prepared">5</span> &nbsp;|&nbsp;
+          Support Prepared: <span id="support-prepared">7</span>
+        </div>
+        <div class="seal-slot-tracker" id="seal-slots"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn btn-sm" onclick="resetSealSlots()">Reset Slots</button>
+        </div>
+
+        <div class="section-header" style="margin-top:16px;">Calligraphy Check</div>
+        <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.1em;color:var(--gold-warm);margin-bottom:8px;">
+          d20 + DEX mod + PB (or EXP with expertise)
+        </div>
+        <table class="calli-table">
+          <thead>
+            <tr><th>Roll</th><th>Quality</th><th>EP</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1–9</td><td>Flawed Scripture</td><td class="ep-val">0</td></tr>
+            <tr><td>10–14</td><td>Refined Scripture</td><td class="ep-val">3</td></tr>
+            <tr><td>15–19</td><td>Masterful Scripture</td><td class="ep-val">6</td></tr>
+            <tr><td>20–24</td><td>Divine Scripture</td><td class="ep-val">9</td></tr>
+            <tr><td>25–29</td><td>Ascendant Scripture</td><td class="ep-val">12</td></tr>
+            <tr><td>30+</td><td>Mythic Scripture</td><td class="ep-val">15</td></tr>
+            <tr><td>Nat 20</td><td>Transcendent Scripture</td><td class="ep-val">18 + free Seal</td></tr>
+          </tbody>
+        </table>
+
+        <div class="section-header" style="margin-top:16px;">Enhancement Points</div>
+        <div class="card" style="font-size:13px;line-height:1.8;color:#CCC;">
+          <strong style="color:var(--gold-warm);">Sharper Script</strong> (1 EP) — +1 to hit or +1 save DC<br>
+          <strong style="color:var(--gold-warm);">Extended Script</strong> (1 EP) — +10 ft range or +5 ft reach<br>
+          <strong style="color:var(--gold-warm);">Flowing Script</strong> (1 EP) — +10 ft movement on activation<br>
+          <strong style="color:var(--gold-warm);">Anchored Script</strong> (1 EP) — Advantage on next save after activation<br>
+          <strong style="color:var(--gold-warm);">Swift Script</strong> (3 EP) — Activation: action→bonus, bonus→free (once/LR)<br>
+          <strong style="color:var(--gold-warm);">Enduring Script</strong> (2/4/6 EP) — +1 extra use before next rest
+        </div>
+      </div>
+      <div>
+        <div class="section-header">Your Seals</div>
+        <div id="seals-list"></div>
+        <button class="btn btn-primary btn-sm" onclick="openAddSeal()">+ Add Seal</button>
+
+        <!-- Add Seal Modal -->
+        <div id="seal-modal" style="display:none;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:8px;padding:16px;margin-top:12px;">
+          <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-bright);margin-bottom:12px;">ADD SEAL</div>
+          <div class="field-group"><label>Seal Name</label><input type="text" id="new-seal-name" placeholder="e.g. Seal of Evasion"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div class="field-group">
+              <label>Tier</label>
+              <select id="new-seal-tier">
+                <option value="B">Basic</option>
+                <option value="A">Advanced</option>
+                <option value="M">Master</option>
+                <option value="D">Divine</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Size</label>
+              <select id="new-seal-size">
+                <option value="N">Normal (1 slot)</option>
+                <option value="G">Greater (2 slots)</option>
+                <option value="C">Colossal (3 slots)</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Type</label>
+              <select id="new-seal-type">
+                <option value="W">War</option>
+                <option value="S">Support</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group"><label>Activation</label><input type="text" id="new-seal-activation" placeholder="e.g. Bonus Action, Reaction"></div>
+          <div class="field-group"><label>Description</label><textarea id="new-seal-desc" placeholder="What does it do?"></textarea></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm" onclick="confirmAddSeal()">Add Seal</button>
+            <button class="btn btn-sm" onclick="closeAddSeal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ FEATURES PANEL ════ -->
+  <div class="panel" id="panel-features">
+    <div class="section-header">Class Features — locked features are greyed out</div>
+    <div id="features-list"></div>
+  </div>
+
+  <!-- ════ INVENTORY PANEL ════ -->
+  <div class="panel" id="panel-inventory">
+    <div class="section-header">Currency</div>
+    <div class="currency-row">
+      <div class="currency-block"><label>PP (Platinum)</label><input type="number" id="curr-pp" value="0" min="0"></div>
+      <div class="currency-block"><label>GP (Gold)</label><input type="number" id="curr-gp" value="0" min="0"></div>
+      <div class="currency-block"><label>EP (Electrum)</label><input type="number" id="curr-ep" value="0" min="0"></div>
+      <div class="currency-block"><label>SP (Silver)</label><input type="number" id="curr-sp" value="0" min="0"></div>
+      <div class="currency-block"><label>CP (Copper)</label><input type="number" id="curr-cp" value="0" min="0"></div>
+    </div>
+    <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:16px;">
+      Total value: <span id="total-gp" style="color:var(--gold-bright);">0</span> GP
+    </div>
+
+    <div class="section-header">Equipment & Items</div>
+    <div class="item-header">
+      <span>Item Name</span><span>Qty</span><span>Weight</span><span>Value</span><span>Rarity</span><span></span>
+    </div>
+    <div id="items-list"></div>
+    <button class="btn btn-sm btn-primary" onclick="addItem()" style="margin-top:8px;">+ Add Item</button>
+
+    <div class="section-header" style="margin-top:20px;">Relics & Magic Items</div>
+    <div id="relics-list"></div>
+    <button class="btn btn-sm btn-primary" onclick="addRelic()" style="margin-top:8px;">+ Add Relic</button>
+  </div>
+
+  <!-- ════ NOTES & FEATS PANEL ════ -->
+  <div class="panel" id="panel-notes">
+    <div class="grid-2">
+      <div>
+        <div class="section-header">Feats</div>
+        <div id="feats-list" style="margin-bottom:8px;"></div>
+        <div class="card" style="padding:12px;">
+          <div class="field-group"><label>Feat Name</label><input type="text" id="new-feat-name" placeholder="e.g. Elven Accuracy"></div>
+          <div class="field-group"><label>Description</label><textarea id="new-feat-desc" placeholder="What does it do?" style="min-height:60px;"></textarea></div>
+          <button class="btn btn-sm btn-primary" onclick="addFeat()">Add Feat</button>
+        </div>
+
+        <div class="section-header" style="margin-top:16px;">Crown of Ascension</div>
+        <div class="crown-tracker">
+          <div style="text-align:center;margin-bottom:12px;">
+            <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-warm);margin-bottom:4px;">MARKS OF ASCENSION</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:12px;">
+              <button class="btn btn-sm" onclick="changeWins(-1)">−</button>
+              <div class="crown-wins-display" id="crown-wins">1</div>
+              <button class="btn btn-sm" onclick="changeWins(1)">+</button>
+            </div>
+          </div>
+          <div id="crown-milestones"></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-header">Backstory</div>
+        <div class="field-group">
+          <label>Character Backstory</label>
+          <textarea id="note-backstory" placeholder="Your character's history and past lives…" style="min-height:120px;"></textarea>
+        </div>
+        <div class="field-group">
+          <label>Personality Traits</label>
+          <textarea id="note-personality" placeholder="How does your character act?" style="min-height:60px;"></textarea>
+        </div>
+        <div class="field-group">
+          <label>Bonds & Ideals</label>
+          <textarea id="note-bonds" style="min-height:60px;"></textarea>
+        </div>
+        <div class="field-group">
+          <label>Flaws</label>
+          <textarea id="note-flaws" style="min-height:60px;"></textarea>
+        </div>
+        <div class="section-header">Session Notes</div>
+        <div class="field-group">
+          <textarea id="note-session" placeholder="Notes from this session…" style="min-height:100px;"></textarea>
+        </div>
+        <div class="section-header">Miscellaneous Notes</div>
+        <div class="field-group">
+          <textarea id="note-misc" placeholder="Anything else…" style="min-height:80px;"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT BAR -->
+  <div class="export-bar">
+    <span class="text-dim">Data auto-saves to this browser</span>
+    <button class="btn btn-sm" onclick="exportData()">Export JSON</button>
+    <button class="btn btn-sm" onclick="document.getElementById('import-file').click()">Import JSON</button>
+    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+    <button class="btn btn-sm btn-primary" onclick="resetAll()">Reset All</button>
+  </div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+firebase.initializeApp({ databaseURL: "https://fundnd-14377-default-rtdb.firebaseio.com" });
+const db = firebase.database();
+const MY_KEY = (localStorage.getItem('fundnd_username') || 'Sean').toLowerCase().replace(/[^a-z0-9]/g, '_');
+let firebaseReady = false;
+
+// Theme
+function setSheetTheme(theme) {
+  if (theme) document.documentElement.setAttribute('data-theme', theme);
+  else document.documentElement.removeAttribute('data-theme');
+  localStorage.setItem('unrivaled_theme', theme);
+  document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+  const titles = { '':'Gold', crimson:'Crimson', emerald:'Emerald', arcane:'Arcane', frost:'Frost', parchment:'Parchment' };
+  document.querySelectorAll('.theme-dot').forEach(d => { if (d.title === (titles[theme] || '')) d.classList.add('active'); });
+}
+const _savedSheetTheme = localStorage.getItem('unrivaled_theme');
+if (_savedSheetTheme) setSheetTheme(_savedSheetTheme);
+else document.querySelector('.theme-dot[title="Gold"]')?.classList.add('active');
+let skipNextFirebaseUpdate = false;
+
+// ══════════════════════════════════════════════════════════
+// DATA MODEL
+// ══════════════════════════════════════════════════════════
+const DEFAULT_STATE = {
+  identity: { name:'', level:3, race:'', background:'', alignment:'', player:'' },
+  abilities: { STR:10, DEX:17, CON:15, INT:10, WIS:20, CHA:10 },
+  hp: { current:28, max:28, temp:0, maxOverride:null },
+  fpUsed: 0,
+  deathSaves: { s:[false,false,false], f:[false,false,false] },
+  skillProf: {
+    Acrobatics:0, 'Animal Handling':0, Arcana:0, Athletics:0,
+    Deception:0, History:0, Insight:2, Intimidation:0, Investigation:0,
+    Medicine:0, Nature:0, Perception:1, Performance:0, Persuasion:0,
+    Religion:0, 'Sleight of Hand':0, Stealth:0, Survival:1
+  },
+  saveProf: { STR:false, DEX:true, CON:false, INT:false, WIS:true, CHA:false },
+  toolProfs: ['Calligrapher\'s Tools'],
+  languages: ['Common'],
+  conditions: [],
+  stance: 'single',
+  sealSlots: [],
+  seals: [
+    { name:'Seal of Discernment', tier:'B', size:'N', type:'S', activation:'Reaction', desc:'Advantage on next Insight or Perception check (not contested).', prepared:false },
+    { name:'Seal of Evasion', tier:'B', size:'N', type:'W', activation:'Reaction', desc:'+2 AC until start of your next turn. Use as reaction to being targeted.', prepared:true },
+    { name:'Seal of Iron Skin', tier:'B', size:'N', type:'W', activation:'Reaction', desc:'Gain temp HP = WIS mod. Use as reaction to being hit — subtract from damage.', prepared:true },
+    { name:'Seal of Focus', tier:'B', size:'N', type:'W', activation:'Bonus Action', desc:'On next successful attack, regain 1 FP.', prepared:false },
+    { name:'Seal of True Strike', tier:'B', size:'N', type:'W', activation:'Reaction', desc:'Reroll your next attack roll once. Use as reaction to missing.', prepared:false },
+    { name:'Seal of the Calmed Mind', tier:'B', size:'N', type:'W', activation:'Bonus Action', desc:'End one charmed/frightened effect, OR advantage on next WIS save.', prepared:false },
+    { name:'Seal of the Empty Scabbard', tier:'B', size:'N', type:'W', activation:'—', desc:'On initiative: consume to gain advantage on the roll.', prepared:true },
+    { name:'Seal of Sharpness', tier:'B', size:'N', type:'W', activation:'Bonus Action', desc:'Next attack deals +MM die force damage.', prepared:false },
+  ],
+  feats: [
+    { name:'Elven Accuracy', desc:'When you have advantage on an attack roll using Dexterity, Intelligence, Wisdom, or Charisma, you can reroll one of the dice once. DEX +1.' },
+    { name:'Skill Expert', desc:'+1 to one ability score, proficiency in one skill, expertise in one skill (Insight).' },
+  ],
+  items: [
+    { name:'Hai Haori (Ash Haori)', qty:1, weight:'—', value:'—', rarity:'Uncommon' },
+  ],
+  relics: [
+    { name:'Hai Haori (Ash Haori)', rarity:'Uncommon', attuned:true, desc:'War Fit: Add PB to initiative. Comfortable: meditate 4 hrs instead of sleeping.' },
+    { name:'Kōshō no Kanmuri', rarity:'Common → Mythic', attuned:true, desc:'Crown of Ascension. Current: Duelist\'s Breath — gain WIS mod + Level temp HP on initiative.' },
+  ],
+  weapons: [
+    { name:'Katana (Longsword)', atk:'+5', dmg:'1d8+3 +1d4 slashing', notes:'Main hand, versatile' },
+  ],
+  currency: { pp:0, gp:0, ep:0, sp:0, cp:0 },
+  crownWins: 1,
+  notes: { backstory:'', personality:'', bonds:'', flaws:'', session:'', misc:'' },
+};
+
+let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+// ── PERSISTENCE ──
+function saveState() {
+  // Collect identity
+  state.identity.name = v('char-name');
+  state.identity.level = parseInt(v('char-level')) || 3;
+  state.identity.race = v('char-race');
+  state.identity.background = v('char-background');
+  state.identity.alignment = v('char-alignment');
+  state.identity.player = v('char-player');
+  // HP
+  state.hp.current = parseInt(v('hp-current')) || 0;
+  state.hp.temp = parseInt(v('temp-hp-input')) || 0;
+  // Currency
+  ['pp','gp','ep','sp','cp'].forEach(c => state.currency[c] = parseInt(v('curr-'+c)) || 0);
+  // Notes
+  ['backstory','personality','bonds','flaws','session','misc'].forEach(k => {
+    state.notes[k] = v('note-'+k);
+  });
+
+  try { localStorage.setItem('unrivaled_sheet', JSON.stringify(state)); } catch(e) {}
+  const ind = document.getElementById('save-indicator');
+  ind.textContent = '● Saved'; ind.className = 'save-indicator saved';
+  setTimeout(() => { ind.textContent = '● Auto-saved'; ind.className = 'save-indicator'; }, 1500);
+
+  // Sync full state to Firebase
+  skipNextFirebaseUpdate = true;
+  db.ref('sheets/' + MY_KEY).set(state);
+
+  // Sync party summary for the party site to read
+  const ab = state.abilities;
+  db.ref('party/' + MY_KEY).set({
+    player: state.identity.player || localStorage.getItem('fundnd_username') || 'Sean',
+    name: state.identity.name,
+    race: state.identity.race,
+    className: 'The Unrivaled',
+    level: state.identity.level,
+    ac: acCalc(),
+    hp: state.hp.current,
+    maxHp: hpMax(),
+    speed: typeof speedCalc === 'function' ? speedCalc() : 30,
+    initiative: typeof initiativeCalc === 'function' ? fmtMod(initiativeCalc()) : '+0',
+    profBonus: pb(),
+    str: ab.STR, dex: ab.DEX, con: ab.CON, int: ab.INT, wis: ab.WIS, cha: ab.CHA,
+    fp: fpTotal() - state.fpUsed,
+    fpMax: fpTotal(),
+    fpDC: fpDC(),
+    mmDie: mmDie(),
+    crownWins: state.crownWins,
+    feats: state.feats.map(f => f.name).join(', '),
+    equipment: state.items.map(i => i.name).filter(Boolean).join(', '),
+    items: state.items.filter(i => i.name).map(i => ({ name: i.name, qty: i.qty || 1, weight: i.weight || '', value: i.value || '', rarity: i.rarity || 'Common' })),
+    relics: state.relics.filter(r => r.name).map(r => ({ name: r.name, rarity: r.rarity || '', attuned: !!r.attuned, desc: r.desc || '' })),
+    currency: state.currency,
+    features: 'Unarmored Defense, Muscle Memory, Focus Points, Niten Ichi-Ryū, Calm Within the Storm',
+    notes: state.notes.session || '',
+    stance: state.stance,
+    seals: state.seals.filter(s => s.prepared).map(s => s.name).join(', '),
+    sheetType: 'unrivaled',
+    lastUpdated: Date.now()
+  });
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('unrivaled_sheet');
+    if (raw) state = Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), JSON.parse(raw));
+  } catch(e) {}
+}
+
+function loadFromFirebase() {
+  db.ref('sheets/' + MY_KEY).once('value', snap => {
+    const data = snap.val();
+    if (data && data.identity) {
+      state = Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), data);
+      initAll();
+    }
+    firebaseReady = true;
+  });
+  // Listen for remote changes (e.g. DM editing your HP)
+  db.ref('sheets/' + MY_KEY).on('value', snap => {
+    if (!firebaseReady || skipNextFirebaseUpdate) { skipNextFirebaseUpdate = false; return; }
+    const data = snap.val();
+    if (data && data.identity) {
+      state = Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), data);
+      initAll();
+    }
+  });
+}
+
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+// ── DERIVED STATS ──
+function mod(score) { return Math.floor((score - 10) / 2); }
+function pb() { const l = state.identity.level; return Math.ceil(l/4) + 1; }
+function fpTotal() { return state.identity.level + mod(state.abilities.WIS); }
+function fpDC() { return 8 + mod(state.abilities.WIS) + pb(); }
+function acCalc() { return 10 + mod(state.abilities.DEX) + mod(state.abilities.WIS); }
+function hpMax() { if (state.hp.maxOverride) return state.hp.maxOverride; return (10 + mod(state.abilities.CON)) + (6 + mod(state.abilities.CON)) * (state.identity.level - 1); }
+function mmDie() {
+  const l = state.identity.level;
+  if (l >= 17) return '1d12'; if (l >= 13) return '1d10';
+  if (l >= 9) return '1d8'; if (l >= 5) return '1d6'; return '1d4';
+}
+function speedCalc() {
+  if (state.identity.level < 5) return 30;
+  return 30 + 5 + 5 * Math.floor(pb() / 2);
+}
+function initiativeCalc() {
+  const base = mod(state.abilities.DEX);
+  const haori = state.relics.some(r => r.name.includes('Haori') && r.attuned);
+  if (state.identity.level >= 5) return base + mod(state.abilities.WIS) + (haori ? pb() : 0);
+  return base + (haori ? pb() : 0);
+}
+function skillBonus(skill, abilityMod) {
+  const p = state.skillProf[skill] || 0;
+  return abilityMod + (p === 1 ? pb() : p === 2 ? pb() * 2 : 0);
+}
+
+const SKILL_ABILITY = {
+  Acrobatics:'DEX','Animal Handling':'WIS',Arcana:'INT',Athletics:'STR',
+  Deception:'CHA',History:'INT',Insight:'WIS',Intimidation:'CHA',
+  Investigation:'INT',Medicine:'WIS',Nature:'INT',Perception:'WIS',
+  Performance:'CHA',Persuasion:'CHA',Religion:'INT','Sleight of Hand':'DEX',
+  Stealth:'DEX',Survival:'WIS'
+};
+
+// ── UPDATE ALL DISPLAYS ──
+function updateAll() {
+  const ab = state.abilities;
+  const level = state.identity.level;
+  const profBonus = pb();
+  const maxHP = hpMax();
+
+  // Header stats
+  setText('display-ac', acCalc());
+  setText('display-fp', fpTotal() - state.fpUsed);
+  setText('display-pb', '+' + profBonus);
+  setText('display-speed', speedCalc());
+  setText('display-initiative', fmtMod(initiativeCalc()));
+  setText('display-fp-dc', fpDC());
+  setText('display-mm', mmDie());
+  setText('hp-max', maxHP);
+  setText('passive-perc', 10 + skillBonus('Perception', mod(ab.WIS)));
+  setText('passive-insight', 10 + skillBonus('Insight', mod(ab.WIS)));
+  setText('qr-pb', '+' + profBonus);
+  setText('combat-mm-die', mmDie());
+  setText('fp-remaining-label', fpTotal() - state.fpUsed);
+  setText('fp-total-label', fpTotal());
+  setText('seals-known', level + mod(ab.WIS));
+  setText('war-prepared', mod(ab.WIS));
+  setText('support-prepared', mod(ab.WIS) + profBonus);
+  setText('crown-wins', state.crownWins);
+
+  // Temp HP display
+  const tempInput = document.getElementById('temp-hp-input');
+  if (tempInput) { tempInput.value = state.hp.temp; setText('display-temp-hp', state.hp.temp || 0); }
+
+  // Currency total
+  const c = state.currency;
+  setText('total-gp', (c.pp*10 + c.gp + c.ep*0.5 + c.sp*0.1 + c.cp*0.01).toFixed(2));
+
+  // Update FP pips
+  renderFPPips();
+
+  // Update ability mods display
+  document.querySelectorAll('.ability-mod').forEach(el => {
+    const ab_key = el.dataset.ab;
+    if (ab_key) el.textContent = fmtMod(mod(state.abilities[ab_key]));
+  });
+
+  // Update skill bonuses
+  document.querySelectorAll('.skill-bonus[data-skill]').forEach(el => {
+    const skill = el.dataset.skill;
+    const ability = SKILL_ABILITY[skill];
+    const abilityMod = mod(state.abilities[ability]);
+    el.textContent = fmtMod(skillBonus(skill, abilityMod));
+  });
+
+  // Update save bonuses
+  document.querySelectorAll('.save-bonus[data-save]').forEach(el => {
+    const ab = el.dataset.save;
+    const abilityMod = mod(state.abilities[ab]);
+    const bonus = abilityMod + (state.saveProf[ab] ? profBonus : 0);
+    el.textContent = fmtMod(bonus);
+  });
+
+  // Update FP DC in technique bodies
+  document.querySelectorAll('.fp-dc-inline').forEach(el => el.textContent = fpDC());
+
+  // Crown milestones
+  renderCrownMilestones();
+  
+  // Features lock/unlock
+  document.querySelectorAll('.feature-card[data-min-level]').forEach(card => {
+    const min = parseInt(card.dataset.minLevel);
+    card.classList.toggle('locked', level < min);
+  });
+}
+
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function fmtMod(n) { return n >= 0 ? '+' + n : '' + n; }
+
+// ── ABILITIES ──
+function renderAbilities() {
+  const grid = document.getElementById('ability-grid');
+  if (!grid) return;
+  const ABILITIES = ['STR','DEX','CON','INT','WIS','CHA'];
+  grid.innerHTML = ABILITIES.map(ab => `
+    <div class="ability-block">
+      <div class="ability-name">${ab}</div>
+      <input class="ability-score" type="number" min="1" max="30" value="${state.abilities[ab]}"
+        onchange="state.abilities['${ab}']=parseInt(this.value)||10; updateAll(); saveState();"
+        onclick="this.select()">
+      <div class="ability-mod" data-ab="${ab}">${fmtMod(mod(state.abilities[ab]))}</div>
+      <div class="ability-mod-label">modifier</div>
+    </div>
+  `).join('');
+}
+
+// ── SAVES ──
+function renderSaves() {
+  const grid = document.getElementById('saves-grid');
+  if (!grid) return;
+  const SAVES = ['STR','DEX','CON','INT','WIS','CHA'];
+  grid.innerHTML = SAVES.map(ab => {
+    const prof = state.saveProf[ab];
+    const bonus = mod(state.abilities[ab]) + (prof ? pb() : 0);
+    return `
+      <div class="save-row ${prof ? 'proficient' : ''}" id="save-row-${ab}">
+        <div class="save-prof-dot ${prof ? 'active' : ''}" onclick="toggleSaveProf('${ab}')"></div>
+        <span class="save-name">${ab} Save</span>
+        <span class="save-bonus" data-save="${ab}">${fmtMod(bonus)}</span>
+      </div>`;
+  }).join('');
+}
+
+function toggleSaveProf(ab) {
+  state.saveProf[ab] = !state.saveProf[ab];
+  renderSaves();
+  updateAll();
+  saveState();
+}
+
+// ── SKILLS ──
+function renderSkills() {
+  const list = document.getElementById('skills-list');
+  if (!list) return;
+  list.innerHTML = Object.keys(SKILL_ABILITY).map(skill => {
+    const ability = SKILL_ABILITY[skill];
+    const abilityMod = mod(state.abilities[ability]);
+    const p = state.skillProf[skill] || 0;
+    const bonus = skillBonus(skill, abilityMod);
+    const cls = p === 2 ? 'expert' : p === 1 ? 'proficient' : '';
+    return `
+      <div class="skill-row ${cls}">
+        <div class="prof-toggle ${p===2?'expert':p===1?'prof':''}" onclick="cycleSkillProf('${skill}')"
+          title="${p===0?'Click for proficient':p===1?'Click for expertise':'Click to remove'}">
+          ${p===2?'E':p===1?'✦':''}
+        </div>
+        <span class="skill-ability">${ability}</span>
+        <span class="skill-name">${skill}</span>
+        <span class="skill-bonus" data-skill="${skill}">${fmtMod(bonus)}</span>
+      </div>`;
+  }).join('');
+}
+
+function cycleSkillProf(skill) {
+  const cur = state.skillProf[skill] || 0;
+  state.skillProf[skill] = (cur + 1) % 3;
+  renderSkills();
+  updateAll();
+  saveState();
+}
+
+// ── FOCUS POINTS ──
+function renderFPPips() {
+  const container = document.getElementById('fp-pips');
+  if (!container) return;
+  const total = fpTotal();
+  const used = Math.min(state.fpUsed, total);
+  let html = '';
+  for (let i = 0; i < total; i++) {
+    const isUsed = i >= (total - used);
+    html += `<div class="fp-pip ${isUsed ? 'used' : ''}" onclick="toggleFP(${i})" title="${isUsed?'Restore FP':'Spend FP'}"></div>`;
+  }
+  container.innerHTML = html;
+}
+
+function toggleFP(idx) {
+  const total = fpTotal();
+  const used = state.fpUsed;
+  // Clicking a filled pip (index < total-used) spends one; clicking empty pip restores one
+  if (idx < total - used) { state.fpUsed = Math.min(total, state.fpUsed + 1); }
+  else { state.fpUsed = Math.max(0, state.fpUsed - 1); }
+  updateAll(); saveState();
+}
+
+function restoreAllFP() { state.fpUsed = 0; updateAll(); saveState(); }
+function restoreHalfFP() {
+  const half = Math.floor(fpTotal() / 2);
+  state.fpUsed = Math.max(0, state.fpUsed - half);
+  updateAll(); saveState();
+}
+
+// ── DEATH SAVES ──
+function toggleDeathSave(el, type, idx) {
+  state.deathSaves[type][idx] = !state.deathSaves[type][idx];
+  el.classList.toggle('filled', state.deathSaves[type][idx]);
+  saveState();
+}
+function resetDeathSaves() {
+  state.deathSaves = { s:[false,false,false], f:[false,false,false] };
+  document.querySelectorAll('.death-pip').forEach(el => el.classList.remove('filled'));
+  saveState();
+}
+function renderDeathSaves() {
+  document.querySelectorAll('.death-save-row.success .death-pip').forEach((el,i) => {
+    el.classList.toggle('filled', state.deathSaves.s[i]);
+  });
+  document.querySelectorAll('.death-save-row.failure .death-pip').forEach((el,i) => {
+    el.classList.toggle('filled', state.deathSaves.f[i]);
+  });
+}
+
+// ── CONDITIONS ──
+function renderConditions() {
+  const list = document.getElementById('conditions-list');
+  if (!list) return;
+  if (state.conditions.length === 0) {
+    list.innerHTML = '<span style="color:#444;font-size:13px;">No active conditions</span>';
+    return;
+  }
+  list.innerHTML = state.conditions.map((c,i) => `
+    <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(139,26,26,0.3);
+      border:1px solid var(--blood-red);border-radius:3px;padding:3px 8px;margin:2px;font-size:12px;
+      font-family:'Cinzel',serif;letter-spacing:0.1em;color:var(--parchment);">
+      ${c}
+      <span onclick="removeCondition(${i})" style="cursor:pointer;color:var(--blood-red);margin-left:4px;font-size:14px;">×</span>
+    </span>`).join('');
+}
+function addCondition() {
+  const sel = document.getElementById('condition-select');
+  if (sel.value && !state.conditions.includes(sel.value)) {
+    state.conditions.push(sel.value);
+    renderConditions(); saveState();
+  }
+  sel.value = '';
+}
+function removeCondition(i) { state.conditions.splice(i,1); renderConditions(); saveState(); }
+
+// ── STANCE ──
+const STANCE_CONTENT = {
+  single: `<strong style="color:var(--gold-bright);">SINGLE-BLADE STANCE</strong><br><br>
+    <strong style="color:var(--gold-pale);">Iaido:</strong> Once per turn, add WIS mod to one melee attack roll.<br>
+    <strong style="color:var(--gold-pale);">Solo Serenity:</strong> On kill, gain temp HP = WIS mod + PB.<br>
+    <strong style="color:var(--gold-pale);">To Cut or Not to Cut:</strong> Free first time/combat, then 1 FP. 
+    WIS Insight vs creature's Insight/Deception. Win: learn emotional state & intent, 
+    advantage on next attack vs it, creature has disadv on next save vs you.`,
+  dual: `<strong style="color:var(--gold-bright);">DUAL-BLADE STANCE</strong><br><br>
+    <strong style="color:var(--gold-pale);">Two-Weapon Fighting:</strong> Add ability mod to off-hand damage.<br>
+    <strong style="color:var(--gold-pale);">Dual Raging Fangs:</strong> On kill, move up to half speed. End within 5 ft of another creature → one free melee attack. Once/turn.<br>
+    <strong style="color:var(--gold-pale);">The Art of Splitting a Man (2 FP):</strong> Replace one attack with dual strike with advantage. 
+    Hit: both weapon dice + 2×MM die + DEX/WIS mod. Choose 1 effect: Broken Guard / Shattered Intent / Vulnerability / Hemorrhage.
+    <em style="color:#888;">Drawback on hit: speed 0, attacks vs you have advantage, no reactions until next turn.</em>`
+};
+function setStance(s) {
+  state.stance = s;
+  document.getElementById('stance-content').innerHTML = STANCE_CONTENT[s];
+  document.getElementById('stance-single').style.borderColor = s === 'single' ? 'var(--gold-bright)' : '';
+  document.getElementById('stance-single').style.color = s === 'single' ? 'var(--gold-bright)' : '';
+  document.getElementById('stance-dual').style.borderColor = s === 'dual' ? 'var(--gold-bright)' : '';
+  document.getElementById('stance-dual').style.color = s === 'dual' ? 'var(--gold-bright)' : '';
+  saveState();
+}
+
+// ── TECHNIQUES ──
+function toggleTechnique(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('span:last-child');
+  const open = body.classList.toggle('open');
+  header.classList.toggle('open', open);
+  if (chevron) chevron.textContent = open ? '▲' : '▼';
+}
+
+// ── SEAL SLOTS ──
+function renderSealSlots() {
+  const container = document.getElementById('seal-slots');
+  if (!container) return;
+  // Slots = WIS mod + PB (simplified)
+  const totalSlots = Math.max(4, mod(state.abilities.WIS) + pb() + 1);
+  while (state.sealSlots.length < totalSlots) state.sealSlots.push(false);
+  while (state.sealSlots.length > totalSlots) state.sealSlots.pop();
+  container.innerHTML = state.sealSlots.map((used, i) =>
+    `<div class="seal-slot ${used ? 'used' : ''}" onclick="toggleSealSlot(${i})"></div>`
+  ).join('');
+}
+function toggleSealSlot(i) {
+  state.sealSlots[i] = !state.sealSlots[i];
+  renderSealSlots(); saveState();
+}
+function resetSealSlots() {
+  state.sealSlots = state.sealSlots.map(() => false);
+  renderSealSlots(); saveState();
+}
+
+// ── SEALS LIST ──
+const TIER_NAMES = { B:'Basic', A:'Advanced', M:'Master', D:'Divine' };
+const SIZE_NAMES = { N:'Normal', G:'Greater', C:'Colossal' };
+const TYPE_NAMES = { W:'War', S:'Support' };
+
+function renderSeals() {
+  const list = document.getElementById('seals-list');
+  if (!list) return;
+  if (state.seals.length === 0) {
+    list.innerHTML = '<div style="color:#444;font-size:13px;padding:8px;">No seals added yet.</div>';
+    return;
+  }
+  list.innerHTML = state.seals.map((seal, i) => `
+    <div class="seal-card">
+      <div class="seal-card-header">
+        <div class="seal-prepared-toggle ${seal.prepared ? 'prepared' : ''}"
+          onclick="toggleSealPrepared(${i})" title="Toggle prepared">✦</div>
+        <div class="seal-card-name">${seal.name}</div>
+        <span class="seal-tag ${seal.type === 'W' ? 'war' : 'support'}">${TYPE_NAMES[seal.type]}</span>
+        <span class="seal-tag ${seal.size === 'N' ? 'normal' : seal.size === 'G' ? 'greater' : 'colossal'}">
+          ${SIZE_NAMES[seal.size]}
+        </span>
+        <span style="font-family:'Cinzel',serif;font-size:9px;color:#555;">${seal.activation}</span>
+        <button class="btn-remove" onclick="removeSeal(${i})">×</button>
+      </div>
+      <div class="seal-desc">${seal.desc}</div>
+    </div>`).join('');
+}
+function toggleSealPrepared(i) { state.seals[i].prepared = !state.seals[i].prepared; renderSeals(); saveState(); }
+function removeSeal(i) { state.seals.splice(i,1); renderSeals(); saveState(); }
+function openAddSeal() { document.getElementById('seal-modal').style.display = 'block'; }
+function closeAddSeal() { document.getElementById('seal-modal').style.display = 'none'; }
+function confirmAddSeal() {
+  const name = document.getElementById('new-seal-name').value.trim();
+  if (!name) return;
+  state.seals.push({
+    name, prepared: false,
+    tier: document.getElementById('new-seal-tier').value,
+    size: document.getElementById('new-seal-size').value,
+    type: document.getElementById('new-seal-type').value,
+    activation: document.getElementById('new-seal-activation').value,
+    desc: document.getElementById('new-seal-desc').value,
+  });
+  closeAddSeal();
+  ['new-seal-name','new-seal-activation','new-seal-desc'].forEach(id => document.getElementById(id).value = '');
+  renderSeals(); saveState();
+}
+
+// ── FEATURES ──
+const FEATURES = [
+  { level:1, name:'Unarmored Defense', body:'AC = 10 + DEX mod + WIS mod. No armor or shield.' },
+  { level:1, name:'Muscle Memory', body:'All swords deal bonus +MM die damage. Scales with level: 1d4→1d6(lv5)→1d8(lv9)→1d10(lv13)→1d12(lv17).' },
+  { level:1, name:'Weapon Mastery', body:'Mastery properties for 2 Simple/Martial Melee weapons. Change one per Long Rest.' },
+  { level:2, name:'Focus Points', body:'FP = Level + WIS mod. Refresh: full on Long Rest, half on Short Rest. FP Save DC = 8 + WIS mod + PB.' },
+  { level:2, name:'The Brush is Mightier', body:'Proficiency in Calligrapher\'s Tools. 30 min writing: temp FP = half PB (round down), advantage on next Insight check, may inscribe Seals.' },
+  { level:3, name:'Niten Ichi-Ryū', body:'Choose Single-Blade or Dual-Blade Stance. Familiar Stances: stow/draw light offhand weapon as free object interaction.' },
+  { level:3, name:'Calm Within the Storm', body:'Passive. 2 adjacent hostiles → +1 AC. 3+ adjacent hostiles → +2 AC.' },
+  { level:5, name:'Extra Attack', body:'Attack twice whenever you take the Attack action.' },
+  { level:5, name:'Flow of War', body:'<strong>Scent of Intent:</strong> Add WIS mod to initiative, can no longer be surprised.<br><strong>Rallying Flow:</strong> Spend 1 FP on initiative to give up to PB allies within 15 ft advantage on initiative.<br><strong>Fluid Motion:</strong> Speed +5 ft + 5×(½PB rounded down).' },
+  { level:6, name:'Unbroken Flow', body:'Once per turn when you spend FP, choose one ally within 30 ft: move 10 ft without OA, gain temp HP = your level, or add PB to one roll before your next turn.' },
+  { level:6, name:'Refined Script', body:'Expertise in Calligrapher\'s Tools. +1 Seal Slot. First Seal each combat: no action (or action→bonus). Basic Seals count 1 size lower. <strong>Old Habits:</strong> Proficiency in 2 tools, swap one per LR, crafting costs 10% less.' },
+  { level:7, name:'Advancing the Basics', body:'Upgrades all Focus Techniques: Imitation Cut → Phantom Severance, Parry → Hagane Nagashi, Riposte → Kaeshi-Giri, Slackened Form → Phantom Form: Vanishing Step, To Cut or Not to Cut → The Reading of Many, Art of Splitting a Man → The Beauty of Dividing the Body.' },
+  { level:9, name:'The Flow-Locking Blade', body:'Allies within 10 ft: +1 AC vs weapon attacks, add half WIS mod (min +1) to saves. Enemies within 10 ft: difficult terrain moving toward allies, disadvantage on first melee attack vs allies each turn. You only gain the AC and saving throw benefits.' },
+  { level:9, name:'Technique Above All', body:'STR/CON ability checks → may use DEX instead. INT/CHA ability checks → may use WIS instead. Does not affect saving throws or attack rolls.' },
+  { level:10, name:'Shadows Die Twice', body:'Advantage on death saving throws. Once per LR: when reduced to 0 HP (not killed outright), drop to half HP rounded up instead and enter heightened mastery for 1 minute: +10 ft speed, OA against you have disadvantage, first hit per turn heals WIS mod HP.' },
+  { level:11, name:'Mastering Ink', body:'+1 Seal Slot. Add WIS mod to calligraphy checks. Normal Seals count 2 sizes lower, Advanced 1 lower. <strong>Second Nature:</strong> Proficiency with all tools, treat d20 rolls of 9 or lower as 10 for tool checks, crafting costs 25% less.' },
+  { level:13, name:'Mastering the Basics', body:'Further upgrades: Phantom Severance → Voidline Rupture, Hagane Nagashi → Hagane no Kekkai, Kaeshi-Giri → Shinkō Sōkaeshi, Vanishing Step → Ascended Form: Flying Void Steps, Reading of Many → Hundred Divine Eyes, Beauty of Dividing → Sublimity of Severing Flesh.' },
+  { level:14, name:'Flow of Shared Mastery', body:'Flow-Locking Blade range extends to 20 ft. Allies in range: no OA on movement, +2 AC, Aegis applies to all saves and checks, +WIS mod to attack rolls vs creatures within 20 ft of you, both you and ally gain WIS mod temp HP when ally gets a kill.' },
+  { level:18, name:'Transcending The Basics', body:'The Infinite Lens. The Divinity of Cleaving the Soul. Absolute Critical. Deific Execution. <em>(Full details pending.)</em>' },
+];
+
+function renderFeatures() {
+  const list = document.getElementById('features-list');
+  if (!list) return;
+  list.innerHTML = FEATURES.map(f => {
+    const unlocked = state.identity.level >= f.level;
+    return `
+      <div class="feature-card ${unlocked ? '' : 'locked'}" data-min-level="${f.level}">
+        <div class="feature-header" onclick="toggleFeature(this)">
+          <span class="feature-level-badge ${unlocked ? 'unlocked' : ''}">Lv ${f.level}</span>
+          <span class="feature-title">${f.name}</span>
+          <span class="feature-chevron">▼</span>
+        </div>
+        <div class="feature-body">${f.body}</div>
+      </div>`;
+  }).join('');
+}
+function toggleFeature(header) {
+  const body = header.nextElementSibling;
+  const open = body.classList.toggle('open');
+  header.classList.toggle('open', open);
+}
+
+// ── INVENTORY ──
+function renderItems() {
+  const list = document.getElementById('items-list');
+  if (!list) return;
+  list.innerHTML = state.items.map((item, i) => `
+    <div class="item-row">
+      <input value="${item.name}" placeholder="Item name" onchange="state.items[${i}].name=this.value;saveState()">
+      <input value="${item.qty}" placeholder="Qty" type="number" min="0" onchange="state.items[${i}].qty=this.value;saveState()">
+      <input value="${item.weight}" placeholder="Weight" onchange="state.items[${i}].weight=this.value;saveState()">
+      <input value="${item.value}" placeholder="Value" onchange="state.items[${i}].value=this.value;saveState()">
+      <select onchange="state.items[${i}].rarity=this.value;saveState()">
+        ${['Common','Uncommon','Rare','Very Rare','Legendary','Artifact'].map(r =>
+          `<option ${item.rarity===r?'selected':''}>${r}</option>`).join('')}
+      </select>
+      <button class="btn-remove" onclick="removeItem(${i})">×</button>
+    </div>`).join('');
+}
+function addItem() {
+  state.items.push({ name:'', qty:1, weight:'—', value:'—', rarity:'Common' });
+  renderItems(); saveState();
+}
+function removeItem(i) { state.items.splice(i,1); renderItems(); saveState(); }
+
+function renderRelics() {
+  const list = document.getElementById('relics-list');
+  if (!list) return;
+  list.innerHTML = state.relics.map((r, i) => `
+    <div style="background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;padding:12px;margin-bottom:8px;">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+        <input value="${r.name}" style="background:transparent;border:none;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:14px;font-weight:600;flex:1;"
+          onchange="state.relics[${i}].name=this.value;saveState()">
+        <span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-warm);padding:2px 8px;border:1px solid var(--border-gold);border-radius:3px;">${r.rarity}</span>
+        <label style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:#666;display:flex;align-items:center;gap:4px;">
+          <input type="checkbox" ${r.attuned?'checked':''} onchange="state.relics[${i}].attuned=this.checked;saveState()">
+          ATTUNED
+        </label>
+        <button class="btn-remove" onclick="removeRelic(${i})">×</button>
+      </div>
+      <textarea style="width:100%;background:transparent;border:none;color:#AAA;font-family:'Crimson Text',serif;font-size:13px;resize:none;min-height:40px;line-height:1.5;"
+        onchange="state.relics[${i}].desc=this.value;saveState()">${r.desc}</textarea>
+    </div>`).join('');
+}
+function addRelic() {
+  state.relics.push({ name:'New Relic', rarity:'Uncommon', attuned:false, desc:'' });
+  renderRelics(); saveState();
+}
+function removeRelic(i) { state.relics.splice(i,1); renderRelics(); saveState(); }
+
+// ── WEAPONS ──
+function renderWeapons() {
+  const list = document.getElementById('weapons-list');
+  if (!list) return;
+  list.innerHTML = state.weapons.map((w, i) => `
+    <div style="background:var(--ink-panel);border:1px solid var(--border);border-radius:4px;padding:8px 12px;margin-bottom:6px;display:grid;grid-template-columns:1fr 70px 120px 1fr auto;gap:8px;align-items:center;">
+      <input value="${w.name}" placeholder="Weapon name" style="background:transparent;border:none;color:var(--gold-pale);font-family:'Crimson Text',serif;font-size:14px;"
+        onchange="state.weapons[${i}].name=this.value;saveState()">
+      <input value="${w.atk}" placeholder="Atk" style="background:transparent;border:none;color:var(--blood-light);font-family:'Cinzel',serif;font-size:14px;text-align:center;"
+        onchange="state.weapons[${i}].atk=this.value;saveState()">
+      <input value="${w.dmg}" placeholder="Damage" style="background:transparent;border:none;color:var(--parchment);font-family:'Crimson Text',serif;font-size:13px;"
+        onchange="state.weapons[${i}].dmg=this.value;saveState()">
+      <input value="${w.notes}" placeholder="Notes" style="background:transparent;border:none;color:#888;font-family:'Crimson Text',serif;font-size:12px;"
+        onchange="state.weapons[${i}].notes=this.value;saveState()">
+      <button class="btn-remove" onclick="removeWeapon(${i})">×</button>
+    </div>`).join('');
+}
+function addWeapon() {
+  state.weapons.push({ name:'', atk:'+0', dmg:'1d6', notes:'' });
+  renderWeapons(); saveState();
+}
+function removeWeapon(i) { state.weapons.splice(i,1); renderWeapons(); saveState(); }
+
+// ── FEATS ──
+function renderFeats() {
+  const list = document.getElementById('feats-list');
+  if (!list) return;
+  list.innerHTML = state.feats.map((f, i) => `
+    <div class="feat-card">
+      <div style="flex:1;">
+        <div class="feat-name">${f.name}</div>
+        <div class="feat-desc">${f.desc}</div>
+      </div>
+      <button class="btn-remove" onclick="removeFeat(${i})" style="flex-shrink:0;">×</button>
+    </div>`).join('');
+}
+function addFeat() {
+  const name = document.getElementById('new-feat-name').value.trim();
+  const desc = document.getElementById('new-feat-desc').value.trim();
+  if (!name) return;
+  state.feats.push({ name, desc });
+  document.getElementById('new-feat-name').value = '';
+  document.getElementById('new-feat-desc').value = '';
+  renderFeats(); saveState();
+}
+function removeFeat(i) { state.feats.splice(i,1); renderFeats(); saveState(); }
+
+// ── TOOL PROFS / LANGUAGES ──
+function renderToolProfs() {
+  const list = document.getElementById('tool-profs-list');
+  if (!list) return;
+  list.innerHTML = state.toolProfs.map((t,i) => `
+    <span style="display:inline-flex;align-items:center;gap:4px;background:var(--ink-mist);
+      border:1px solid var(--border);border-radius:3px;padding:3px 8px;margin:2px;font-size:13px;color:var(--parchment);">
+      ${t}
+      <span onclick="removeToolProf(${i})" style="cursor:pointer;color:#555;font-size:14px;">×</span>
+    </span>`).join('');
+}
+function addToolProf() {
+  const val = document.getElementById('tool-prof-input').value.trim();
+  if (val && !state.toolProfs.includes(val)) { state.toolProfs.push(val); renderToolProfs(); saveState(); }
+  document.getElementById('tool-prof-input').value = '';
+}
+function removeToolProf(i) { state.toolProfs.splice(i,1); renderToolProfs(); saveState(); }
+
+function renderLanguages() {
+  const list = document.getElementById('languages-list');
+  if (!list) return;
+  list.innerHTML = state.languages.map((l,i) => `
+    <span style="display:inline-flex;align-items:center;gap:4px;background:var(--ink-mist);
+      border:1px solid var(--border);border-radius:3px;padding:3px 8px;margin:2px;font-size:13px;color:var(--parchment);">
+      ${l}
+      <span onclick="removeLanguage(${i})" style="cursor:pointer;color:#555;font-size:14px;">×</span>
+    </span>`).join('');
+}
+function addLanguage() {
+  const val = document.getElementById('language-input').value.trim();
+  if (val && !state.languages.includes(val)) { state.languages.push(val); renderLanguages(); saveState(); }
+  document.getElementById('language-input').value = '';
+}
+function removeLanguage(i) { state.languages.splice(i,1); renderLanguages(); saveState(); }
+
+// ── CROWN ──
+const CROWN_MILESTONES = [
+  { wins:1, tier:'Common', name:'Duelist\'s Breath', color:'#8A8A8A' },
+  { wins:3, tier:'Uncommon', name:'Duelist\'s Reserve', color:'#4A8A4A' },
+  { wins:6, tier:'Rare', name:'Golden Afterimage', color:'#4A6A8A' },
+  { wins:12, tier:'Very Rare', name:'Duelist\'s Momentum', color:'#6A4A8A' },
+  { wins:20, tier:'Legendary', name:'Voice of Challenge', color:'#8A6A2A' },
+  { wins:35, tier:'Artifact', name:'Crowned Dominion', color:'#C8A000' },
+  { wins:50, tier:'Mythic', name:'Mythic Duelist Ascension', color:'#FFD700' },
+];
+function changeWins(delta) {
+  state.crownWins = Math.max(0, state.crownWins + delta);
+  setText('crown-wins', state.crownWins);
+  renderCrownMilestones(); saveState();
+}
+function renderCrownMilestones() {
+  const list = document.getElementById('crown-milestones');
+  if (!list) return;
+  const wins = state.crownWins;
+  list.innerHTML = CROWN_MILESTONES.map(m => {
+    const unlocked = wins >= m.wins;
+    const active = wins >= m.wins && (wins < CROWN_MILESTONES.find(x => x.wins > m.wins)?.wins || true);
+    return `<div class="crown-milestone-row ${unlocked ? 'unlocked' : ''}">
+      <div class="milestone-wins" style="color:${m.color}">${m.wins}</div>
+      <div>
+        <div class="milestone-name">${m.name}</div>
+        <div style="font-size:11px;color:#555;font-family:'Cinzel',serif;letter-spacing:0.1em;">${m.tier}</div>
+      </div>
+      <div>${unlocked ? '✦' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── TABS ──
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name)?.classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── EXPORT / IMPORT ──
+function exportData() {
+  saveState();
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (state.identity.name || 'unrivaled') + '_sheet.json';
+  a.click();
+}
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      state = JSON.parse(e.target.result);
+      initAll();
+      alert('Character loaded!');
+    } catch { alert('Invalid file.'); }
+  };
+  reader.readAsText(file);
+}
+function resetAll() {
+  if (!confirm('Reset ALL character data? This cannot be undone.')) return;
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  localStorage.removeItem('unrivaled_sheet');
+  initAll();
+}
+
+// ── IDENTITY SYNC ──
+function syncIdentity() {
+  document.getElementById('char-name').value = state.identity.name;
+  document.getElementById('char-level').value = state.identity.level;
+  document.getElementById('char-race').value = state.identity.race;
+  document.getElementById('char-background').value = state.identity.background;
+  document.getElementById('char-alignment').value = state.identity.alignment;
+  document.getElementById('char-player').value = state.identity.player;
+  document.getElementById('hp-current').value = state.hp.current;
+  const hpOvEl = document.getElementById('hp-max-override');
+  if (hpOvEl) hpOvEl.value = state.hp.maxOverride || '';
+  document.getElementById('temp-hp-input').value = state.hp.temp;
+  ['pp','gp','ep','sp','cp'].forEach(c => document.getElementById('curr-'+c).value = state.currency[c] || 0);
+  ['backstory','personality','bonds','flaws','session','misc'].forEach(k => {
+    document.getElementById('note-'+k).value = state.notes[k] || '';
+  });
+}
+
+// ── INK CANVAS (ambient) ──
+function initInkCanvas() {
+  const canvas = document.getElementById('ink-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  // Draw some calligraphic marks
+  ctx.strokeStyle = '#C8A97E';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < 12; i++) {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const len = 40 + Math.random() * 120;
+    const angle = Math.random() * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
+    ctx.stroke();
+  }
+}
+
+// ── MAX HP OVERRIDE ──
+function updateMaxHPOverride(val) {
+  state.hp.maxOverride = val ? parseInt(val) : null;
+  updateAll();
+  saveState();
+}
+
+// ── INIT ──
+function initAll() {
+  syncIdentity();
+  renderAbilities();
+  renderSaves();
+  renderSkills();
+  renderDeathSaves();
+  renderConditions();
+  renderToolProfs();
+  renderLanguages();
+  renderFPPips();
+  renderSealSlots();
+  renderSeals();
+  renderFeatures();
+  renderItems();
+  renderRelics();
+  renderWeapons();
+  renderFeats();
+  renderCrownMilestones();
+  setStance(state.stance || 'single');
+  updateAll();
+}
+
+// ── AUTO-SAVE ON INPUT ──
+document.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  initAll();
+  initInkCanvas();
+  loadFromFirebase();
+
+  // Presence & connection
+  const userName = localStorage.getItem('fundnd_username') || 'Sean';
+  const presRef = db.ref('presence/' + userName);
+  db.ref('.info/connected').on('value', snap => {
+    const ind = document.getElementById('save-indicator');
+    if (snap.val()) {
+      presRef.set(true);
+      presRef.onDisconnect().remove();
+      ind.textContent = '● Connected'; ind.className = 'save-indicator saved';
+      setTimeout(() => { ind.textContent = '● Auto-saved'; ind.className = 'save-indicator'; }, 2000);
+    }
+  });
+
+  // Listen on all inputs for auto-save
+  document.addEventListener('input', (e) => {
+    const id = e.target.id;
+    if (id === 'char-level') { state.identity.level = parseInt(e.target.value) || 1; updateAll(); }
+    if (id === 'hp-current') { state.hp.current = parseInt(e.target.value) || 0; }
+    if (id === 'temp-hp-input') { state.hp.temp = parseInt(e.target.value) || 0; setText('display-temp-hp', state.hp.temp); }
+    ['pp','gp','ep','sp','cp'].forEach(c => {
+      if (id === 'curr-'+c) { state.currency[c] = parseInt(e.target.value) || 0; }
+    });
+    // Debounced save
+    clearTimeout(window._saveTimer);
+    window._saveTimer = setTimeout(saveState, 600);
+  });
+
+  // Enter key on tool/language inputs
+  document.getElementById('tool-prof-input').addEventListener('keydown', e => { if (e.key === 'Enter') addToolProf(); });
+  document.getElementById('language-input').addEventListener('keydown', e => { if (e.key === 'Enter') addLanguage(); });
+});
+</script>
+</body>
+</html>

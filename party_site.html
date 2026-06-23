@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Party Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-void: #0a0e1a; --bg-deep: #0d1120; --bg-panel: #12162a; --bg-field: #1a1e2e;
+    --gold: #c9a84c; --gold-dim: #a89878; --gold-glow: #c9a84c33;
+    --text: #e8dcc8; --text-dim: #888; --text-faint: #666;
+    --accent: #c9a84c; --accent-hover: #d4b96a;
+    --border: #c9a84c33; --border-light: #c9a84c22; --border-hover: #c9a84c88;
+    --hp-high: linear-gradient(90deg,#2a6b2a,#4a4); --hp-mid: linear-gradient(90deg,#8b6b1a,#c9a84c);
+    --hp-low: linear-gradient(90deg,#8b1a1a,#c94040);
+    --green: #6d4; --red: #d66;
+  }
+  [data-theme="crimson"] {
+    --bg-void: #1a0a0a; --bg-deep: #201010; --bg-panel: #2a1414; --bg-field: #331a1a;
+    --gold: #d44; --gold-dim: #a86868; --gold-glow: #d4444433;
+    --accent: #d44; --accent-hover: #e66;
+    --border: #d4444433; --border-light: #d4444422; --border-hover: #d4444488;
+  }
+  [data-theme="emerald"] {
+    --bg-void: #0a1a0e; --bg-deep: #0d2014; --bg-panel: #122a1a; --bg-field: #1a3322;
+    --gold: #4ac970; --gold-dim: #78a889; --gold-glow: #4ac97033;
+    --accent: #4ac970; --accent-hover: #6ad48a;
+    --border: #4ac97033; --border-light: #4ac97022; --border-hover: #4ac97088;
+  }
+  [data-theme="arcane"] {
+    --bg-void: #0e0a1a; --bg-deep: #140d20; --bg-panel: #1a122a; --bg-field: #221a33;
+    --gold: #a86ade; --gold-dim: #8878a8; --gold-glow: #a86ade33;
+    --accent: #a86ade; --accent-hover: #c08af0;
+    --border: #a86ade33; --border-light: #a86ade22; --border-hover: #a86ade88;
+  }
+  [data-theme="frost"] {
+    --bg-void: #0a0e1a; --bg-deep: #0d1220; --bg-panel: #121a2e; --bg-field: #1a2233;
+    --gold: #6ab0de; --gold-dim: #7899a8; --gold-glow: #6ab0de33;
+    --accent: #6ab0de; --accent-hover: #8ac4e8;
+    --border: #6ab0de33; --border-light: #6ab0de22; --border-hover: #6ab0de88;
+  }
+  [data-theme="parchment"] {
+    --bg-void: #f5e6c8; --bg-deep: #eddcb8; --bg-panel: #e8d4aa; --bg-field: #dcc89a;
+    --gold: #5a4020; --gold-dim: #7a6040; --gold-glow: #5a402033;
+    --text: #2a1a0a; --text-dim: #5a4a3a; --text-faint: #8a7a6a;
+    --accent: #5a4020; --accent-hover: #7a5a30;
+    --border: #5a402033; --border-light: #5a402022; --border-hover: #5a402088;
+    --green: #2a6b2a; --red: #8b1a1a;
+  }
+
+  body { font-family: 'Crimson Text', serif; background: var(--bg-void); color: var(--text); min-height: 100vh; display: flex; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px; min-height: 100vh; background: var(--bg-deep); border-right: 2px solid var(--border);
+    display: flex; flex-direction: column; position: fixed; left: 0; top: 0; bottom: 0; z-index: 50;
+  }
+  .sidebar-header { padding: 24px 16px 16px; text-align: center; border-bottom: 1px solid var(--border-light); }
+  .sidebar-header h1 { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--gold); text-shadow: 0 0 15px var(--gold-glow); letter-spacing: 2px; }
+  .sidebar-header .conn { font-size: 0.75rem; margin-top: 6px; }
+  .sidebar-header .conn.on { color: var(--green); }
+  .sidebar-header .conn.off { color: var(--red); }
+
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .sidebar-nav button {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 20px;
+    background: none; border: none; color: var(--gold-dim); font-family: 'Cinzel', serif; font-size: 0.85rem;
+    cursor: pointer; transition: all 0.15s; text-align: left; border-left: 3px solid transparent;
+  }
+  .sidebar-nav button:hover { color: var(--text); background: #ffffff06; }
+  .sidebar-nav button.active { color: var(--accent); background: #ffffff08; border-left-color: var(--accent); }
+  .sidebar-nav button .icon { font-size: 1.1rem; width: 22px; text-align: center; }
+
+  .sidebar-presence { padding: 12px 16px; border-top: 1px solid var(--border-light); }
+  .sidebar-presence .pres-title { font-family: 'Cinzel', serif; font-size: 0.75rem; color: var(--text-faint); margin-bottom: 8px; letter-spacing: 1px; }
+  .pres-user { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 0.85rem; color: var(--text); }
+  .pres-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 5px var(--green); }
+
+  /* Theme picker */
+  .theme-picker { padding: 10px 16px; border-top: 1px solid var(--border-light); }
+  .theme-picker .tp-title { font-family: 'Cinzel', serif; font-size: 0.7rem; color: var(--text-faint); margin-bottom: 6px; letter-spacing: 1px; }
+  .theme-dots { display: flex; gap: 6px; flex-wrap: wrap; }
+  .theme-dot {
+    width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .theme-dot:hover { transform: scale(1.2); }
+  .theme-dot.active { border-color: var(--text); }
+
+  /* ── Main ── */
+  .main { margin-left: 220px; flex: 1; min-height: 100vh; }
+  .tab-content { display: none; padding: 30px; max-width: 1100px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+  h2 { font-family: 'Cinzel', serif; color: var(--gold); font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { font-family: 'Cinzel', serif; color: var(--accent-hover); font-size: 1.1rem; margin: 16px 0 8px; }
+
+  .sheet-panel {
+    background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: 10px; padding: 16px;
+  }
+  .sheet-panel h3 { margin: 0 0 10px; font-size: 1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 6px; }
+
+  .si { background: var(--bg-void); border: 1px solid var(--border-light); border-radius: 4px; color: var(--text); padding: 6px 8px; font-family: 'Crimson Text', serif; font-size: 0.95rem; width: 100%; }
+  .si:focus { outline: none; border-color: var(--accent); }
+  .field-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 2px; font-family: 'Cinzel', serif; letter-spacing: 0.5px; }
+  .hp-bar-big { height: 10px; background: var(--bg-field); border-radius: 5px; margin-top: 8px; overflow: hidden; }
+  .hp-bar-fill { height: 100%; border-radius: 5px; transition: width 0.3s; }
+
+  /* ── Party Cards — horizontal ── */
+  .party-grid { display: flex; flex-direction: column; gap: 12px; }
+  .char-card {
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px;
+    transition: border-color 0.2s; cursor: pointer;
+    display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;
+  }
+  .char-card:hover { border-color: var(--border-hover); }
+  .char-card .cc-left { }
+  .char-card .cc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 200px; }
+  .char-card .cc-name { font-family: 'Cinzel', serif; font-size: 1.3rem; color: var(--gold); }
+  .char-card .cc-sub { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 6px; }
+  .char-card .cc-hp-label { font-size: 0.8rem; color: var(--text-dim); text-align: right; }
+  .char-card .cc-hp-bar { width: 200px; height: 10px; background: var(--bg-field); border-radius: 5px; overflow: hidden; }
+  .char-card .cc-hp-fill { height: 100%; border-radius: 5px; transition: width 0.3s; }
+  .stat-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+  .stat-badge { background: var(--bg-field); padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; border: 1px solid #ffffff11; }
+  .stat-badge .label { color: var(--text-dim); } .stat-badge .val { color: var(--text); font-weight: 600; }
+
+  /* Party detail overlay */
+  .party-detail-overlay {
+    display: none; position: fixed; inset: 0; background: #00000099; z-index: 80;
+    justify-content: center; align-items: start; padding: 40px 20px; overflow-y: auto;
+  }
+  .party-detail-overlay.open { display: flex; }
+  .party-detail {
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px;
+    max-width: 700px; width: 100%; position: relative;
+  }
+  .party-detail .close-btn {
+    position: absolute; top: 12px; right: 16px; background: none; border: none;
+    color: var(--text-dim); font-size: 1.5rem; cursor: pointer;
+  }
+  .party-detail .close-btn:hover { color: var(--text); }
+  .pd-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 12px 0; }
+  .pd-stat-box { background: var(--bg-void); border: 1px solid var(--border-light); border-radius: 6px; padding: 8px; text-align: center; }
+  .pd-stat-box .pd-ab { font-family: 'Cinzel', serif; font-size: 0.7rem; color: var(--gold); }
+  .pd-stat-box .pd-score { font-size: 1.1rem; font-weight: 700; }
+  .pd-stat-box .pd-mod { font-size: 0.85rem; color: var(--accent-hover); }
+  .pd-field { margin: 8px 0; line-height: 1.4; }
+  .pd-field .pd-fl { color: var(--text-dim); font-size: 0.85rem; }
+
+  /* ── Inventory ── */
+  .gold-display { font-family: 'Cinzel', serif; font-size: 2rem; color: var(--gold); text-align: center; padding: 20px; background: var(--bg-panel); border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px; }
+  .inv-controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .inv-controls input, .inv-controls select { padding: 8px 12px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'Crimson Text', serif; font-size: 0.95rem; }
+  .inv-controls input:focus, .inv-controls select:focus { outline: none; border-color: var(--accent); }
+  .inv-controls button, .gold-adj button { padding: 8px 18px; background: var(--accent); color: var(--bg-void); border: none; border-radius: 6px; font-family: 'Cinzel', serif; font-weight: 700; cursor: pointer; }
+  .inv-table { width: 100%; border-collapse: collapse; }
+  .inv-table th { font-family: 'Cinzel', serif; color: var(--gold); text-align: left; padding: 10px; border-bottom: 2px solid var(--border); font-size: 0.9rem; }
+  .inv-table td { padding: 10px; border-bottom: 1px solid #ffffff0a; }
+  .inv-table tr:hover td { background: #ffffff05; }
+  .inv-table .remove-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 1.1rem; }
+  .gold-adj { display: flex; gap: 8px; align-items: center; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .gold-adj input { width: 100px; text-align: center; padding: 8px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'Crimson Text', serif; }
+  .gold-adj input:focus { outline: none; border-color: var(--accent); }
+  .gold-adj button { background: var(--bg-field); color: var(--accent); border: 1px solid var(--border); }
+  .gold-adj button:hover { background: var(--accent); color: var(--bg-void); }
+  .gold-log { max-height: 200px; overflow-y: auto; margin-top: 12px; }
+  .gold-entry { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #ffffff08; font-size: 0.95rem; }
+  .gold-entry .positive { color: var(--green); } .gold-entry .negative { color: var(--red); }
+
+  /* ── Session / Leaderboard / Chat ── */
+  .session-list { display: flex; flex-direction: column; gap: 12px; }
+  .session-entry { background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; }
+  .session-entry .session-title { font-family: 'Cinzel', serif; color: var(--gold); font-size: 1.1rem; }
+  .session-entry .session-date { color: var(--text-dim); font-size: 0.85rem; }
+  .session-entry .session-recap { margin-top: 8px; line-height: 1.5; }
+  .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .leaderboard-table th { font-family: 'Cinzel', serif; color: var(--gold); text-align: left; padding: 10px; border-bottom: 2px solid var(--border); font-size: 0.9rem; }
+  .leaderboard-table td { padding: 10px; border-bottom: 1px solid #ffffff0a; }
+  .leaderboard-table tr:hover td { background: #ffffff05; }
+  .rank-1 { color: #ffd700; } .rank-2 { color: #c0c0c0; } .rank-3 { color: #cd7f32; }
+  #chat-messages { background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; height: 400px; overflow-y: auto; margin-bottom: 12px; }
+  .chat-msg { margin-bottom: 10px; }
+  .chat-msg .chat-author { font-family: 'Cinzel', serif; color: var(--gold); font-size: 0.9rem; }
+  .chat-msg .chat-time { color: var(--text-faint); font-size: 0.75rem; margin-left: 8px; }
+  .chat-msg .chat-text { margin-top: 2px; line-height: 1.4; }
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input-row input { flex: 1; padding: 10px 14px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'Crimson Text', serif; font-size: 1rem; }
+  .chat-input-row input:focus { outline: none; border-color: var(--accent); }
+  .chat-input-row button { padding: 10px 20px; background: var(--accent); color: var(--bg-void); border: none; border-radius: 6px; font-family: 'Cinzel', serif; font-weight: 700; cursor: pointer; }
+
+  /* ── Name Modal ── */
+  .name-modal { position: fixed; inset: 0; background: #000000cc; display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .name-modal-inner { background: var(--bg-panel); border: 2px solid var(--border); border-radius: 12px; padding: 40px; text-align: center; }
+  .name-modal-inner h2 { font-family: 'Cinzel', serif; color: var(--gold); font-size: 1.6rem; border: none; margin-bottom: 20px; }
+  .name-modal-inner input { padding: 12px 20px; background: var(--bg-void); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'Crimson Text', serif; font-size: 1.1rem; text-align: center; margin-bottom: 16px; width: 100%; }
+  .name-modal-inner input:focus { outline: none; border-color: var(--accent); }
+  .name-modal-inner button { padding: 10px 30px; background: var(--accent); color: var(--bg-void); border: none; border-radius: 6px; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1rem; cursor: pointer; }
+
+  .empty-state { text-align: center; color: var(--text-faint); padding: 40px; font-style: italic; }
+
+  /* ── Mobile ── */
+  .menu-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 60; background: var(--bg-panel); border: 1px solid var(--border); color: var(--accent); width: 40px; height: 40px; border-radius: 8px; font-size: 1.3rem; cursor: pointer; }
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.2s; }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .menu-toggle { display: block; }
+    .sheet { grid-template-columns: 1fr; }
+    .pd-stats { grid-template-columns: repeat(3, 1fr); }
+    .combat-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="name-modal" id="nameModal">
+  <div class="name-modal-inner">
+    <h2>Who Goes There?</h2>
+    <p style="color:var(--gold-dim); margin-bottom:20px;">Enter your name to join the party</p>
+    <input type="text" id="nameInput" placeholder="Your name..." autofocus onkeydown="if(event.key==='Enter')setName()">
+    <br>
+    <button onclick="setName()">Enter</button>
+  </div>
+</div>
+
+<!-- Party Detail Overlay -->
+<div class="party-detail-overlay" id="partyOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="party-detail" id="partyDetail">
+    <button class="close-btn" onclick="closeDetail()">✕</button>
+    <div id="partyDetailContent"></div>
+  </div>
+</div>
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>⚔ Party Hub ⚔</h1>
+    <div class="conn off" id="connStatus">Disconnected</div>
+  </div>
+  <div class="sidebar-nav">
+    <button class="active" onclick="showTab('sheet',this)"><span class="icon">📜</span> My Sheet</button>
+    <button onclick="showTab('party',this)"><span class="icon">⚔</span> Party</button>
+    <button onclick="showTab('inventory',this)"><span class="icon">🎒</span> Inventory</button>
+    <button onclick="showTab('sessions',this)"><span class="icon">📖</span> Sessions</button>
+    <button onclick="showTab('leaderboard',this)"><span class="icon">🏆</span> Leaderboard</button>
+    <button onclick="showTab('shop',this)"><span class="icon">🪙</span> Shop</button>
+    <button onclick="showTab('map',this)"><span class="icon">🗺</span> Map</button>
+    <button onclick="showTab('npcs',this)"><span class="icon">🧑</span> NPCs</button>
+    <button onclick="showTab('chat',this)"><span class="icon">💬</span> Chat</button>
+  </div>
+  <div class="sidebar-presence">
+    <div class="pres-title">ONLINE</div>
+    <div id="presenceList"></div>
+  </div>
+  <div class="theme-picker">
+    <div class="tp-title">THEME</div>
+    <div class="theme-dots" id="themeDots">
+      <div class="theme-dot active" style="background:#c9a84c;" onclick="setTheme('')" title="Gold (Default)"></div>
+      <div class="theme-dot" style="background:#d44;" onclick="setTheme('crimson')" title="Crimson"></div>
+      <div class="theme-dot" style="background:#4ac970;" onclick="setTheme('emerald')" title="Emerald"></div>
+      <div class="theme-dot" style="background:#a86ade;" onclick="setTheme('arcane')" title="Arcane"></div>
+      <div class="theme-dot" style="background:#6ab0de;" onclick="setTheme('frost')" title="Frost"></div>
+      <div class="theme-dot" style="background:#c8a060;" onclick="setTheme('parchment')" title="Parchment"></div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+
+<!-- ═══ MY SHEET ═══ -->
+<div class="tab-content active" id="tab-sheet">
+  <div style="text-align:center; padding: 60px 20px;">
+    <div style="font-size:4rem; margin-bottom:20px;">📜</div>
+    <h2 style="border:none; margin-bottom:12px;">Your Character Sheet</h2>
+    <p style="color:var(--gold-dim); font-size:1.1rem; margin-bottom:8px;" id="sheetCharName">Loading...</p>
+    <p style="color:var(--text-faint); margin-bottom:24px;">Your dedicated class sheet syncs to this hub automatically.</p>
+    <a href="unrivaled_sheet.html" target="_blank" style="display:inline-block; padding:14px 32px; background:var(--accent); color:var(--bg-void); text-decoration:none; border-radius:8px; font-family:'Cinzel',serif; font-weight:700; font-size:1rem;">Open My Sheet</a>
+    <div style="margin-top:40px; max-width:500px; margin-left:auto; margin-right:auto;">
+      <div class="sheet-panel" style="text-align:left;">
+        <h3 style="text-align:center; margin-bottom:12px;">Live Stats</h3>
+        <div id="mySheetPreview" style="text-align:center;">
+          <div class="empty-state">No character data yet — open your sheet to get started</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PARTY ═══ -->
+<div class="tab-content" id="tab-party">
+  <h2>The Party</h2>
+  <div class="party-grid" id="partyGrid"></div>
+  <h3 style="margin-top:30px;">Sidekicks</h3>
+  <div class="party-grid" id="sidekickGrid"><div class="empty-state">No sidekicks — add them in the NPC tab with role "Sidekick"</div></div>
+</div>
+
+<!-- ═══ INVENTORY ═══ -->
+<div class="tab-content" id="tab-inventory">
+  <h2>Party Inventory</h2>
+
+  <!-- Combined Gold -->
+  <div class="gold-display" id="goldDisplay">0 gp</div>
+  <div id="goldBreakdown" style="text-align:center;margin-bottom:16px;"></div>
+
+  <!-- Shared Party Gold -->
+  <h3>Shared Party Gold</h3>
+  <div class="gold-adj">
+    <input type="number" id="goldAmount" placeholder="Amount">
+    <input type="text" id="goldReason" placeholder="Reason..." class="si" style="width:180px;">
+    <button onclick="adjustGold(1)">+ Add</button>
+    <button onclick="adjustGold(-1)">- Spend</button>
+  </div>
+
+  <!-- All Items -->
+  <h3>All Party Items</h3>
+  <table class="inv-table">
+    <thead><tr><th>Item</th><th>Qty</th><th>Owner</th><th>Rarity</th><th>Details</th></tr></thead>
+    <tbody id="invBody"><tr><td colspan="5" class="empty-state">No items yet</td></tr></tbody>
+  </table>
+
+  <!-- Shared Items -->
+  <h3 style="margin-top:24px;">Shared Party Items</h3>
+  <div class="inv-controls">
+    <input type="text" id="itemName" placeholder="Item name...">
+    <input type="number" id="itemQty" placeholder="Qty" value="1" min="1" style="width:70px;">
+    <select id="itemCategory"><option>Weapon</option><option>Armor</option><option>Potion</option><option>Scroll</option><option>Gear</option><option>Loot</option><option>Other</option></select>
+    <input type="text" id="itemNotes" placeholder="Notes..." style="width:140px;">
+    <button onclick="addItem()">Add Item</button>
+  </div>
+  <table class="inv-table">
+    <thead><tr><th>Item</th><th>Qty</th><th>Category</th><th>Notes</th><th></th></tr></thead>
+    <tbody id="sharedInvBody"><tr><td colspan="5" class="empty-state">No shared items yet</td></tr></tbody>
+  </table>
+
+  <h3 style="margin-top:24px;">Gold Log</h3>
+  <div class="gold-log" id="goldLog"><div class="empty-state">No transactions yet</div></div>
+</div>
+
+<!-- ═══ SESSIONS ═══ -->
+<div class="tab-content" id="tab-sessions">
+  <h2>Session Log</h2>
+  <div class="session-list" id="sessionList"><div class="empty-state">Loading...</div></div>
+</div>
+
+<!-- ═══ LEADERBOARD ═══ -->
+<div class="tab-content" id="tab-leaderboard">
+  <h2>Leaderboard</h2>
+  <div id="leaderboardContainer"><div class="empty-state">Loading...</div></div>
+</div>
+
+<!-- ═══ MAP ═══ -->
+<div class="tab-content" id="tab-map">
+  <h2>Campaign Map</h2>
+  <div id="mapContainer" style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;min-height:500px;position:relative;overflow:hidden;">
+    <div id="mapImage" style="width:100%;height:500px;display:flex;align-items:center;justify-content:center;">
+      <div class="empty-state">No map loaded yet — the DM will set this up</div>
+    </div>
+    <div id="mapPins"></div>
+  </div>
+  <div id="mapPinList" style="margin-top:16px;"></div>
+</div>
+
+<!-- ═══ SHOP ═══ -->
+<div class="tab-content" id="tab-shop">
+  <h2>Shop</h2>
+  <div id="shopContent"><div class="empty-state">No shop items available — the DM will stock this</div></div>
+</div>
+
+<!-- ═══ NPCs ═══ -->
+<div class="tab-content" id="tab-npcs">
+  <h2>NPCs & Sidekicks</h2>
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <button class="si" style="width:auto;padding:8px 18px;background:var(--accent);color:var(--bg-void);border:none;border-radius:6px;font-family:'Cinzel',serif;font-weight:700;cursor:pointer;" onclick="addNPC()">+ Add NPC</button>
+  </div>
+  <div class="party-grid" id="npcGrid"><div class="empty-state">No NPCs yet</div></div>
+</div>
+
+<!-- NPC Edit Modal -->
+<div class="party-detail-overlay" id="npcEditOverlay" onclick="if(event.target===this)closeNPCEdit()">
+  <div class="party-detail" id="npcEditPanel" style="max-width:500px;">
+    <button class="close-btn" onclick="closeNPCEdit()">✕</button>
+    <h2 style="border:none;margin-bottom:16px;" id="npcEditTitle">Add NPC</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><div class="field-label">Name</div><input class="si" id="npc_name"></div>
+      <div><div class="field-label">Role</div><input class="si" id="npc_role" placeholder="e.g. Sidekick, Merchant, Quest Giver"></div>
+      <div><div class="field-label">Race</div><input class="si" id="npc_race"></div>
+      <div><div class="field-label">Class</div><input class="si" id="npc_class"></div>
+      <div><div class="field-label">Level</div><input class="si" id="npc_level" type="number"></div>
+      <div><div class="field-label">AC</div><input class="si" id="npc_ac" type="number"></div>
+      <div><div class="field-label">HP</div><input class="si" id="npc_hp" type="number"></div>
+      <div><div class="field-label">Max HP</div><input class="si" id="npc_maxHp" type="number"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">
+      <div><div class="field-label">STR</div><input class="si" id="npc_str" type="number"></div>
+      <div><div class="field-label">DEX</div><input class="si" id="npc_dex" type="number"></div>
+      <div><div class="field-label">CON</div><input class="si" id="npc_con" type="number"></div>
+      <div><div class="field-label">INT</div><input class="si" id="npc_int" type="number"></div>
+      <div><div class="field-label">WIS</div><input class="si" id="npc_wis" type="number"></div>
+      <div><div class="field-label">CHA</div><input class="si" id="npc_cha" type="number"></div>
+    </div>
+    <div style="margin-top:8px;"><div class="field-label">Attacks / Actions</div><textarea class="si" id="npc_attacks" style="min-height:50px;resize:vertical;" placeholder="e.g. Longsword +5, 1d8+3 slashing"></textarea></div>
+    <div style="margin-top:8px;"><div class="field-label">Abilities / Features</div><textarea class="si" id="npc_abilities" style="min-height:50px;resize:vertical;"></textarea></div>
+    <div style="margin-top:8px;"><div class="field-label">Notes</div><textarea class="si" id="npc_notes" style="min-height:50px;resize:vertical;" placeholder="Personality, backstory, location..."></textarea></div>
+    <input type="hidden" id="npc_editKey">
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button style="padding:10px 24px;background:var(--accent);color:var(--bg-void);border:none;border-radius:6px;font-family:'Cinzel',serif;font-weight:700;cursor:pointer;" onclick="saveNPC()">Save</button>
+      <button style="padding:10px 24px;background:var(--bg-field);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:'Cinzel',serif;cursor:pointer;" onclick="closeNPCEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHAT ═══ -->
+<div class="tab-content" id="tab-chat">
+  <h2>Party Chat</h2>
+  <div id="chat-messages"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="Say something..." onkeydown="if(event.key==='Enter')sendChat()">
+    <button onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+firebase.initializeApp({ databaseURL: "https://fundnd-14377-default-rtdb.firebaseio.com" });
+const db = firebase.database();
+let currentUser = localStorage.getItem('fundnd_username') || '';
+let myKey = '';
+const ABILITIES = ['str','dex','con','int','wis','cha'];
+const SKILLS = [
+  { name:'Acrobatics', ab:'dex' }, { name:'Animal Handling', ab:'wis' }, { name:'Arcana', ab:'int' },
+  { name:'Athletics', ab:'str' }, { name:'Deception', ab:'cha' }, { name:'History', ab:'int' },
+  { name:'Insight', ab:'wis' }, { name:'Intimidation', ab:'cha' }, { name:'Investigation', ab:'int' },
+  { name:'Medicine', ab:'wis' }, { name:'Nature', ab:'int' }, { name:'Perception', ab:'wis' },
+  { name:'Performance', ab:'cha' }, { name:'Persuasion', ab:'cha' }, { name:'Religion', ab:'int' },
+  { name:'Sleight of Hand', ab:'dex' }, { name:'Stealth', ab:'dex' }, { name:'Survival', ab:'wis' }
+];
+
+function modFor(score) { return Math.floor((score - 10) / 2); }
+function modStr(score) { const m = modFor(score); return m >= 0 ? '+' + m : '' + m; }
+
+if (currentUser) {
+  document.getElementById('nameModal').style.display = 'none';
+  myKey = currentUser.toLowerCase().replace(/[^a-z0-9]/g, '_');
+}
+
+function setName() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) return;
+  currentUser = name;
+  myKey = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  localStorage.setItem('fundnd_username', name);
+  document.getElementById('nameModal').style.display = 'none';
+  document.getElementById('s_player').value = name;
+  goOnline();
+  loadMySheet();
+}
+
+// Presence
+let presenceRef = null;
+function goOnline() {
+  if (!currentUser) return;
+  if (presenceRef) presenceRef.remove();
+  presenceRef = db.ref('presence/' + currentUser);
+  presenceRef.set(true);
+  presenceRef.onDisconnect().remove();
+}
+if (currentUser) goOnline();
+
+db.ref('.info/connected').on('value', snap => {
+  const el = document.getElementById('connStatus');
+  if (snap.val()) { el.textContent = '● Connected'; el.className = 'conn on'; }
+  else { el.textContent = '○ Disconnected'; el.className = 'conn off'; }
+});
+
+db.ref('presence').on('value', snap => {
+  const el = document.getElementById('presenceList');
+  const data = snap.val();
+  if (!data) { el.innerHTML = '<div style="color:#555;font-size:0.8rem;font-style:italic;">Nobody</div>'; return; }
+  el.innerHTML = Object.keys(data).map(n => `<div class="pres-user"><span class="pres-dot"></span>${esc(n)}</div>`).join('');
+});
+
+// Tabs
+// Theme
+function setTheme(theme) {
+  if (theme) document.documentElement.setAttribute('data-theme', theme);
+  else document.documentElement.removeAttribute('data-theme');
+  localStorage.setItem('fundnd_theme', theme);
+  document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+  const titles = { '':'Gold (Default)', crimson:'Crimson', emerald:'Emerald', arcane:'Arcane', frost:'Frost', parchment:'Parchment' };
+  document.querySelectorAll('.theme-dot').forEach(d => { if (d.title === (titles[theme] || '')) d.classList.add('active'); });
+}
+const savedTheme = localStorage.getItem('fundnd_theme');
+if (savedTheme) setTheme(savedTheme);
+
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.querySelector('.sidebar').classList.remove('open');
+}
+
+// ════════════════════════════════════
+// MY SHEET — live preview from Firebase
+// ════════════════════════════════════
+if (myKey) {
+  db.ref('party/' + myKey).on('value', snap => {
+    const c = snap.val();
+    const nameEl = document.getElementById('sheetCharName');
+    const preview = document.getElementById('mySheetPreview');
+    if (!c) {
+      nameEl.textContent = 'No character yet';
+      preview.innerHTML = '<div class="empty-state">Open your sheet to get started</div>';
+      return;
+    }
+    nameEl.textContent = (c.name || 'Unnamed') + ' — ' + (c.className || 'Unknown Class') + ' Lv' + (c.level || '?');
+    let html = '<div class="stat-row" style="justify-content:center;margin-bottom:10px;">';
+    html += `<div class="stat-badge"><span class="label">AC</span> <span class="val">${c.ac||'?'}</span></div>`;
+    html += `<div class="stat-badge"><span class="label">HP</span> <span class="val">${c.hp??'?'}/${c.maxHp??'?'}</span></div>`;
+    html += `<div class="stat-badge"><span class="label">Speed</span> <span class="val">${c.speed||'?'}</span></div>`;
+    if (c.fp != null) html += `<div class="stat-badge"><span class="label">FP</span> <span class="val">${c.fp}/${c.fpMax||'?'}</span></div>`;
+    if (c.fpDC) html += `<div class="stat-badge"><span class="label">FP DC</span> <span class="val">${c.fpDC}</span></div>`;
+    html += '</div>';
+    html += '<div class="stat-row" style="justify-content:center;">';
+    ABILITIES.forEach(ab => { if (c[ab] != null) html += `<div class="stat-badge"><span class="label">${ab.toUpperCase()}</span> <span class="val">${c[ab]}</span></div>`; });
+    html += '</div>';
+    if (c.lastUpdated) html += `<div style="color:#555;font-size:0.8rem;margin-top:12px;">Last synced: ${new Date(c.lastUpdated).toLocaleString()}</div>`;
+    preview.innerHTML = html;
+  });
+}
+
+// ════════════════════════════════════
+// PARTY VIEW
+// ════════════════════════════════════
+db.ref('party').on('value', snap => {
+  const data = snap.val() || {};
+  const grid = document.getElementById('partyGrid');
+  const others = Object.entries(data).filter(([k]) => k !== myKey);
+  if (!others.length) { grid.innerHTML = '<div class="empty-state">No other party members yet</div>'; return; }
+  grid.innerHTML = others.map(([key, c]) => {
+    const hpPct = c.maxHp ? Math.max(0, Math.min(100, ((c.hp || 0) / c.maxHp) * 100)) : 100;
+    const hpColor = hpPct > 50 ? 'linear-gradient(90deg,#2a6b2a,#4a4)' : hpPct > 25 ? 'linear-gradient(90deg,#8b6b1a,#c9a84c)' : 'linear-gradient(90deg,#8b1a1a,#c94040)';
+    return `
+    <div class="char-card" onclick="showDetail('${key}')">
+      <div class="cc-left">
+        <div class="cc-name">${esc(c.name || key)}</div>
+        <div class="cc-sub">${esc(c.player || '???')} · ${esc(c.race || '???')} · ${esc(c.className || '???')} · Lv${c.level || '?'}</div>
+        <div class="stat-row">
+          <div class="stat-badge"><span class="label">AC</span> <span class="val">${c.ac || '?'}</span></div>
+          <div class="stat-badge"><span class="label">SPD</span> <span class="val">${c.speed || '?'}</span></div>
+          <div class="stat-badge"><span class="label">INIT</span> <span class="val">${c.initiative || '?'}</span></div>
+          ${c.fp != null ? `<div class="stat-badge"><span class="label">FP</span> <span class="val">${c.fp}/${c.fpMax||'?'}</span></div>` : ''}
+          ${ABILITIES.map(ab => c[ab] != null ? `<div class="stat-badge"><span class="label">${ab.toUpperCase()}</span> <span class="val">${c[ab]}</span></div>` : '').join('')}
+        </div>
+      </div>
+      <div class="cc-right">
+        <div class="cc-hp-label">HP ${c.hp ?? '?'} / ${c.maxHp ?? '?'}</div>
+        <div class="cc-hp-bar"><div class="cc-hp-fill" style="width:${hpPct}%;background:${hpColor};"></div></div>
+        <div style="color:var(--text-faint);font-size:0.75rem;">Click to view sheet</div>
+      </div>
+    </div>`;
+  }).join('');
+});
+
+function showDetail(key) {
+  db.ref('party/' + key).once('value', snap => {
+    const c = snap.val();
+    if (!c) return;
+    let html = `<div class="cc-name" style="font-family:'Cinzel',serif;font-size:1.6rem;color:var(--gold);">${esc(c.name || key)}</div>`;
+    html += `<div style="color:var(--text-dim);margin-bottom:12px;">${esc(c.player||'???')} · ${esc(c.race||'')} · ${esc(c.className||'')} · Level ${c.level||'?'}</div>`;
+    if (c.background) html += `<div style="color:var(--gold-dim);margin-bottom:4px;">Background: ${esc(c.background)}</div>`;
+    if (c.alignment) html += `<div style="color:var(--gold-dim);margin-bottom:12px;">Alignment: ${esc(c.alignment)}</div>`;
+
+    html += `<div class="pd-stats">`;
+    ABILITIES.forEach(ab => {
+      const score = c[ab] ?? 10;
+      html += `<div class="pd-stat-box"><div class="pd-ab">${ab.toUpperCase()}</div><div class="pd-score">${score}</div><div class="pd-mod">${modStr(score)}</div></div>`;
+    });
+    html += `</div>`;
+
+    html += `<div class="stat-row" style="justify-content:center;margin:12px 0;">`;
+    html += `<div class="stat-badge"><span class="label">AC</span> <span class="val">${c.ac||'?'}</span></div>`;
+    html += `<div class="stat-badge"><span class="label">HP</span> <span class="val">${c.hp??'?'}/${c.maxHp??'?'}</span></div>`;
+    html += `<div class="stat-badge"><span class="label">Speed</span> <span class="val">${c.speed||'?'}</span></div>`;
+    html += `<div class="stat-badge"><span class="label">Init</span> <span class="val">${c.initiative||'?'}</span></div>`;
+    html += `</div>`;
+
+    // Class-specific details
+    if (c.sheetType === 'unrivaled') {
+      html += `<div class="stat-row" style="justify-content:center;margin:8px 0;">`;
+      if (c.fp != null) html += `<div class="stat-badge"><span class="label">FP</span> <span class="val">${c.fp}/${c.fpMax||'?'}</span></div>`;
+      if (c.fpDC) html += `<div class="stat-badge"><span class="label">FP DC</span> <span class="val">${c.fpDC}</span></div>`;
+      if (c.mmDie) html += `<div class="stat-badge"><span class="label">MM Die</span> <span class="val">${c.mmDie}</span></div>`;
+      if (c.crownWins != null) html += `<div class="stat-badge"><span class="label">Crown Wins</span> <span class="val">${c.crownWins}</span></div>`;
+      html += `</div>`;
+      if (c.stance) html += `<div class="pd-field"><span class="pd-fl">Stance:</span> ${esc(c.stance === 'single' ? 'Single-Blade' : c.stance === 'dual' ? 'Dual-Blade' : c.stance)}</div>`;
+      if (c.seals) html += `<div class="pd-field"><span class="pd-fl">Prepared Seals:</span> ${esc(c.seals)}</div>`;
+    }
+
+    if (c.attacks && c.attacks.length) {
+      html += `<h3>Attacks</h3><table class="attack-table"><tr><th>Name</th><th>Atk</th><th>Damage</th></tr>`;
+      c.attacks.forEach(a => { html += `<tr><td>${esc(a.name)}</td><td>${esc(a.bonus)}</td><td>${esc(a.damage)}</td></tr>`; });
+      html += `</table>`;
+    }
+    ['features','feats','equipment','spells','notes'].forEach(k => {
+      if (c[k]) html += `<div class="pd-field"><span class="pd-fl">${k.charAt(0).toUpperCase()+k.slice(1)}:</span> ${esc(c[k]).replace(/\n/g,'<br>')}</div>`;
+    });
+
+    document.getElementById('partyDetailContent').innerHTML = html;
+    document.getElementById('partyOverlay').classList.add('open');
+  });
+}
+
+function closeDetail() { document.getElementById('partyOverlay').classList.remove('open'); }
+
+// ════════════════════════════════════
+// INVENTORY
+// ════════════════════════════════════
+// Gold: aggregate from shared pot + all party members' personal currency
+let sharedGoldTotal = 0;
+let allPartyData = {};
+
+function toGP(cur) {
+  if (!cur) return 0;
+  return (cur.pp || 0) * 10 + (cur.gp || 0) + (cur.ep || 0) * 0.5 + (cur.sp || 0) * 0.1 + (cur.cp || 0) * 0.01;
+}
+
+function updateGoldDisplay() {
+  let personalTotal = 0;
+  const breakdown = [];
+  Object.entries(allPartyData).forEach(([k, c]) => {
+    if (c.currency) {
+      const gp = toGP(c.currency);
+      personalTotal += gp;
+      breakdown.push({ name: c.player || c.name || k, gp: gp, currency: c.currency });
+    }
+  });
+  const grandTotal = sharedGoldTotal + personalTotal;
+  document.getElementById('goldDisplay').textContent = Math.round(grandTotal * 100) / 100 + ' gp (total)';
+
+  let html = '<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:0.9rem;">';
+  html += '<div class="stat-badge"><span class="label">Shared</span> <span class="val">' + sharedGoldTotal + ' gp</span></div>';
+  breakdown.forEach(b => {
+    const detail = [];
+    if (b.currency.pp) detail.push(b.currency.pp + ' PP');
+    if (b.currency.gp) detail.push(b.currency.gp + ' GP');
+    if (b.currency.ep) detail.push(b.currency.ep + ' EP');
+    if (b.currency.sp) detail.push(b.currency.sp + ' SP');
+    if (b.currency.cp) detail.push(b.currency.cp + ' CP');
+    html += '<div class="stat-badge"><span class="label">' + esc(b.name) + '</span> <span class="val">' + (detail.join(', ') || '0') + '</span></div>';
+  });
+  html += '</div>';
+  document.getElementById('goldBreakdown').innerHTML = html;
+}
+
+// Listen for shared gold
+db.ref('partyGold').on('value', snap => {
+  const data = snap.val() || {};
+  sharedGoldTotal = data.total || 0;
+  updateGoldDisplay();
+  const log = document.getElementById('goldLog');
+  if (!data.log) { log.innerHTML = '<div class="empty-state">No transactions yet</div>'; return; }
+  const entries = Object.values(data.log).sort((a, b) => (b.time || 0) - (a.time || 0));
+  log.innerHTML = entries.map(e => `
+    <div class="gold-entry">
+      <span>${esc(e.desc || 'Unknown')} <span style="color:var(--text-faint);font-size:0.8rem;">-- ${esc(e.by || '?')}</span></span>
+      <span class="${e.amount >= 0 ? 'positive' : 'negative'}">${e.amount >= 0 ? '+' : ''}${e.amount} gp</span>
+    </div>`).join('');
+});
+
+// Listen for all party members' items + currency
+db.ref('party').on('value', snap => {
+  allPartyData = snap.val() || {};
+  updateGoldDisplay();
+  renderAllItems();
+});
+
+function renderAllItems() {
+  const body = document.getElementById('invBody');
+  let rows = [];
+  Object.entries(allPartyData).forEach(([k, c]) => {
+    const owner = c.player || c.name || k;
+    if (c.items && Array.isArray(c.items)) {
+      c.items.forEach(item => {
+        rows.push({ name: item.name, qty: item.qty || 1, owner: owner, rarity: item.rarity || '', detail: item.weight ? 'Wt: ' + item.weight : '' });
+      });
+    }
+    if (c.relics && Array.isArray(c.relics)) {
+      c.relics.forEach(r => {
+        rows.push({ name: r.name + (r.attuned ? ' (attuned)' : ''), qty: 1, owner: owner, rarity: r.rarity || '', detail: r.desc || '' });
+      });
+    }
+  });
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="5" class="empty-state">No items yet -- items from character sheets sync here automatically</td></tr>'; return; }
+  body.innerHTML = rows.map(r => `
+    <tr>
+      <td>${esc(r.name)}</td>
+      <td>${r.qty}</td>
+      <td style="color:var(--accent);">${esc(r.owner)}</td>
+      <td style="color:var(--gold-dim);">${esc(r.rarity)}</td>
+      <td style="color:var(--text-dim);font-size:0.85rem;">${esc(r.detail)}</td>
+    </tr>`).join('');
+}
+
+function adjustGold(sign) {
+  const amount = parseInt(document.getElementById('goldAmount').value);
+  if (!amount || amount <= 0) return;
+  const signed = amount * sign;
+  db.ref('partyGold/total').transaction(cur => (cur || 0) + signed);
+  db.ref('partyGold/log').push({ amount: signed, desc: document.getElementById('goldReason').value || (sign > 0 ? 'Added gold' : 'Spent gold'), by: currentUser, time: Date.now() });
+  document.getElementById('goldAmount').value = '';
+  document.getElementById('goldReason').value = '';
+}
+
+// Shared party items (not from character sheets)
+db.ref('partyInventory').on('value', snap => {
+  const data = snap.val();
+  const body = document.getElementById('sharedInvBody');
+  if (!data) { body.innerHTML = '<tr><td colspan="5" class="empty-state">No shared items yet</td></tr>'; return; }
+  body.innerHTML = Object.entries(data).map(([k, item]) => `
+    <tr>
+      <td>${esc(item.name)}</td>
+      <td>${item.qty || 1}</td>
+      <td>${esc(item.category || '')}</td>
+      <td style="color:var(--gold-dim);">${esc(item.notes || '')}</td>
+      <td><button class="remove-btn" onclick="removeItem('${k}')">✕</button></td>
+    </tr>`).join('');
+});
+
+function addItem() {
+  const name = document.getElementById('itemName').value.trim();
+  if (!name) return;
+  db.ref('partyInventory').push({ name, qty: parseInt(document.getElementById('itemQty').value) || 1, category: document.getElementById('itemCategory').value, notes: document.getElementById('itemNotes').value.trim(), addedBy: currentUser, time: Date.now() });
+  document.getElementById('itemName').value = '';
+  document.getElementById('itemQty').value = '1';
+  document.getElementById('itemNotes').value = '';
+}
+function removeItem(key) { db.ref('partyInventory/' + key).remove(); }
+
+// ════════════════════════════════════
+// SESSIONS & LEADERBOARD (from /tracker)
+// ════════════════════════════════════
+const LB_STATS = [
+  { key:'kills', label:'Kills' }, { key:'finalBlows', label:'Final Blows' },
+  { key:'crits', label:'Critical Hits' }, { key:'nat20', label:'Nat 20s' }, { key:'nat1', label:'Nat 1s' },
+  { key:'dmgDealt', label:'Damage Dealt' }, { key:'dmgTaken', label:'Damage Taken' }, { key:'bigHit', label:'Biggest Hit' },
+  { key:'healGiven', label:'Healing Given' }, { key:'healRecv', label:'Healing Received' },
+  { key:'downed', label:"KO'd" }, { key:'spells', label:'Spells Cast' }, { key:'abilities', label:'Abilities Used' },
+  { key:'aura', label:'Aura Farmed' }, { key:'gold', label:'Gold Stolen' }, { key:'seduce', label:'Seductions' }, { key:'mvp', label:'MVP Votes' }
+];
+
+db.ref('tracker').on('value', snap => {
+  const tracker = snap.val();
+  const sessionList = document.getElementById('sessionList');
+  const lbContainer = document.getElementById('leaderboardContainer');
+
+  if (!tracker || !tracker.history || !tracker.history.length) {
+    sessionList.innerHTML = '<div class="empty-state">No sessions logged yet - use the Session Tracker to log games</div>';
+    lbContainer.innerHTML = '<div class="empty-state">No stats yet</div>';
+    return;
+  }
+
+  // Sessions tab
+  const sessions = [...tracker.history].reverse();
+  sessionList.innerHTML = sessions.map(s => {
+    const topStats = [];
+    if (s.data) {
+      Object.entries(s.data).forEach(([p, d]) => {
+        if (d.kills) topStats.push(esc(p) + ': ' + d.kills + ' kills');
+        if (d.crits) topStats.push(esc(p) + ': ' + d.crits + ' crits');
+      });
+    }
+    return `
+    <div class="session-entry">
+      <div class="session-title">Session ${s.num || '?'}${s.name ? ': ' + esc(s.name) : ''}</div>
+      <div class="session-date">${esc(s.date || '')}</div>
+      ${topStats.length ? '<div style="color:var(--gold-dim);font-size:0.9rem;margin-top:6px;">' + topStats.slice(0, 4).join(' | ') + '</div>' : ''}
+    </div>`;
+  }).join('');
+
+  // Leaderboard - aggregate all sessions
+  const totals = {};
+  const players = tracker.players || [];
+  players.forEach(p => { totals[p] = {}; LB_STATS.forEach(s => totals[p][s.key] = 0); });
+  tracker.history.forEach(sess => {
+    if (!sess.data) return;
+    Object.entries(sess.data).forEach(([p, d]) => {
+      if (!totals[p]) { totals[p] = {}; LB_STATS.forEach(s => totals[p][s.key] = 0); }
+      LB_STATS.forEach(s => { totals[p][s.key] = (totals[p][s.key] || 0) + (d[s.key] || 0); });
+    });
+  });
+
+  let html = '';
+  LB_STATS.forEach(stat => {
+    const ranked = Object.entries(totals).map(([name, d]) => ({ name, val: d[stat.key] || 0 })).filter(p => p.val > 0).sort((a, b) => b.val - a.val);
+    if (!ranked.length) return;
+    html += '<h3>' + esc(stat.label) + '</h3><table class="leaderboard-table"><tr><th>#</th><th>Name</th><th>' + esc(stat.label) + '</th></tr>';
+    ranked.forEach((p, i) => {
+      const cls = i < 3 ? ' class="rank-' + (i + 1) + '"' : '';
+      html += '<tr><td' + cls + '>' + (i + 1) + '</td><td>' + esc(p.name) + '</td><td>' + p.val + '</td></tr>';
+    });
+    html += '</table>';
+  });
+  lbContainer.innerHTML = html || '<div class="empty-state">No stats yet</div>';
+});
+
+// ════════════════════════════════════
+// SHOP (DM stocks via /shop in Firebase)
+// ════════════════════════════════════
+db.ref('shop').on('value', snap => {
+  const data = snap.val();
+  const container = document.getElementById('shopContent');
+  if (!data || !data.items || !Object.keys(data.items).length) {
+    container.innerHTML = '<div class="empty-state">The shop is empty — the DM hasn\'t stocked it yet</div>';
+    return;
+  }
+  const categories = {};
+  Object.entries(data.items).forEach(([k, item]) => {
+    const cat = item.category || 'General';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push({ ...item, key: k });
+  });
+  let html = '';
+  if (data.shopName) html += '<div style="text-align:center;font-family:\'Cinzel\',serif;font-size:1.2rem;color:var(--gold);margin-bottom:16px;">' + esc(data.shopName) + '</div>';
+  if (data.shopKeeper) html += '<div style="text-align:center;color:var(--gold-dim);margin-bottom:16px;">Shopkeeper: ' + esc(data.shopKeeper) + '</div>';
+  Object.entries(categories).forEach(([cat, items]) => {
+    html += '<h3>' + esc(cat) + '</h3>';
+    html += '<table class="inv-table"><thead><tr><th>Item</th><th>Price</th><th>Stock</th><th>Rarity</th><th>Description</th></tr></thead><tbody>';
+    items.forEach(item => {
+      const outOfStock = item.stock !== undefined && item.stock <= 0;
+      html += '<tr style="' + (outOfStock ? 'opacity:0.4;' : '') + '">';
+      html += '<td>' + esc(item.name) + '</td>';
+      html += '<td style="color:var(--gold);">' + esc(item.price || '?') + '</td>';
+      html += '<td>' + (item.stock !== undefined ? item.stock : 'unlimited') + '</td>';
+      html += '<td style="color:var(--gold-dim);">' + esc(item.rarity || '') + '</td>';
+      html += '<td style="color:var(--text-dim);font-size:0.85rem;">' + esc(item.desc || '') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  });
+  container.innerHTML = html;
+});
+
+// ════════════════════════════════════
+// NPCs
+// ════════════════════════════════════
+let editingNPCKey = null;
+
+function renderNPCCard(key, n, showRemove) {
+  const hpPct = n.maxHp ? Math.max(0, Math.min(100, ((n.hp || 0) / n.maxHp) * 100)) : 100;
+  const hpColor = hpPct > 50 ? 'linear-gradient(90deg,#2a6b2a,#4a4)' : hpPct > 25 ? 'linear-gradient(90deg,#8b6b1a,#c9a84c)' : 'linear-gradient(90deg,#8b1a1a,#c94040)';
+  return `
+  <div class="char-card" onclick="editNPC('${key}')" style="grid-template-columns:1fr auto;">
+    <div class="cc-left">
+      <div class="cc-name">${esc(n.name || 'Unnamed')}</div>
+      <div class="cc-sub">${esc(n.role || 'NPC')}${n.race ? ' | ' + esc(n.race) : ''}${n.className ? ' | ' + esc(n.className) : ''}${n.level ? ' | Lv' + n.level : ''}</div>
+      <div class="stat-row">
+        ${n.ac ? '<div class="stat-badge"><span class="label">AC</span> <span class="val">' + n.ac + '</span></div>' : ''}
+        ${n.hp != null ? '<div class="stat-badge"><span class="label">HP</span> <span class="val">' + (n.hp || 0) + '/' + (n.maxHp || '?') + '</span></div>' : ''}
+        ${['str','dex','con','int','wis','cha'].map(ab => n[ab] ? '<div class="stat-badge"><span class="label">' + ab.toUpperCase() + '</span> <span class="val">' + n[ab] + '</span></div>' : '').join('')}
+      </div>
+      ${n.abilities ? '<div style="color:var(--gold-dim);font-size:0.85rem;margin-top:4px;">' + esc(n.abilities).substring(0, 80) + (n.abilities.length > 80 ? '...' : '') + '</div>' : ''}
+    </div>
+    <div class="cc-right">
+      ${n.maxHp ? '<div class="cc-hp-label">HP ' + (n.hp || 0) + ' / ' + n.maxHp + '</div><div class="cc-hp-bar"><div class="cc-hp-fill" style="width:' + hpPct + '%;background:' + hpColor + ';"></div></div>' : ''}
+      <div style="color:var(--text-faint);font-size:0.75rem;">Click to edit</div>
+      ${showRemove ? '<button class="remove-btn" onclick="event.stopPropagation();removeNPC(\'' + key + '\')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:1rem;">✕ Remove</button>' : ''}
+    </div>
+  </div>`;
+}
+
+db.ref('npcs').on('value', snap => {
+  const data = snap.val();
+  const npcGrid = document.getElementById('npcGrid');
+  const sidekickGrid = document.getElementById('sidekickGrid');
+
+  if (!data) {
+    npcGrid.innerHTML = '<div class="empty-state">No NPCs yet - add sidekicks and allies</div>';
+    sidekickGrid.innerHTML = '<div class="empty-state">No sidekicks — add them in the NPC tab with role "Sidekick"</div>';
+    return;
+  }
+
+  const entries = Object.entries(data).filter(([k, n]) => !n.hidden);
+  const sidekicks = entries.filter(([k, n]) => (n.role || '').toLowerCase() === 'sidekick');
+  const others = entries.filter(([k, n]) => (n.role || '').toLowerCase() !== 'sidekick');
+
+  // NPC tab shows all
+  npcGrid.innerHTML = entries.map(([key, n]) => renderNPCCard(key, n, true)).join('');
+
+  // Party tab sidekick section
+  if (sidekicks.length) {
+    sidekickGrid.innerHTML = sidekicks.map(([key, n]) => renderNPCCard(key, n, false)).join('');
+  } else {
+    sidekickGrid.innerHTML = '<div class="empty-state">No sidekicks — add NPCs with role "Sidekick" to show them here</div>';
+  }
+});
+
+function addNPC() {
+  editingNPCKey = null;
+  document.getElementById('npcEditTitle').textContent = 'Add NPC';
+  ['name','role','race','class','level','ac','hp','maxHp','str','dex','con','int','wis','cha'].forEach(f => { document.getElementById('npc_' + f).value = ''; });
+  ['attacks','abilities','notes'].forEach(f => { document.getElementById('npc_' + f).value = ''; });
+  document.getElementById('npc_editKey').value = '';
+  document.getElementById('npcEditOverlay').classList.add('open');
+}
+
+function editNPC(key) {
+  editingNPCKey = key;
+  document.getElementById('npcEditTitle').textContent = 'Edit NPC';
+  db.ref('npcs/' + key).once('value', snap => {
+    const n = snap.val() || {};
+    document.getElementById('npc_name').value = n.name || '';
+    document.getElementById('npc_role').value = n.role || '';
+    document.getElementById('npc_race').value = n.race || '';
+    document.getElementById('npc_class').value = n.className || '';
+    document.getElementById('npc_level').value = n.level || '';
+    document.getElementById('npc_ac').value = n.ac || '';
+    document.getElementById('npc_hp').value = n.hp || '';
+    document.getElementById('npc_maxHp').value = n.maxHp || '';
+    ['str','dex','con','int','wis','cha'].forEach(ab => { document.getElementById('npc_' + ab).value = n[ab] || ''; });
+    document.getElementById('npc_attacks').value = n.attacks || '';
+    document.getElementById('npc_abilities').value = n.abilities || '';
+    document.getElementById('npc_notes').value = n.notes || '';
+    document.getElementById('npc_editKey').value = key;
+    document.getElementById('npcEditOverlay').classList.add('open');
+  });
+}
+
+function saveNPC() {
+  const data = {
+    name: document.getElementById('npc_name').value.trim(),
+    role: document.getElementById('npc_role').value.trim(),
+    race: document.getElementById('npc_race').value.trim(),
+    className: document.getElementById('npc_class').value.trim(),
+    attacks: document.getElementById('npc_attacks').value,
+    abilities: document.getElementById('npc_abilities').value,
+    notes: document.getElementById('npc_notes').value,
+    addedBy: currentUser,
+    lastUpdated: Date.now()
+  };
+  ['level','ac','hp','maxHp'].forEach(f => {
+    const v = document.getElementById('npc_' + f).value;
+    data[f] = v !== '' ? Number(v) : null;
+  });
+  ['str','dex','con','int','wis','cha'].forEach(ab => {
+    const v = document.getElementById('npc_' + ab).value;
+    data[ab] = v !== '' ? Number(v) : null;
+  });
+  if (!data.name) return;
+  const key = editingNPCKey || db.ref('npcs').push().key;
+  db.ref('npcs/' + key).set(data);
+  closeNPCEdit();
+}
+
+function removeNPC(key) { db.ref('npcs/' + key).remove(); }
+function closeNPCEdit() { document.getElementById('npcEditOverlay').classList.remove('open'); }
+
+db.ref('chat').orderByChild('time').limitToLast(100).on('value', snap => {
+  const data = snap.val();
+  const box = document.getElementById('chat-messages');
+  if (!data) { box.innerHTML = '<div class="empty-state">No messages yet. Say hi!</div>'; return; }
+  const msgs = Object.values(data).sort((a, b) => a.time - b.time);
+  box.innerHTML = msgs.map(m => `
+    <div class="chat-msg">
+      <span class="chat-author">${esc(m.author || '???')}</span>
+      <span class="chat-time">${new Date(m.time).toLocaleString()}</span>
+      <div class="chat-text">${esc(m.text || '')}</div>
+    </div>`).join('');
+  box.scrollTop = box.scrollHeight;
+});
+
+// ════════════════════════════════════
+// MAP (framework — DM populates via DM site)
+// ════════════════════════════════════
+db.ref('map').on('value', snap => {
+  const data = snap.val();
+  const imgContainer = document.getElementById('mapImage');
+  const pinList = document.getElementById('mapPinList');
+  const pinsContainer = document.getElementById('mapPins');
+  if (!data || !data.imageUrl) {
+    imgContainer.innerHTML = '<div class="empty-state">No map loaded yet — the DM will set this up</div>';
+    pinList.innerHTML = '';
+    pinsContainer.innerHTML = '';
+    return;
+  }
+  imgContainer.innerHTML = '<img src="' + esc(data.imageUrl) + '" style="width:100%;height:auto;display:block;border-radius:10px;" alt="Campaign Map">';
+  if (data.pins) {
+    const pins = Object.values(data.pins);
+    pinsContainer.innerHTML = pins.map(p => `
+      <div style="position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-100%);cursor:pointer;" title="${esc(p.label || '')}">
+        <div style="font-size:1.4rem;">📍</div>
+      </div>`).join('');
+    pinList.innerHTML = '<h3>Locations</h3>' + pins.map(p => `
+      <div style="display:flex;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border-light);">
+        <span style="color:var(--gold);font-family:'Cinzel',serif;">${esc(p.label || 'Unknown')}</span>
+        <span style="color:var(--text-dim);font-size:0.9rem;">${esc(p.desc || '')}</span>
+      </div>`).join('');
+  } else {
+    pinsContainer.innerHTML = '';
+    pinList.innerHTML = '';
+  }
+});
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !currentUser) return;
+  db.ref('chat').push({ author: currentUser, text, time: Date.now() });
+  input.value = '';
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = String(s ?? ''); return d.innerHTML; }
+</script>
+</body>
+</html>
