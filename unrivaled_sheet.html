@@ -1201,7 +1201,10 @@ body {
           War Prepared: <span id="war-prepared">5</span> &nbsp;|&nbsp;
           Support Prepared: <span id="support-prepared">7</span>
         </div>
-        <div class="seal-slot-tracker" id="seal-slots"></div>
+        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--blood-red);margin-bottom:4px;">WAR SLOTS</div>
+        <div class="seal-slot-tracker" id="war-seal-slots"></div>
+        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:#6A3ADE;margin:10px 0 4px;">SUPPORT SLOTS</div>
+        <div class="seal-slot-tracker" id="support-seal-slots"></div>
         <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
           <button class="btn btn-sm" onclick="resetSealSlots()">Reset Slots</button>
           <span style="margin-left:auto;font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;">BONUS SLOTS</span>
@@ -1424,7 +1427,8 @@ const DEFAULT_STATE = {
   languages: ['Common'],
   conditions: [],
   stance: 'single',
-  sealSlots: [],
+  warSealSlots: [],
+  supportSealSlots: [],
   bonusSealSlots: 0,
   seals: [
     { name:'Seal of Discernment', tier:'B', size:'N', type:'S', activation:'Reaction', desc:'Advantage on next Insight or Perception check (not contested).', prepared:false },
@@ -1852,24 +1856,37 @@ function toggleTechnique(header) {
 
 // ── SEAL SLOTS ──
 function renderSealSlots() {
-  const container = document.getElementById('seal-slots');
-  if (!container) return;
-  // Slots = WIS mod + PB (simplified)
-  const totalSlots = Math.max(4, mod(state.abilities.WIS) + pb() + 1 + (state.bonusSealSlots || 0));
-  while (state.sealSlots.length < totalSlots) state.sealSlots.push(false);
-  while (state.sealSlots.length > totalSlots) state.sealSlots.pop();
-  container.innerHTML = state.sealSlots.map((used, i) =>
-    `<div class="seal-slot ${used ? 'used' : ''}" onclick="toggleSealSlot(${i})"></div>`
+  const warTotal = mod(state.abilities.WIS) + (state.bonusSealSlots || 0);
+  const supTotal = mod(state.abilities.WIS) + pb() + (state.bonusSealSlots || 0);
+
+  if (!state.warSealSlots) state.warSealSlots = [];
+  if (!state.supportSealSlots) state.supportSealSlots = [];
+  while (state.warSealSlots.length < warTotal) state.warSealSlots.push(false);
+  while (state.warSealSlots.length > warTotal) state.warSealSlots.pop();
+  while (state.supportSealSlots.length < supTotal) state.supportSealSlots.push(false);
+  while (state.supportSealSlots.length > supTotal) state.supportSealSlots.pop();
+
+  const warEl = document.getElementById('war-seal-slots');
+  if (warEl) warEl.innerHTML = state.warSealSlots.map((used, i) =>
+    `<div class="seal-slot ${used ? 'used' : ''}" onclick="toggleSealSlot('war',${i})"></div>`
   ).join('');
+
+  const supEl = document.getElementById('support-seal-slots');
+  if (supEl) supEl.innerHTML = state.supportSealSlots.map((used, i) =>
+    `<div class="seal-slot ${used ? 'used' : ''}" onclick="toggleSealSlot('support',${i})"></div>`
+  ).join('');
+
   const bsEl = document.getElementById('bonus-slots-count');
   if (bsEl) bsEl.textContent = state.bonusSealSlots || 0;
 }
-function toggleSealSlot(i) {
-  state.sealSlots[i] = !state.sealSlots[i];
+function toggleSealSlot(type, i) {
+  if (type === 'war') state.warSealSlots[i] = !state.warSealSlots[i];
+  else state.supportSealSlots[i] = !state.supportSealSlots[i];
   renderSealSlots(); saveState();
 }
 function resetSealSlots() {
-  state.sealSlots = state.sealSlots.map(() => false);
+  state.warSealSlots = state.warSealSlots.map(() => false);
+  state.supportSealSlots = state.supportSealSlots.map(() => false);
   renderSealSlots(); saveState();
 }
 
