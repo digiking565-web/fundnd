@@ -1249,7 +1249,7 @@ body {
 
         <!-- Add Seal Modal -->
         <div id="seal-modal" style="display:none;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:8px;padding:16px;margin-top:12px;">
-          <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-bright);margin-bottom:12px;">ADD SEAL</div>
+          <div id="seal-modal-title" style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-bright);margin-bottom:12px;">ADD SEAL</div>
           <div class="field-group"><label>Seal Name</label><input type="text" id="new-seal-name" placeholder="e.g. Seal of Evasion"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
             <div class="field-group">
@@ -1914,6 +1914,7 @@ function renderSeals() {
         </span>
         <span style="font-family:'Cinzel',serif;font-size:9px;color:#555;">${seal.activation}</span>
         <span style="color:#555;font-size:12px;margin-left:4px;">▼</span>
+        <button class="btn btn-sm" onclick="event.stopPropagation();editSeal(${i})" style="font-size:9px;padding:2px 8px;">Edit</button>
         <button class="btn-remove" onclick="event.stopPropagation();removeSeal(${i})">×</button>
       </div>
       <div class="seal-desc" style="display:none;">${seal.desc}</div>
@@ -1928,21 +1929,48 @@ function toggleSealDesc(header) {
 }
 function toggleSealPrepared(i) { state.seals[i].prepared = !state.seals[i].prepared; renderSeals(); saveState(); }
 function removeSeal(i) { state.seals.splice(i,1); renderSeals(); saveState(); }
-function openAddSeal() { document.getElementById('seal-modal').style.display = 'block'; }
+let editingSealIdx = -1;
+function openAddSeal() {
+  editingSealIdx = -1;
+  document.getElementById('seal-modal-title').textContent = 'ADD SEAL';
+  ['new-seal-name','new-seal-activation','new-seal-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('new-seal-tier').value = 'B';
+  document.getElementById('new-seal-size').value = 'N';
+  document.getElementById('new-seal-type').value = 'W';
+  document.getElementById('seal-modal').style.display = 'block';
+}
+function editSeal(i) {
+  editingSealIdx = i;
+  const seal = state.seals[i];
+  document.getElementById('seal-modal-title').textContent = 'EDIT SEAL';
+  document.getElementById('new-seal-name').value = seal.name || '';
+  document.getElementById('new-seal-tier').value = seal.tier || 'B';
+  document.getElementById('new-seal-size').value = seal.size || 'N';
+  document.getElementById('new-seal-type').value = seal.type || 'W';
+  document.getElementById('new-seal-activation').value = seal.activation || '';
+  document.getElementById('new-seal-desc').value = seal.desc || '';
+  document.getElementById('seal-modal').style.display = 'block';
+}
 function closeAddSeal() { document.getElementById('seal-modal').style.display = 'none'; }
 function confirmAddSeal() {
   const name = document.getElementById('new-seal-name').value.trim();
   if (!name) return;
-  state.seals.push({
-    name, prepared: false,
+  const data = {
+    name,
     tier: document.getElementById('new-seal-tier').value,
     size: document.getElementById('new-seal-size').value,
     type: document.getElementById('new-seal-type').value,
     activation: document.getElementById('new-seal-activation').value,
     desc: document.getElementById('new-seal-desc').value,
-  });
+  };
+  if (editingSealIdx >= 0) {
+    data.prepared = state.seals[editingSealIdx].prepared;
+    state.seals[editingSealIdx] = data;
+  } else {
+    data.prepared = false;
+    state.seals.push(data);
+  }
   closeAddSeal();
-  ['new-seal-name','new-seal-activation','new-seal-desc'].forEach(id => document.getElementById(id).value = '');
   renderSeals(); saveState();
 }
 
