@@ -1904,19 +1904,27 @@ function renderSeals() {
   }
   list.innerHTML = state.seals.map((seal, i) => `
     <div class="seal-card">
-      <div class="seal-card-header">
+      <div class="seal-card-header" onclick="toggleSealDesc(this)" style="cursor:pointer;">
         <div class="seal-prepared-toggle ${seal.prepared ? 'prepared' : ''}"
-          onclick="toggleSealPrepared(${i})" title="Toggle prepared">✦</div>
+          onclick="event.stopPropagation();toggleSealPrepared(${i})" title="Toggle prepared">✦</div>
         <div class="seal-card-name">${seal.name}</div>
         <span class="seal-tag ${seal.type === 'W' ? 'war' : 'support'}">${TYPE_NAMES[seal.type]}</span>
         <span class="seal-tag ${seal.size === 'N' ? 'normal' : seal.size === 'G' ? 'greater' : 'colossal'}">
           ${SIZE_NAMES[seal.size]}
         </span>
         <span style="font-family:'Cinzel',serif;font-size:9px;color:#555;">${seal.activation}</span>
-        <button class="btn-remove" onclick="removeSeal(${i})">×</button>
+        <span style="color:#555;font-size:12px;margin-left:4px;">▼</span>
+        <button class="btn-remove" onclick="event.stopPropagation();removeSeal(${i})">×</button>
       </div>
-      <div class="seal-desc">${seal.desc}</div>
+      <div class="seal-desc" style="display:none;">${seal.desc}</div>
     </div>`).join('');
+}
+function toggleSealDesc(header) {
+  const desc = header.nextElementSibling;
+  const chevron = header.querySelector('span:nth-last-child(2)');
+  const open = desc.style.display === 'none';
+  desc.style.display = open ? 'block' : 'none';
+  if (chevron) chevron.textContent = open ? '▲' : '▼';
 }
 function toggleSealPrepared(i) { state.seals[i].prepared = !state.seals[i].prepared; renderSeals(); saveState(); }
 function removeSeal(i) { state.seals.splice(i,1); renderSeals(); saveState(); }
