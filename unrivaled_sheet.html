@@ -1202,8 +1202,12 @@ body {
           Support Prepared: <span id="support-prepared">7</span>
         </div>
         <div class="seal-slot-tracker" id="seal-slots"></div>
-        <div style="display:flex;gap:8px;margin-top:8px;">
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
           <button class="btn btn-sm" onclick="resetSealSlots()">Reset Slots</button>
+          <span style="margin-left:auto;font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;">BONUS SLOTS</span>
+          <button class="btn btn-sm" onclick="state.bonusSealSlots=Math.max(0,(state.bonusSealSlots||0)-1);renderSealSlots();saveState();">−</button>
+          <span id="bonus-slots-count" style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold-pale);min-width:20px;text-align:center;">0</span>
+          <button class="btn btn-sm" onclick="state.bonusSealSlots=(state.bonusSealSlots||0)+1;renderSealSlots();saveState();">+</button>
         </div>
 
         <div class="section-header" style="margin-top:16px;">Calligraphy Check</div>
@@ -1421,6 +1425,7 @@ const DEFAULT_STATE = {
   conditions: [],
   stance: 'single',
   sealSlots: [],
+  bonusSealSlots: 0,
   seals: [
     { name:'Seal of Discernment', tier:'B', size:'N', type:'S', activation:'Reaction', desc:'Advantage on next Insight or Perception check (not contested).', prepared:false },
     { name:'Seal of Evasion', tier:'B', size:'N', type:'W', activation:'Reaction', desc:'+2 AC until start of your next turn. Use as reaction to being targeted.', prepared:true },
@@ -1850,12 +1855,14 @@ function renderSealSlots() {
   const container = document.getElementById('seal-slots');
   if (!container) return;
   // Slots = WIS mod + PB (simplified)
-  const totalSlots = Math.max(4, mod(state.abilities.WIS) + pb() + 1);
+  const totalSlots = Math.max(4, mod(state.abilities.WIS) + pb() + 1 + (state.bonusSealSlots || 0));
   while (state.sealSlots.length < totalSlots) state.sealSlots.push(false);
   while (state.sealSlots.length > totalSlots) state.sealSlots.pop();
   container.innerHTML = state.sealSlots.map((used, i) =>
     `<div class="seal-slot ${used ? 'used' : ''}" onclick="toggleSealSlot(${i})"></div>`
   ).join('');
+  const bsEl = document.getElementById('bonus-slots-count');
+  if (bsEl) bsEl.textContent = state.bonusSealSlots || 0;
 }
 function toggleSealSlot(i) {
   state.sealSlots[i] = !state.sealSlots[i];
