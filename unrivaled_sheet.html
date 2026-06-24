@@ -1243,9 +1243,11 @@ body {
         </div>
       </div>
       <div>
-        <div class="section-header">Your Seals</div>
-        <div id="seals-list"></div>
-        <button class="btn btn-primary btn-sm" onclick="openAddSeal()">+ Add Seal</button>
+        <div class="section-header" style="color:var(--blood-red);">War Seals</div>
+        <div id="war-seals-list"></div>
+        <div class="section-header" style="margin-top:16px;color:#6A3ADE;">Support Seals</div>
+        <div id="support-seals-list"></div>
+        <button class="btn btn-primary btn-sm" onclick="openAddSeal()" style="margin-top:12px;">+ Add Seal</button>
 
         <!-- Add Seal Modal -->
         <div id="seal-modal" style="display:none;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:8px;padding:16px;margin-top:12px;">
@@ -1895,30 +1897,34 @@ const TIER_NAMES = { B:'Basic', A:'Advanced', M:'Master', D:'Divine' };
 const SIZE_NAMES = { N:'Normal', G:'Greater', C:'Colossal' };
 const TYPE_NAMES = { W:'War', S:'Support' };
 
+function renderSealCard(seal, i) {
+  return `<div class="seal-card">
+    <div class="seal-card-header" onclick="toggleSealDesc(this)" style="cursor:pointer;">
+      <div class="seal-prepared-toggle ${seal.prepared ? 'prepared' : ''}"
+        onclick="event.stopPropagation();toggleSealPrepared(${i})" title="Toggle prepared">✦</div>
+      <div class="seal-card-name">${seal.name}</div>
+      <span class="seal-tag ${seal.size === 'N' ? 'normal' : seal.size === 'G' ? 'greater' : 'colossal'}">
+        ${SIZE_NAMES[seal.size]}
+      </span>
+      <span style="font-family:'Cinzel',serif;font-size:9px;color:#555;">${seal.activation}</span>
+      <span style="color:#555;font-size:12px;margin-left:4px;">▼</span>
+      <button class="btn btn-sm" onclick="event.stopPropagation();editSeal(${i})" style="font-size:9px;padding:2px 8px;">Edit</button>
+      <button class="btn-remove" onclick="event.stopPropagation();removeSeal(${i})">×</button>
+    </div>
+    <div class="seal-desc" style="display:none;">${seal.desc}</div>
+  </div>`;
+}
+
 function renderSeals() {
-  const list = document.getElementById('seals-list');
-  if (!list) return;
-  if (state.seals.length === 0) {
-    list.innerHTML = '<div style="color:#444;font-size:13px;padding:8px;">No seals added yet.</div>';
-    return;
-  }
-  list.innerHTML = state.seals.map((seal, i) => `
-    <div class="seal-card">
-      <div class="seal-card-header" onclick="toggleSealDesc(this)" style="cursor:pointer;">
-        <div class="seal-prepared-toggle ${seal.prepared ? 'prepared' : ''}"
-          onclick="event.stopPropagation();toggleSealPrepared(${i})" title="Toggle prepared">✦</div>
-        <div class="seal-card-name">${seal.name}</div>
-        <span class="seal-tag ${seal.type === 'W' ? 'war' : 'support'}">${TYPE_NAMES[seal.type]}</span>
-        <span class="seal-tag ${seal.size === 'N' ? 'normal' : seal.size === 'G' ? 'greater' : 'colossal'}">
-          ${SIZE_NAMES[seal.size]}
-        </span>
-        <span style="font-family:'Cinzel',serif;font-size:9px;color:#555;">${seal.activation}</span>
-        <span style="color:#555;font-size:12px;margin-left:4px;">▼</span>
-        <button class="btn btn-sm" onclick="event.stopPropagation();editSeal(${i})" style="font-size:9px;padding:2px 8px;">Edit</button>
-        <button class="btn-remove" onclick="event.stopPropagation();removeSeal(${i})">×</button>
-      </div>
-      <div class="seal-desc" style="display:none;">${seal.desc}</div>
-    </div>`).join('');
+  const warList = document.getElementById('war-seals-list');
+  const supList = document.getElementById('support-seals-list');
+  if (!warList || !supList) return;
+
+  const warSeals = state.seals.map((s, i) => ({ seal: s, idx: i })).filter(x => x.seal.type === 'W');
+  const supSeals = state.seals.map((s, i) => ({ seal: s, idx: i })).filter(x => x.seal.type === 'S');
+
+  warList.innerHTML = warSeals.length ? warSeals.map(x => renderSealCard(x.seal, x.idx)).join('') : '<div style="color:#444;font-size:13px;padding:8px;">No war seals yet.</div>';
+  supList.innerHTML = supSeals.length ? supSeals.map(x => renderSealCard(x.seal, x.idx)).join('') : '<div style="color:#444;font-size:13px;padding:8px;">No support seals yet.</div>';
 }
 function toggleSealDesc(header) {
   const desc = header.nextElementSibling;
