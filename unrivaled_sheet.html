@@ -1281,16 +1281,40 @@ body {
       Total value: <span id="total-gp" style="color:var(--gold-bright);">0</span> GP
     </div>
 
-    <div class="section-header">Equipment & Items</div>
-    <div class="item-header">
-      <span>Item Name</span><span>Qty</span><span>Weight</span><span>Value</span><span>Rarity</span><span></span>
+    <div class="section-header">Equipment & Gear</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <input type="text" id="new-item-name" placeholder="Item name..." style="flex:1;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;" onkeydown="if(event.key==='Enter')addItem()">
+      <input type="number" id="new-item-qty" value="1" min="1" style="width:50px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;text-align:center;">
+      <button class="btn btn-sm btn-primary" onclick="addItem()">Add</button>
     </div>
     <div id="items-list"></div>
-    <button class="btn btn-sm btn-primary" onclick="addItem()" style="margin-top:8px;">+ Add Item</button>
 
-    <div class="section-header" style="margin-top:20px;">Relics & Magic Items</div>
+    <div class="section-header" style="margin-top:20px;">Magic Items</div>
     <div id="relics-list"></div>
-    <button class="btn btn-sm btn-primary" onclick="addRelic()" style="margin-top:8px;">+ Add Relic</button>
+    <div style="margin-top:8px;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;padding:12px;">
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--gold-bright);margin-bottom:8px;">ADD MAGIC ITEM</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div class="field-group" style="margin:0;"><label>Name</label><input type="text" id="new-relic-name" placeholder="Item name..."></div>
+        <div class="field-group" style="margin:0;"><label>Category</label>
+          <select id="new-relic-cat">
+            <option>Weapon</option><option>Armor</option><option>Wondrous Item</option><option>Ring</option><option>Rod</option><option>Staff</option><option>Potion</option><option>Scroll</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field-group" style="margin:0;"><label>Rarity</label>
+          <select id="new-relic-rarity">
+            <option>Common</option><option>Uncommon</option><option>Rare</option><option>Very Rare</option><option>Legendary</option><option>Artifact</option>
+          </select>
+        </div>
+        <div class="field-group" style="margin:0;"><label>Attunement</label>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 0;">
+            <input type="checkbox" id="new-relic-attune" style="accent-color:var(--gold-bright);width:16px;height:16px;">
+            <span style="font-size:13px;">Requires Attunement</span>
+          </div>
+        </div>
+      </div>
+      <div class="field-group" style="margin:6px 0 0;"><label>Description</label><textarea id="new-relic-desc" style="min-height:50px;" placeholder="What does it do?"></textarea></div>
+      <button class="btn btn-primary btn-sm" onclick="addRelic()">Add Magic Item</button>
+    </div>
   </div>
 
   <!-- ════ NOTES & FEATS PANEL ════ -->
@@ -2068,49 +2092,79 @@ function toggleFeature(header) {
 function renderItems() {
   const list = document.getElementById('items-list');
   if (!list) return;
+  if (!state.items.length) { list.innerHTML = '<div style="color:#444;font-size:13px;padding:4px;">No items yet.</div>'; return; }
   list.innerHTML = state.items.map((item, i) => `
-    <div class="item-row">
-      <input value="${item.name}" placeholder="Item name" onchange="state.items[${i}].name=this.value;saveState()">
-      <input value="${item.qty}" placeholder="Qty" type="number" min="0" onchange="state.items[${i}].qty=this.value;saveState()">
-      <input value="${item.weight}" placeholder="Weight" onchange="state.items[${i}].weight=this.value;saveState()">
-      <input value="${item.value}" placeholder="Value" onchange="state.items[${i}].value=this.value;saveState()">
-      <select onchange="state.items[${i}].rarity=this.value;saveState()">
-        ${['Common','Uncommon','Rare','Very Rare','Legendary','Artifact'].map(r =>
-          `<option ${item.rarity===r?'selected':''}>${r}</option>`).join('')}
-      </select>
-      <button class="btn-remove" onclick="removeItem(${i})">×</button>
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--ink-deep);border-radius:4px;margin-bottom:3px;border:1px solid var(--border);">
+      <span style="flex:1;font-size:14px;">${item.name}</span>
+      <span style="color:var(--gold-warm);font-size:13px;min-width:30px;text-align:center;">×${item.qty||1}</span>
+      <button class="btn-remove" onclick="state.items.splice(${i},1);renderItems();saveState();">×</button>
     </div>`).join('');
 }
 function addItem() {
-  state.items.push({ name:'', qty:1, weight:'—', value:'—', rarity:'Common' });
+  const nameEl = document.getElementById('new-item-name');
+  const qtyEl = document.getElementById('new-item-qty');
+  const name = nameEl.value.trim();
+  if (!name) return;
+  state.items.push({ name, qty: parseInt(qtyEl.value) || 1 });
+  nameEl.value = ''; qtyEl.value = '1';
   renderItems(); saveState();
 }
-function removeItem(i) { state.items.splice(i,1); renderItems(); saveState(); }
+
+const RARITY_COLORS = { Common:'#888', Uncommon:'#4A8A4A', Rare:'#4A6A8A', 'Very Rare':'#6A4A8A', Legendary:'#8A6A2A', Artifact:'#C8A000' };
 
 function renderRelics() {
   const list = document.getElementById('relics-list');
   if (!list) return;
+  if (!state.relics.length) { list.innerHTML = '<div style="color:#444;font-size:13px;padding:4px;">No magic items yet.</div>'; return; }
   list.innerHTML = state.relics.map((r, i) => `
-    <div style="background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;padding:12px;margin-bottom:8px;">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-        <input value="${r.name}" style="background:transparent;border:none;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:14px;font-weight:600;flex:1;"
-          onchange="state.relics[${i}].name=this.value;saveState()">
-        <span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-warm);padding:2px 8px;border:1px solid var(--border-gold);border-radius:3px;">${r.rarity}</span>
-        <label style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:#666;display:flex;align-items:center;gap:4px;">
-          <input type="checkbox" ${r.attuned?'checked':''} onchange="state.relics[${i}].attuned=this.checked;saveState()">
-          ATTUNED
-        </label>
-        <button class="btn-remove" onclick="removeRelic(${i})">×</button>
+    <div style="background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;margin-bottom:6px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span style="font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--gold-pale);flex:1;">${r.name}</span>
+        <span style="font-family:'Cinzel',serif;font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid ${RARITY_COLORS[r.rarity]||'#555'};color:${RARITY_COLORS[r.rarity]||'#555'};">${r.rarity||'Common'}</span>
+        ${r.category ? '<span style="font-size:9px;color:#666;font-family:Cinzel,serif;letter-spacing:0.1em;">' + r.category + '</span>' : ''}
+        ${r.attuned ? '<span style="font-size:9px;color:var(--gold-bright);font-family:Cinzel,serif;">✦ ATTUNED</span>' : ''}
+        <span style="color:#555;font-size:12px;">▼</span>
       </div>
-      <textarea style="width:100%;background:transparent;border:none;color:#AAA;font-family:'Crimson Text',serif;font-size:13px;resize:none;min-height:40px;line-height:1.5;"
-        onchange="state.relics[${i}].desc=this.value;saveState()">${r.desc}</textarea>
+      <div style="display:none;padding:0 12px 10px;">
+        <div style="font-size:13px;color:#AAA;line-height:1.6;margin-bottom:8px;">${r.desc||'No description.'}</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <label style="font-size:11px;color:#666;display:flex;align-items:center;gap:4px;cursor:pointer;">
+            <input type="checkbox" ${r.attuned?'checked':''} onchange="state.relics[${i}].attuned=this.checked;renderRelics();saveState();" style="accent-color:var(--gold-bright);"> Attuned
+          </label>
+          <button class="btn btn-sm" onclick="editRelic(${i})" style="font-size:9px;padding:2px 8px;">Edit</button>
+          <button class="btn-remove" onclick="state.relics.splice(${i},1);renderRelics();saveState();">×</button>
+        </div>
+      </div>
     </div>`).join('');
 }
+
+let editingRelicIdx = -1;
 function addRelic() {
-  state.relics.push({ name:'New Relic', rarity:'Uncommon', attuned:false, desc:'' });
+  const name = document.getElementById('new-relic-name').value.trim();
+  if (!name) return;
+  const relic = {
+    name, category: document.getElementById('new-relic-cat').value,
+    rarity: document.getElementById('new-relic-rarity').value,
+    attuned: document.getElementById('new-relic-attune').checked,
+    desc: document.getElementById('new-relic-desc').value
+  };
+  if (editingRelicIdx >= 0) { state.relics[editingRelicIdx] = relic; editingRelicIdx = -1; }
+  else state.relics.push(relic);
+  document.getElementById('new-relic-name').value = '';
+  document.getElementById('new-relic-desc').value = '';
+  document.getElementById('new-relic-attune').checked = false;
   renderRelics(); saveState();
 }
-function removeRelic(i) { state.relics.splice(i,1); renderRelics(); saveState(); }
+function editRelic(i) {
+  editingRelicIdx = i;
+  const r = state.relics[i];
+  document.getElementById('new-relic-name').value = r.name || '';
+  document.getElementById('new-relic-cat').value = r.category || 'Wondrous Item';
+  document.getElementById('new-relic-rarity').value = r.rarity || 'Common';
+  document.getElementById('new-relic-attune').checked = !!r.attuned;
+  document.getElementById('new-relic-desc').value = r.desc || '';
+  document.getElementById('new-relic-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
 // ── WEAPONS ──
 function renderWeapons() {

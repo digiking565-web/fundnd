@@ -410,11 +410,33 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
       <div class="currency-block"><label>SP</label><input type="number" id="curr-sp" value="0" min="0"></div>
       <div class="currency-block"><label>CP</label><input type="number" id="curr-cp" value="0" min="0"></div>
     </div>
-    <div class="section-header">Equipment</div>
+    <div class="section-header">Equipment & Gear</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <input type="text" id="new-item-name" placeholder="Item name..." style="flex:1;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;" onkeydown="if(event.key==='Enter')addItem()">
+      <input type="number" id="new-item-qty" value="1" min="1" style="width:50px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;text-align:center;">
+      <button class="btn btn-sm btn-primary" onclick="addItem()">Add</button>
+    </div>
     <div id="items-list"></div>
-    <button class="btn btn-sm btn-primary" onclick="addItem()" style="margin-top:8px;">+ Add Item</button>
-    <div class="section-header" style="margin-top:16px;">Musical Instruments</div>
-    <div class="field-group"><textarea id="note-instruments" placeholder="List your instruments..." style="min-height:60px;"></textarea></div>
+
+    <div class="section-header" style="margin-top:20px;">Magic Items</div>
+    <div id="relics-list"></div>
+    <div style="margin-top:8px;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;padding:12px;">
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--gold-bright);margin-bottom:8px;">ADD MAGIC ITEM</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div class="field-group" style="margin:0;"><label>Name</label><input type="text" id="new-relic-name" placeholder="Item name..."></div>
+        <div class="field-group" style="margin:0;"><label>Category</label>
+          <select id="new-relic-cat"><option>Weapon</option><option>Armor</option><option>Wondrous Item</option><option>Ring</option><option>Rod</option><option>Staff</option><option>Potion</option><option>Scroll</option><option>Instrument</option><option>Other</option></select>
+        </div>
+        <div class="field-group" style="margin:0;"><label>Rarity</label>
+          <select id="new-relic-rarity"><option>Common</option><option>Uncommon</option><option>Rare</option><option>Very Rare</option><option>Legendary</option><option>Artifact</option></select>
+        </div>
+        <div class="field-group" style="margin:0;"><label>Attunement</label>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 0;"><input type="checkbox" id="new-relic-attune" style="accent-color:var(--gold-bright);width:16px;height:16px;"><span style="font-size:13px;">Requires Attunement</span></div>
+        </div>
+      </div>
+      <div class="field-group" style="margin:6px 0 0;"><label>Description</label><textarea id="new-relic-desc" style="min-height:50px;" placeholder="What does it do?"></textarea></div>
+      <button class="btn btn-primary btn-sm" onclick="addRelic()">Add Magic Item</button>
+    </div>
   </div>
 
   <!-- ═══ NOTES ═══ -->
@@ -509,7 +531,7 @@ const FEATURES = [
 const DS = { identity:{name:'',level:1,race:'',background:'',alignment:'',player:''},
   abilities:{STR:10,DEX:10,CON:10,INT:10,WIS:10,CHA:10}, hp:{current:0,max:0,temp:0}, ac:10, speed:30, hitDice:'',
   inspiration:0, deathSaves:{s:[false,false,false],f:[false,false,false]}, skillProf:{}, saveProf:{STR:false,DEX:true,CON:false,INT:false,WIS:false,CHA:true},
-  conditions:[], slotsUsed:{}, biUsed:0, usUsed:0, iiUsed:0, cantrips:[], spells:[], items:[],
+  conditions:[], slotsUsed:{}, biUsed:0, usUsed:0, iiUsed:0, cantrips:[], spells:[], items:[], relics:[],
   currency:{pp:0,gp:0,ep:0,sp:0,cp:0},
   notes:{backstory:'',personality:'',bonds:'',flaws:'',session:'',allies:'',misc:'',languages:'Common',tools:'',armor:'Light armor, simple weapons, hand crossbows, longswords, rapiers, shortswords',instruments:''}
 };
@@ -606,8 +628,37 @@ function addSpell(){const n=document.getElementById('new-spell-name').value.trim
 function renderFeatures(){document.getElementById('features-list').innerHTML=FEATURES.map(f=>{const u=state.identity.level>=f.level;return`<div class="feature-card ${u?'':'locked'}" data-min-level="${f.level}"><div class="feature-header" onclick="this.nextElementSibling.classList.toggle('open')"><span class="feature-level-badge">Lv ${f.level}</span><span class="feature-title">${f.name}</span><span style="color:#555;font-size:12px;">▼</span></div><div class="feature-body">${f.body}</div></div>`;}).join('');}
 
 // Items
-function renderItems(){document.getElementById('items-list').innerHTML=state.items.map((it,i)=>`<div class="item-row"><input value="${it.name}" placeholder="Item" onchange="state.items[${i}].name=this.value;saveState()"><input value="${it.qty}" type="number" min="0" onchange="state.items[${i}].qty=this.value;saveState()"><input value="${it.rarity||'Common'}" placeholder="Rarity" onchange="state.items[${i}].rarity=this.value;saveState()"><button class="btn-remove" onclick="state.items.splice(${i},1);renderItems();saveState();">×</button></div>`).join('');}
-function addItem(){state.items.push({name:'',qty:1,rarity:'Common'});renderItems();saveState();}
+function renderItems(){
+  const list=document.getElementById('items-list');
+  if(!state.items.length){list.innerHTML='<div style="color:#444;font-size:13px;padding:4px;">No items yet.</div>';return;}
+  list.innerHTML=state.items.map((it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--ink-deep);border-radius:4px;margin-bottom:3px;border:1px solid var(--border);"><span style="flex:1;font-size:14px;">${it.name}</span><span style="color:var(--gold-warm);font-size:13px;min-width:30px;text-align:center;">×${it.qty||1}</span><button class="btn-remove" onclick="state.items.splice(${i},1);renderItems();saveState();">×</button></div>`).join('');
+}
+function addItem(){
+  const el=document.getElementById('new-item-name'),qel=document.getElementById('new-item-qty');
+  const name=el.value.trim();if(!name)return;
+  state.items.push({name,qty:parseInt(qel.value)||1});el.value='';qel.value='1';renderItems();saveState();
+}
+const RARITY_COLORS={Common:'#888',Uncommon:'#4A8A4A',Rare:'#4A6A8A','Very Rare':'#6A4A8A',Legendary:'#8A6A2A',Artifact:'#C8A000'};
+function renderRelics(){
+  const list=document.getElementById('relics-list');
+  if(!state.relics||!state.relics.length){list.innerHTML='<div style="color:#444;font-size:13px;padding:4px;">No magic items yet.</div>';return;}
+  list.innerHTML=state.relics.map((r,i)=>`<div style="background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;margin-bottom:6px;overflow:hidden;"><div style="display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"><span style="font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--gold-pale);flex:1;">${r.name}</span><span style="font-family:'Cinzel',serif;font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid ${RARITY_COLORS[r.rarity]||'#555'};color:${RARITY_COLORS[r.rarity]||'#555'};">${r.rarity||'Common'}</span>${r.category?'<span style="font-size:9px;color:#666;font-family:Cinzel,serif;letter-spacing:0.1em;">'+r.category+'</span>':''}${r.attuned?'<span style="font-size:9px;color:var(--gold-bright);font-family:Cinzel,serif;">✦ ATTUNED</span>':''}<span style="color:#555;font-size:12px;">▼</span></div><div style="display:none;padding:0 12px 10px;"><div style="font-size:13px;color:#AAA;line-height:1.6;margin-bottom:8px;">${r.desc||'No description.'}</div><div style="display:flex;gap:6px;align-items:center;"><label style="font-size:11px;color:#666;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ${r.attuned?'checked':''} onchange="state.relics[${i}].attuned=this.checked;renderRelics();saveState();" style="accent-color:var(--gold-bright);"> Attuned</label><button class="btn btn-sm" onclick="editRelic(${i})" style="font-size:9px;padding:2px 8px;">Edit</button><button class="btn-remove" onclick="state.relics.splice(${i},1);renderRelics();saveState();">×</button></div></div></div>`).join('');
+}
+let editingRelicIdx=-1;
+function addRelic(){
+  const name=document.getElementById('new-relic-name').value.trim();if(!name)return;
+  const relic={name,category:document.getElementById('new-relic-cat').value,rarity:document.getElementById('new-relic-rarity').value,attuned:document.getElementById('new-relic-attune').checked,desc:document.getElementById('new-relic-desc').value};
+  if(editingRelicIdx>=0){state.relics[editingRelicIdx]=relic;editingRelicIdx=-1;}else{if(!state.relics)state.relics=[];state.relics.push(relic);}
+  document.getElementById('new-relic-name').value='';document.getElementById('new-relic-desc').value='';document.getElementById('new-relic-attune').checked=false;
+  renderRelics();saveState();
+}
+function editRelic(i){
+  editingRelicIdx=i;const r=state.relics[i];
+  document.getElementById('new-relic-name').value=r.name||'';document.getElementById('new-relic-cat').value=r.category||'Wondrous Item';
+  document.getElementById('new-relic-rarity').value=r.rarity||'Common';document.getElementById('new-relic-attune').checked=!!r.attuned;
+  document.getElementById('new-relic-desc').value=r.desc||'';
+  document.getElementById('new-relic-name').scrollIntoView({behavior:'smooth',block:'center'});
+}
 
 // Death Saves / Conditions
 function toggleDS(el,t,i){state.deathSaves[t][i]=!state.deathSaves[t][i];el.classList.toggle('filled');saveState();}
@@ -632,7 +683,7 @@ function syncIdentity(){
   ['backstory','personality','bonds','flaws','session','allies','misc','languages','tools','armor','instruments'].forEach(k=>{const el=document.getElementById('note-'+k);if(el)el.value=state.notes[k]||'';});
 }
 
-function initAll(){syncIdentity();renderAbilities();renderSaves();renderSkills();renderDS();renderConditions();renderBI();renderSpellSlots();renderCantrips();renderSpells();renderFeatures();renderItems();updateAll();}
+function initAll(){syncIdentity();renderAbilities();renderSaves();renderSkills();renderDS();renderConditions();renderBI();renderSpellSlots();renderCantrips();renderSpells();renderFeatures();renderItems();renderRelics();updateAll();}
 
 document.addEventListener('DOMContentLoaded',()=>{
   loadState();initAll();loadFB();
