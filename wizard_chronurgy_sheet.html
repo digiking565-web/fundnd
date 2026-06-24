@@ -242,7 +242,7 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
   </div>
 
   <div class="stat-bar">
-    <div class="stat-bubble computed"><div class="val" id="display-ac">—</div><div class="lbl">Armor Class</div></div>
+    <div class="stat-bubble computed"><div class="val"><input type="number" id="ac-input" value="10" style="background:transparent;border:none;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:26px;font-weight:700;width:50px;text-align:center;" oninput="state.ac=parseInt(this.value)||10;clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);"></div><div class="lbl">Armor Class</div></div>
     <div class="stat-bubble">
       <div class="hp-tracker">
         <input type="number" id="hp-current" value="0">
@@ -653,7 +653,7 @@ function v(id) { const el = document.getElementById(id); return el ? el.value : 
 function updateAll() {
   const ab = state.abilities;
   const level = state.identity.level;
-  setText('display-ac', state.ac || 10 + mod(ab.DEX));
+  document.getElementById('ac-input').value = state.ac || 10 + mod(ab.DEX);
   setText('display-spell-dc', spellDC());
   setText('display-spell-atk', fmtMod(spellAtk()));
   setText('display-pb', '+' + pb());
@@ -907,6 +907,7 @@ function syncIdentity() {
   document.getElementById('char-background').value = state.identity.background;
   document.getElementById('char-alignment').value = state.identity.alignment;
   document.getElementById('char-player').value = state.identity.player || localStorage.getItem('fundnd_username') || '';
+  document.getElementById('ac-input').value = state.ac || 10;
   document.getElementById('hp-current').value = state.hp.current;
   document.getElementById('hp-max').value = state.hp.max;
   document.getElementById('temp-hp-input').value = state.hp.temp;
