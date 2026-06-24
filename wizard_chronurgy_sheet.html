@@ -267,6 +267,10 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
     <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;">ft</span>
     <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;margin-left:12px;">HIT DICE</span>
     <input type="text" id="char-hitdice" placeholder="e.g. 3d6" style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:14px;padding:3px 8px;width:80px;">
+    <span style="margin-left:auto;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="toggleInspiration()">
+      <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;">INSPIRATION</span>
+      <span id="inspiration-star" style="font-size:20px;color:#333;transition:color 0.2s;">★</span>
+    </span>
   </div>
 
   <div class="tabs">
@@ -553,6 +557,7 @@ const DEFAULT_STATE = {
   conditions: [],
   slotsUsed: {},
   chronalShiftUsed: 0,
+  inspiration: false,
   arcaneRecoveryUsed: false,
   cantrips: [],
   spellbook: [],
@@ -741,6 +746,9 @@ function toggleChronalShift(i) {
   renderChronalShift(); saveState();
 }
 function resetChronalShift() { state.chronalShiftUsed = 0; renderChronalShift(); saveState(); }
+
+function toggleInspiration() { state.inspiration = !state.inspiration; renderInspiration(); saveState(); }
+function renderInspiration() { const s = document.getElementById('inspiration-star'); if (s) s.style.color = state.inspiration ? 'var(--gold-bright)' : '#333'; }
 
 // ── Spell Slots ──
 function renderSpellSlots() {
@@ -933,6 +941,7 @@ function initAll() {
   renderSpellbook();
   renderFeatures();
   renderItems();
+  renderInspiration();
   updateAll();
 }
 

@@ -973,6 +973,10 @@ body {
     <span id="display-fp-dc" style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold-pale);">15</span>
     <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;margin-left:12px;">MM DIE</span>
     <span id="display-mm" style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold-pale);">1d4</span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="toggleInspiration()">
+      <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;">INSPIRATION</span>
+      <span id="inspiration-star" style="font-size:20px;color:#333;transition:color 0.2s;">★</span>
+    </span>
   </div>
 
   <!-- TABS -->
@@ -1401,6 +1405,7 @@ const DEFAULT_STATE = {
   abilities: { STR:10, DEX:17, CON:15, INT:10, WIS:20, CHA:10 },
   hp: { current:28, max:28, temp:0, maxOverride:null },
   fpUsed: 0,
+  inspiration: false,
   deathSaves: { s:[false,false,false], f:[false,false,false] },
   skillProf: {
     Acrobatics:0, 'Animal Handling':0, Arcana:0, Athletics:0,
@@ -1749,6 +1754,16 @@ function restoreHalfFP() {
 }
 
 // ── DEATH SAVES ──
+function toggleInspiration() {
+  state.inspiration = !state.inspiration;
+  renderInspiration();
+  saveState();
+}
+function renderInspiration() {
+  const star = document.getElementById('inspiration-star');
+  if (star) star.style.color = state.inspiration ? 'var(--gold-bright)' : '#333';
+}
+
 function toggleDeathSave(el, type, idx) {
   state.deathSaves[type][idx] = !state.deathSaves[type][idx];
   el.classList.toggle('filled', state.deathSaves[type][idx]);
@@ -2208,6 +2223,7 @@ function initAll() {
   renderFeats();
   renderCrownMilestones();
   setStance(state.stance || 'single');
+  renderInspiration();
   updateAll();
 }
 
