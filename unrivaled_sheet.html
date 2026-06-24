@@ -1243,49 +1243,20 @@ body {
         </div>
       </div>
       <div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <button class="btn btn-sm" onclick="setSealFilter('all')" id="sf-all" style="border-color:var(--gold-warm);">All</button>
+          <button class="btn btn-sm" onclick="setSealFilter('known')" id="sf-known">Known</button>
+          <button class="btn btn-sm" onclick="setSealFilter('prepared')" id="sf-prepared">Prepared</button>
+        </div>
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:0.1em;margin-bottom:8px;">
+          Known: <span id="seal-known-count">0</span>/<span id="seal-known-max">0</span> &nbsp;|&nbsp;
+          War Prepared: <span id="seal-war-prep-count">0</span>/<span id="seal-war-prep-max">0</span> &nbsp;|&nbsp;
+          Support Prepared: <span id="seal-sup-prep-count">0</span>/<span id="seal-sup-prep-max">0</span>
+        </div>
         <div class="section-header" style="color:var(--blood-red);">War Seals</div>
         <div id="war-seals-list"></div>
         <div class="section-header" style="margin-top:16px;color:#6A3ADE;">Support Seals</div>
         <div id="support-seals-list"></div>
-        <button class="btn btn-primary btn-sm" onclick="openAddSeal()" style="margin-top:12px;">+ Add Seal</button>
-
-        <!-- Add Seal Modal -->
-        <div id="seal-modal" style="display:none;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:8px;padding:16px;margin-top:12px;">
-          <div id="seal-modal-title" style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-bright);margin-bottom:12px;">ADD SEAL</div>
-          <div class="field-group"><label>Seal Name</label><input type="text" id="new-seal-name" placeholder="e.g. Seal of Evasion"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-            <div class="field-group">
-              <label>Tier</label>
-              <select id="new-seal-tier">
-                <option value="B">Basic</option>
-                <option value="A">Advanced</option>
-                <option value="M">Master</option>
-                <option value="D">Divine</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label>Size</label>
-              <select id="new-seal-size">
-                <option value="N">Normal (1 slot)</option>
-                <option value="G">Greater (2 slots)</option>
-                <option value="C">Colossal (3 slots)</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label>Type</label>
-              <select id="new-seal-type">
-                <option value="W">War</option>
-                <option value="S">Support</option>
-              </select>
-            </div>
-          </div>
-          <div class="field-group"><label>Activation</label><input type="text" id="new-seal-activation" placeholder="e.g. Bonus Action, Reaction"></div>
-          <div class="field-group"><label>Description</label><textarea id="new-seal-desc" placeholder="What does it do?"></textarea></div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-primary btn-sm" onclick="confirmAddSeal()">Add Seal</button>
-            <button class="btn btn-sm" onclick="closeAddSeal()">Cancel</button>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -1411,6 +1382,75 @@ let skipNextFirebaseUpdate = false;
 // ══════════════════════════════════════════════════════════
 // DATA MODEL
 // ══════════════════════════════════════════════════════════
+const SEAL_LIBRARY = [
+// ── BASIC NORMAL WAR ──
+{id:'discernment',name:'Seal of Discernment',tier:'B',size:'N',type:'S',activation:'Reaction',desc:'Your senses sharpen. Advantage on next Insight or Perception check (not contested). May use as a reaction to the check.'},
+{id:'evasion',name:'Seal of Evasion',tier:'B',size:'N',type:'W',activation:'Reaction',desc:'+2 AC until start of your next turn. May use as a reaction to getting targeted with an attack.'},
+{id:'sharpness',name:'Seal of Sharpness',tier:'B',size:'N',type:'W',activation:'Bonus Action',desc:'Your blade cuts deeper. Next attack deals additional force damage equal to your Muscle Memory die.'},
+{id:'jump',name:'Seal of Jump',tier:'B',size:'N',type:'S',activation:'Bonus Action',desc:'Jump double the distance of your Dexterity score.'},
+{id:'focus',name:'Seal of Focus',tier:'B',size:'N',type:'W',activation:'Bonus Action',desc:'Your mind centers. On your next successful attack, you regain 1 Focus Point.'},
+{id:'truestrike',name:'Seal of True Strike',tier:'B',size:'N',type:'W',activation:'Reaction',desc:'Reroll your next attack roll once. May use as a reaction to missing.'},
+{id:'ironskin',name:'Seal of Iron Skin',tier:'B',size:'N',type:'W',activation:'Reaction',desc:'Gain temp HP = WIS mod. Use as reaction to getting hit — subtract from damage.'},
+{id:'calmedmind',name:'Seal of the Calmed Mind',tier:'B',size:'N',type:'W',activation:'Bonus Action',desc:'End one charmed or frightened effect on yourself, or gain advantage on your next Wisdom saving throw.'},
+{id:'emptyscabbard',name:'Seal of the Empty Scabbard',tier:'B',size:'N',type:'W',activation:'—',desc:'When rolling initiative you may consume this seal to gain advantage on the roll.'},
+{id:'translating',name:'Seal of the Translating',tier:'B',size:'N',type:'S',activation:'Action',desc:'Floating ink translates text/speech you see or hear into a language you understand, and vice versa. Lasts 30 minutes.'},
+{id:'inktally',name:'Seal of the Ink-Bound Tally',tier:'B',size:'N',type:'S',activation:'Action',desc:'A counting glyph appears. For 10 minutes, instantly count objects, coins, steps, distances up to 100 ft.'},
+{id:'petalmap',name:'Seal of the Petal-Scribed Map',tier:'B',size:'N',type:'S',activation:'Action',desc:'Automatically map surroundings. Floating scroll records rooms, corridors, terrain, elevation, doors/windows. Zoom, rotate, annotate with gestures.'},
+{id:'perfectread',name:'Seal of Perfect Read',tier:'B',size:'N',type:'W',activation:'Bonus Action',desc:'Prereq: To Cut or Not to Cut. On your next use of To Cut or Not to Cut you have advantage on the contest.'},
+{id:'inkarmament',name:'Seal of Ink-Drawn Armament',tier:'B',size:'N',type:'W',activation:'Bonus Action',desc:'Summon one spectral weapon and attack within 60 ft. Ink Spear: 1d6+MM force, -10 speed. Ink Arrow: 1d6+MM piercing, no reactions. Ink Blade: 1d6+MM slashing, -1 AC. Ink Hammer: 1d6+MM bludgeon, STR save or pushed 10 ft.'},
+{id:'bookmark',name:'Seal of the Ink-Bound Bookmark',tier:'B',size:'N',type:'S',activation:'Action',desc:'Mark a page, door, or location. For 1 hour, always know direction back to that point within 300 ft.'},
+{id:'compass',name:'Seal of the Ink-Draft Compass',tier:'B',size:'N',type:'S',activation:'Action',desc:'Compass-glyph for 10 minutes. Perfect cardinal direction, advantage on Survival checks to navigate.'},
+// ── BASIC GREATER ──
+{id:'twinstrike',name:'Seal of Twin Strike',tier:'B',size:'G',type:'W',activation:'Bonus Action',desc:'Make two melee attacks (one per weapon) against same or different targets. Extra MM die force damage per hit. If both hit same target, its speed is halved until end of your next turn.'},
+{id:'echolessstep',name:'Seal of Echoless Step',tier:'B',size:'G',type:'S',activation:'Bonus Action',desc:'Until end of your turn, movement is silent. Advantage on Stealth checks this turn.'},
+{id:'ghostlantern',name:'Seal of the Ghost Lantern',tier:'B',size:'G',type:'S',activation:'Action',desc:'Floating ink lantern for 8 hours. Bright light 20 ft, dim 20 ft. Advantage on Investigation checks to inspect objects or writing.'},
+{id:'inkbridge',name:'Seal of the Ink Bridge',tier:'B',size:'G',type:'S',activation:'Action',desc:'Create 15-ft long, 5-ft wide temporary ink platform for 1 minute. Supports up to 300 lbs.'},
+{id:'whisper',name:'Seal of the Whisper',tier:'B',size:'G',type:'S',activation:'Action',desc:'You and one creature you touch whisper to each other across 120 ft, even through walls, for 10 minutes.'},
+{id:'inkscout',name:'Seal of the Ink-Bound Scout',tier:'B',size:'G',type:'S',activation:'Action',desc:'Create a tiny ink insect that crawls up to 60 ft. See through its eyes while concentrating (up to 1 minute). Cannot fly or pass through cracks.'},
+{id:'ironmountain',name:'Seal of Iron Mountain',tier:'B',size:'G',type:'W',activation:'Reaction',desc:'Gain temp HP = 2×WIS mod. +2 AC until start of next turn. Cannot be pushed, knocked prone, or moved. When hit with melee, attacker takes half MM die force damage (while temp HP remain).'},
+{id:'cleaving',name:'Seal of Cleaving',tier:'B',size:'G',type:'W',activation:'Action',desc:'10-ft line from you. DEX save. Fail: 3×MM force damage, pushed 5 ft. Success: 1×MM. If 2+ creatures hit, next melee attack deals extra weapon damage die.'},
+{id:'twinstrokearsenal',name:'Seal of Twin-Stroke Arsenal',tier:'B',size:'G',type:'W',activation:'Bonus Action',desc:'Two ink-gates open. Summon two spectral weapons from Armory, fire at creature within 60 ft. If both hit same creature, WIS save or disadvantage on next attack.'},
+// ── BASIC COLOSSAL ──
+{id:'wanderinghut',name:'Seal of the Wandering Hut',tier:'B',size:'C',type:'S',activation:'30 min writing',desc:'Ink-hut 10-ft radius dome for 8 hours. Environmental protection, one-way translucent walls. Long rest inside: +1d6 max HP, advantage on first WIS check. Short Rest Form (bonus action): 1-hour inkfire camp, advantage on Hit Dice rolls, +1 FP regained.'},
+{id:'fourfoldvault',name:'Fourfold War Vault',tier:'B',size:'C',type:'W',activation:'Action',desc:'Four spectral weapons orbit you. Once/round as reaction or bonus action, two fire at creatures within 60 ft. When all four fired, seal ends. Drawback: half speed, disadvantage on DEX saves while active.'},
+{id:'inkworkshop',name:'Seal of the Ink-Forged Workshop',tier:'B',size:'C',type:'S',activation:'Action',desc:'10-ft radius atelier for 1 hour. All nonmagical artisan tools. Advantage on craft/repair/analyze checks. 1hr 20min of crafting in 1 hour. Free during long rest/downtime.'},
+{id:'sakuradance',name:'Sakura Dance',tier:'B',size:'C',type:'W',activation:'Action (1/LR)',desc:'Petalbound Ascension: rise 15 ft, glide 20 ft (invisible, no OA). Three melee attacks, each 2×MM force + weapon. If 2+ hit same target, 5-ft AoE 1×MM force. Falling Blossom: DEX save, fail 2×MM + prone. Recoil: take MM psychic, speed 0, 1 exhaustion.'},
+// ── ADVANCED NORMAL (LV6+) ──
+{id:'phantombloom',name:'Seal of Phantom Bloom',tier:'A',size:'N',type:'W',activation:'Bonus Action',desc:'Prereq: Imitation Cut. Target up to 2 creatures within 10 ft of each other. WIS save. Fail: no reactions, disadvantage on next attack. Fail by 5+: no reactions, disadvantage on ALL attacks until end of next turn. Success: MM die psychic damage.'},
+{id:'inkscryingeye',name:'Seal of the Ink-Scrying Eye',tier:'A',size:'N',type:'S',activation:'Bonus Action',desc:'Blindsight 15 ft until end of next turn. Advantage on Insight and Perception. First hit during duration: learn HP range, highest ability score, or if under magical effect.'},
+{id:'twofoldfang',name:'Seal of the Twofold Fang',tier:'A',size:'N',type:'W',activation:'Bonus Action',desc:'Dual-Wielding (Twin Fangs): next attack deals both weapon dice twice, no MM. Single-Blade (Perfect Cut): next attack +MM die, forces disadvantage on target\'s next attack.'},
+{id:'ironstance',name:'Seal of Iron Stance',tier:'A',size:'N',type:'W',activation:'Bonus Action',desc:'Gain temp HP = 2×WIS mod. Cannot be pushed/knocked prone until next turn. First melee hit on you deals MM force damage back. If you take no damage before next turn, advantage on next save.'},
+{id:'inkrecollection',name:'Ink-Forged Recollection',tier:'A',size:'N',type:'W',activation:'Action',desc:'3 ranged attacks within 60 ft. Each 1d8+MM force. Choose form per hit: Ink Katana (-1 AC), Ink Spear (-10 speed), Ink Axe (STR save or prone), Ink Dagger (no reactions). If all 3 hit same creature: WIS save or disadvantage on next 2 attacks.'},
+{id:'whisperedintent',name:'Seal of Whispered Intent',tier:'A',size:'N',type:'W',activation:'Bonus Action',desc:'Choose creature within 30 ft. Know its next action type (move/attack/spell/item) until end of next turn. First time it targets you, +2 AC. May spend 2 FP for To Cut or Not to Cut with advantage.'},
+{id:'inkwalkingstep',name:'Seal of the Ink-Walking Step',tier:'A',size:'N',type:'S',activation:'Action',desc:'Walk on any surface (water, walls, ceilings, fog, smoke, branches) for 10 minutes. Leave faint ink footprints that fade after 1 minute.'},
+{id:'inksightlantern',name:'Seal of the Ink-Sight Lantern',tier:'A',size:'N',type:'S',activation:'Action',desc:'For 10 minutes: See Invisibility, Detect Magic (visual only), advantage on Investigation. Floating ink lantern sheds dim light.'},
+{id:'whisperecho',name:'Seal of the Whisper-Bound Echo',tier:'A',size:'N',type:'S',activation:'Action',desc:'Capture up to 10 minutes of audio in floating ink orb. Replay perfectly, silently review, or project up to 60 ft. Can mimic voices, passwords, environmental sounds.'},
+{id:'inkoath',name:'Seal of the Ink-Scribed Oath',tier:'A',size:'N',type:'S',activation:'Action',desc:'Inscribe magically binding agreement in floating ink. Creatures that willingly sign are compelled to honor terms. Breaking causes harmless petal burst revealing the violator.'},
+{id:'inkwroughtbridge',name:'Seal of the Ink-Wrought Bridge',tier:'A',size:'N',type:'S',activation:'Action',desc:'Draw a line in air or across a gap. Becomes solid ink walkway up to 30 ft long, 10 ft wide. Lasts 10 minutes.'},
+// ── ADVANCED GREATER (LV6+) ──
+{id:'petalmessage',name:'Seal of the Petal-Scribed Message',tier:'A',size:'G',type:'S',activation:'Action',desc:'Write up to 100 words. Message becomes petal swarm traveling to creature within 1 mile. Heard in your voice. 25-word reply.'},
+{id:'focusedvolley',name:'Ink Arsenal: Focused Volley',tier:'A',size:'G',type:'W',activation:'Action',desc:'Range 120 ft. One ranged spell attack. Hit: 4d8+MM force. Advantage if target took damage this turn. If you beat AC by 5+, second creature within 10 ft takes 2d8 force.'},
+{id:'inkdominion',name:'Seal of the Ink-Bound Dominion',tier:'A',size:'G',type:'W',activation:'Action',desc:'10-ft radius zone until end of next turn. Enemies entering: WIS save or disadvantage on attacks. Allies: +1 AC. Fail by 5+: can\'t move closer. Nullifies negative environmental effects (fire, poison, acid).'},
+{id:'phantomblossom',name:'Seal of the Phantom Blossom',tier:'A',size:'G',type:'W',activation:'Action',desc:'Prereq: Imitation Cut. Up to 4 creatures within 15 ft. WIS save. Fail: Incapacitated. Fail by 5+: Stunned. Success or fail: 2×MM psychic. If 1+ fails, move 10 ft no OA. May expend to use normal Phantom Bloom twice instead.'},
+{id:'twinfangcarnage',name:'Seal of the Twin Fang Carnage',tier:'A',size:'G',type:'W',activation:'Action',desc:'Dual: next attack deals both weapon dice three times (no MM), DEX save to knock prone (can\'t crit). Single: next attack deals 2×MM, forces disadvantage on next 2 attacks.'},
+{id:'blazingedge',name:'Seal of the Blazing Edge',tier:'A',size:'G',type:'W',activation:'Bonus Action',desc:'Next 3 hits deal extra fire damage = MM die. If all 3 hit same creature, additional fire damage = 2×WIS mod.'},
+{id:'beautifulend',name:'Seal of A Beautiful End',tier:'A',size:'G',type:'W',activation:'Bonus Action',desc:'Mark creature within 30 ft for 1 minute. First attack +2×MM, subsequent +1×MM. Target has disadvantage on first save vs your features. Kill: bloom, regain 1 FP, move 10 ft no OA. If mark ends and target survives: 4×MM psychic backlash (unreducible).'},
+{id:'shadesprite',name:'Ink-Bound Shade Sprite',tier:'A',size:'G',type:'S',activation:'Action',desc:'Summon small ink echo. AC 15, HP = Level×(MM+PB). Shadow Merge (bonus action). Echo Drift (through creatures as difficult terrain). Ink Swipe: +PB, 1d6+PB slashing. 30 ft link range. Fading Memory: dissolves at 0 HP, resummon on long rest.'},
+// ── ADVANCED COLOSSAL ──
+{id:'inksundered',name:'Ink Sundered Offering',tier:'A',size:'C',type:'W',activation:'Action (1/LR)',desc:'Prereq: two weapons. Step 1: become invisible ink, +20 speed, move through creatures, no OA. Step 2: reappear along path. Up to 4 creatures: WIS save. Fail: 8×MM force, stunned. Success: half, no reactions. Step 3: take MM psychic damage.'},
+{id:'skyrendingburial',name:'Sky Rending Burial',tier:'A',size:'C',type:'W',activation:'Action (1/LR)',desc:'Range 60 ft. Part I: STR save. Fail: launched 40 ft up, restrained. Success: 10 ft up. Part II: teleport above, melee with advantage. Hit: +6×MM force. Target falls full height + prone. 10-ft shockwave: DEX save or half MM force + prone. You have no movement until end of next turn.'},
+{id:'attendantscourt',name:'Seal of the Attendants\' Court',tier:'A',size:'C',type:'S',activation:'Action',desc:'24 silent attendants for 8 hours. Camp setup in 1 min, no difficult terrain for travel, 5× carrying capacity. Short rest: temp HP = WIS mod. Long rest: remove 1 exhaustion. Choose 3 professions for proficiency (or advantage if already proficient). 2× crafting speed. Auto-document maps and discoveries.'},
+// ── MASTER NORMAL (LV11+) ──
+{id:'inkblinkexecution',name:'Seal of Ink Blink Execution',tier:'M',size:'N',type:'W',activation:'Bonus Action',desc:'Teleport to space adjacent to creature within 30 ft. Make one melee attack with advantage. Hit: +4×MM force. Crits on 19–20.'},
+{id:'sovereignphantom',name:'Seal of the Sovereign Phantom Blossom',tier:'M',size:'N',type:'W',activation:'Action',desc:'Prereq: Imitation Cut. Up to 8 creatures within 60 ft. WIS save. Fail: Stunned. Fail by 5+: Stunned until end of next turn. Success: 2×MM psychic. If 1+ fails: move 20 ft no OA. If 3+ fail: allies within 60 ft advantage on next save.'},
+{id:'fourfoldmirage',name:'Seal of the Fourfold Mirage',tier:'M',size:'N',type:'W',activation:'Bonus Action',desc:'Four mirage clones for 1 minute. When taking damage, d4: 1-3 clone destroyed (no damage), 4 hits you normally. Clones untargetable, indistinguishable. Ink-Scatter: move 5 ft no OA when clone destroyed.'},
+// ── MASTER GREATER (LV11+) ──
+{id:'armycleaving',name:'Seal of the Army Cleaving',tier:'M',size:'G',type:'W',activation:'Action',desc:'30-ft cone. DEX save. Fail: 6×MM force, knocked prone. Fail by 5+: 10×MM force, pushed 30 ft, prone. Success: 3×MM psychic. Per failed creature, allies within 60 ft gain MM die temp HP.'},
+// ── MASTER COLOSSAL (LV11+) ──
+{id:'swordhell',name:'Ink-Drawn Sword Hell',tier:'M',size:'C',type:'W',activation:'Action',desc:'Strike blade into ground. 20-ft ink sea (expands 10 ft/round to 40 ft max). 3 rounds. Act I: difficult terrain, allies half cover, your attacks advantage, enemies 2×MM force, -10 speed. Act II: two ink blades per enemy turn (1×MM each, DEX save), +1×MM on your attacks, -10 more speed, attack any creature in domain. Act III: 4×MM force (CON half), resistance to all damage, advantage, enemies disadv on saves vs seals, heavily obscured for enemies. Act IV: teleport to chosen creature, melee with advantage, +8×MM force. Escape: DC 22 DEX+WIS saves. Aftermath: 1 exhaustion, -10 speed, no seals, -3 AC, no reactions, disadvantage on next save.'},
+{id:'yuentomo',name:'Yūen-Tomo — The Friend Beyond Fate',tier:'M',size:'C',type:'W',activation:'Action',desc:'Replaces Shade Sprite. Permanent martial spirit. AC = your base+1. HP = (MM+PB)×level. STR 18 DEX 16 CON 16. Resistance to physical+force. Shadow-Guard (reaction: take damage for you). Ink-Spear: +PB+4, 1d10+4+MM force. Shadow-Step Requiem (1/SR): both teleport and attack, if both hit +2×MM+PB force, no reactions. Ink-Cross Guard: halve damage to ally within 20 ft. Bond Overdrive: on crit, other attacks with advantage. Costs 4 seal slots permanently. At 0 HP: leftover damage to you + 1 exhaustion.'},
+];
+
 const DEFAULT_STATE = {
   identity: { name:'', level:3, race:'', background:'', alignment:'', player:'' },
   abilities: { STR:10, DEX:17, CON:15, INT:10, WIS:20, CHA:10 },
@@ -1432,16 +1472,8 @@ const DEFAULT_STATE = {
   warSealSlots: [],
   supportSealSlots: [],
   bonusSealSlots: 0,
-  seals: [
-    { name:'Seal of Discernment', tier:'B', size:'N', type:'S', activation:'Reaction', desc:'Advantage on next Insight or Perception check (not contested).', prepared:false },
-    { name:'Seal of Evasion', tier:'B', size:'N', type:'W', activation:'Reaction', desc:'+2 AC until start of your next turn. Use as reaction to being targeted.', prepared:true },
-    { name:'Seal of Iron Skin', tier:'B', size:'N', type:'W', activation:'Reaction', desc:'Gain temp HP = WIS mod. Use as reaction to being hit — subtract from damage.', prepared:true },
-    { name:'Seal of Focus', tier:'B', size:'N', type:'W', activation:'Bonus Action', desc:'On next successful attack, regain 1 FP.', prepared:false },
-    { name:'Seal of True Strike', tier:'B', size:'N', type:'W', activation:'Reaction', desc:'Reroll your next attack roll once. Use as reaction to missing.', prepared:false },
-    { name:'Seal of the Calmed Mind', tier:'B', size:'N', type:'W', activation:'Bonus Action', desc:'End one charmed/frightened effect, OR advantage on next WIS save.', prepared:false },
-    { name:'Seal of the Empty Scabbard', tier:'B', size:'N', type:'W', activation:'—', desc:'On initiative: consume to gain advantage on the roll.', prepared:true },
-    { name:'Seal of Sharpness', tier:'B', size:'N', type:'W', activation:'Bonus Action', desc:'Next attack deals +MM die force damage.', prepared:false },
-  ],
+  knownSeals: {},
+  preparedSeals: {},
   feats: [
     { name:'Elven Accuracy', desc:'When you have advantage on an attack roll using Dexterity, Intelligence, Wisdom, or Charisma, you can reroll one of the dice once. DEX +1.' },
     { name:'Skill Expert', desc:'+1 to one ability score, proficiency in one skill, expertise in one skill (Insight).' },
@@ -1518,7 +1550,7 @@ function saveState() {
     features: 'Unarmored Defense, Muscle Memory, Focus Points, Niten Ichi-Ryū, Calm Within the Storm',
     notes: state.notes.session || '',
     stance: state.stance,
-    seals: state.seals.filter(s => s.prepared).map(s => s.name).join(', '),
+    seals: SEAL_LIBRARY.filter(s => state.preparedSeals[s.id]).map(s => s.name).join(', '),
     sheetType: 'unrivaled',
     lastUpdated: Date.now()
   });
@@ -1892,24 +1924,46 @@ function resetSealSlots() {
   renderSealSlots(); saveState();
 }
 
-// ── SEALS LIST ──
+// ── SEALS LIST (Library-based) ──
 const TIER_NAMES = { B:'Basic', A:'Advanced', M:'Master', D:'Divine' };
-const SIZE_NAMES = { N:'Normal', G:'Greater', C:'Colossal' };
+const SIZE_NAMES = { N:'Normal (1)', G:'Greater (2)', C:'Colossal (3)' };
 const TYPE_NAMES = { W:'War', S:'Support' };
+const TIER_MIN_LEVEL = { B:1, A:6, M:11, D:16 };
+let sealFilter = 'all';
 
-function renderSealCard(seal, i) {
-  return `<div class="seal-card">
+function setSealFilter(f) {
+  sealFilter = f;
+  document.querySelectorAll('[id^="sf-"]').forEach(b => b.style.borderColor = 'var(--border)');
+  document.getElementById('sf-' + f).style.borderColor = 'var(--gold-warm)';
+  renderSeals();
+}
+
+function getAvailableSeals() {
+  const level = state.identity.level;
+  return SEAL_LIBRARY.filter(s => level >= (TIER_MIN_LEVEL[s.tier] || 1));
+}
+
+function renderSealCard(seal) {
+  const known = state.knownSeals[seal.id] || false;
+  const prepared = state.preparedSeals[seal.id] || false;
+  const available = state.identity.level >= (TIER_MIN_LEVEL[seal.tier] || 1);
+  const tierColor = seal.tier === 'B' ? '#888' : seal.tier === 'A' ? 'var(--gold-warm)' : seal.tier === 'M' ? 'var(--gold-bright)' : '#FF6600';
+
+  if (sealFilter === 'known' && !known) return '';
+  if (sealFilter === 'prepared' && !prepared) return '';
+
+  return `<div class="seal-card" style="${!available ? 'opacity:0.3;' : !known ? 'opacity:0.6;' : ''}">
     <div class="seal-card-header" onclick="toggleSealDesc(this)" style="cursor:pointer;">
-      <div class="seal-prepared-toggle ${seal.prepared ? 'prepared' : ''}"
-        onclick="event.stopPropagation();toggleSealPrepared(${i})" title="Toggle prepared">✦</div>
-      <div class="seal-card-name">${seal.name}</div>
-      <span class="seal-tag ${seal.size === 'N' ? 'normal' : seal.size === 'G' ? 'greater' : 'colossal'}">
-        ${SIZE_NAMES[seal.size]}
-      </span>
+      <div class="seal-prepared-toggle ${prepared ? 'prepared' : ''}"
+        onclick="event.stopPropagation();toggleSealPrepared('${seal.id}')" title="Toggle prepared"
+        style="${!known ? 'pointer-events:none;opacity:0.3;' : ''}">✦</div>
+      <div style="width:18px;height:18px;border:1px solid ${known ? 'var(--gold-bright)' : '#333'};border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:${known ? 'var(--gold-bright)' : 'transparent'};background:${known ? 'rgba(200,169,126,0.15)' : 'transparent'};flex-shrink:0;"
+        onclick="event.stopPropagation();toggleSealKnown('${seal.id}')" title="Toggle known">✓</div>
+      <div class="seal-card-name" style="${!known ? 'color:#666;' : ''}">${seal.name}</div>
+      <span class="seal-tag" style="color:${tierColor};font-size:8px;">${TIER_NAMES[seal.tier]}</span>
+      <span class="seal-tag ${seal.size === 'N' ? 'normal' : seal.size === 'G' ? 'greater' : 'colossal'}">${SIZE_NAMES[seal.size]}</span>
       <span style="font-family:'Cinzel',serif;font-size:9px;color:#555;">${seal.activation}</span>
       <span style="color:#555;font-size:12px;margin-left:4px;">▼</span>
-      <button class="btn btn-sm" onclick="event.stopPropagation();editSeal(${i})" style="font-size:9px;padding:2px 8px;">Edit</button>
-      <button class="btn-remove" onclick="event.stopPropagation();removeSeal(${i})">×</button>
     </div>
     <div class="seal-desc" style="display:none;">${seal.desc}</div>
   </div>`;
@@ -1920,63 +1974,48 @@ function renderSeals() {
   const supList = document.getElementById('support-seals-list');
   if (!warList || !supList) return;
 
-  const warSeals = state.seals.map((s, i) => ({ seal: s, idx: i })).filter(x => x.seal.type === 'W');
-  const supSeals = state.seals.map((s, i) => ({ seal: s, idx: i })).filter(x => x.seal.type === 'S');
+  const allSeals = SEAL_LIBRARY;
+  const warSeals = allSeals.filter(s => s.type === 'W');
+  const supSeals = allSeals.filter(s => s.type === 'S');
 
-  warList.innerHTML = warSeals.length ? warSeals.map(x => renderSealCard(x.seal, x.idx)).join('') : '<div style="color:#444;font-size:13px;padding:8px;">No war seals yet.</div>';
-  supList.innerHTML = supSeals.length ? supSeals.map(x => renderSealCard(x.seal, x.idx)).join('') : '<div style="color:#444;font-size:13px;padding:8px;">No support seals yet.</div>';
+  const warHTML = warSeals.map(s => renderSealCard(s)).filter(Boolean).join('');
+  const supHTML = supSeals.map(s => renderSealCard(s)).filter(Boolean).join('');
+
+  warList.innerHTML = warHTML || '<div style="color:#444;font-size:13px;padding:8px;">No matching war seals.</div>';
+  supList.innerHTML = supHTML || '<div style="color:#444;font-size:13px;padding:8px;">No matching support seals.</div>';
+
+  // Update counts
+  const knownCount = Object.values(state.knownSeals).filter(Boolean).length;
+  const knownMax = state.identity.level + mod(state.abilities.WIS);
+  const warPrepCount = SEAL_LIBRARY.filter(s => s.type === 'W' && state.preparedSeals[s.id]).length;
+  const warPrepMax = mod(state.abilities.WIS);
+  const supPrepCount = SEAL_LIBRARY.filter(s => s.type === 'S' && state.preparedSeals[s.id]).length;
+  const supPrepMax = mod(state.abilities.WIS) + pb();
+  setText('seal-known-count', knownCount);
+  setText('seal-known-max', knownMax);
+  setText('seal-war-prep-count', warPrepCount);
+  setText('seal-war-prep-max', warPrepMax);
+  setText('seal-sup-prep-count', supPrepCount);
+  setText('seal-sup-prep-max', supPrepMax);
 }
+
 function toggleSealDesc(header) {
   const desc = header.nextElementSibling;
-  const chevron = header.querySelector('span:nth-last-child(2)');
+  const chevron = header.querySelector('span:last-child');
   const open = desc.style.display === 'none';
   desc.style.display = open ? 'block' : 'none';
   if (chevron) chevron.textContent = open ? '▲' : '▼';
 }
-function toggleSealPrepared(i) { state.seals[i].prepared = !state.seals[i].prepared; renderSeals(); saveState(); }
-function removeSeal(i) { state.seals.splice(i,1); renderSeals(); saveState(); }
-let editingSealIdx = -1;
-function openAddSeal() {
-  editingSealIdx = -1;
-  document.getElementById('seal-modal-title').textContent = 'ADD SEAL';
-  ['new-seal-name','new-seal-activation','new-seal-desc'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('new-seal-tier').value = 'B';
-  document.getElementById('new-seal-size').value = 'N';
-  document.getElementById('new-seal-type').value = 'W';
-  document.getElementById('seal-modal').style.display = 'block';
+
+function toggleSealKnown(id) {
+  state.knownSeals[id] = !state.knownSeals[id];
+  if (!state.knownSeals[id]) state.preparedSeals[id] = false;
+  renderSeals(); saveState();
 }
-function editSeal(i) {
-  editingSealIdx = i;
-  const seal = state.seals[i];
-  document.getElementById('seal-modal-title').textContent = 'EDIT SEAL';
-  document.getElementById('new-seal-name').value = seal.name || '';
-  document.getElementById('new-seal-tier').value = seal.tier || 'B';
-  document.getElementById('new-seal-size').value = seal.size || 'N';
-  document.getElementById('new-seal-type').value = seal.type || 'W';
-  document.getElementById('new-seal-activation').value = seal.activation || '';
-  document.getElementById('new-seal-desc').value = seal.desc || '';
-  document.getElementById('seal-modal').style.display = 'block';
-}
-function closeAddSeal() { document.getElementById('seal-modal').style.display = 'none'; }
-function confirmAddSeal() {
-  const name = document.getElementById('new-seal-name').value.trim();
-  if (!name) return;
-  const data = {
-    name,
-    tier: document.getElementById('new-seal-tier').value,
-    size: document.getElementById('new-seal-size').value,
-    type: document.getElementById('new-seal-type').value,
-    activation: document.getElementById('new-seal-activation').value,
-    desc: document.getElementById('new-seal-desc').value,
-  };
-  if (editingSealIdx >= 0) {
-    data.prepared = state.seals[editingSealIdx].prepared;
-    state.seals[editingSealIdx] = data;
-  } else {
-    data.prepared = false;
-    state.seals.push(data);
-  }
-  closeAddSeal();
+
+function toggleSealPrepared(id) {
+  if (!state.knownSeals[id]) return;
+  state.preparedSeals[id] = !state.preparedSeals[id];
   renderSeals(); saveState();
 }
 
