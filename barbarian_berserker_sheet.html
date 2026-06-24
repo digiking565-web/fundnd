@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Berserker Barbarian — Character Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink-void: #12080A; --ink-deep: #1E0E10; --ink-panel: #2A1418; --ink-mist: #32181C; --ink-field: #3A1E22;
+  --gold-bright: #DD4444; --gold-warm: #C87060; --gold-pale: #E88A7A; --blood-red: #AA2222; --blood-light: #DD4444;
+  --parchment: #F5D8D0; --ink-blue: #DE6A6A; --border: #4A2228; --border-gold: #3A1418; --green-low: #2A1A1A; --purple-low: #2A0A0A;
+}
+[data-theme="gold"]{--ink-void:#0A0A12;--ink-deep:#12121E;--ink-panel:#1A1A2E;--ink-mist:#1E1E32;--ink-field:#242438;--gold-bright:#FFD700;--gold-warm:#C8A97E;--gold-pale:#E8C97A;--blood-red:#8B1A1A;--blood-light:#B22222;--parchment:#F5E6C8;--border:#2A2A4A;--border-gold:#3A3020;}
+[data-theme="frost"]{--ink-void:#060A12;--ink-deep:#0E141E;--ink-panel:#141E2E;--ink-mist:#182438;--ink-field:#1E2A42;--gold-bright:#6AB0FF;--gold-warm:#7899C8;--gold-pale:#8AB0E8;--blood-red:#1A4A8B;--blood-light:#2266BB;--parchment:#D0E0F5;--border:#2A3A4A;--border-gold:#18283A;}
+[data-theme="arcane"]{--ink-void:#0A060E;--ink-deep:#140E1E;--ink-panel:#1E142E;--ink-mist:#241838;--ink-field:#2E1E42;--gold-bright:#B06AFF;--gold-warm:#9878C8;--gold-pale:#B88AE8;--blood-red:#6A2AAA;--blood-light:#8844DD;--parchment:#E0D0F5;--border:#3A2A4A;--border-gold:#2A183A;}
+[data-theme="emerald"]{--ink-void:#060E08;--ink-deep:#0E1E14;--ink-panel:#142A1A;--ink-mist:#18321E;--ink-field:#1E3A24;--gold-bright:#44DD66;--gold-warm:#70C88A;--gold-pale:#8AE8A0;--blood-red:#1A6B2A;--blood-light:#22AA44;--parchment:#D0F5D8;--border:#2A4A2E;--border-gold:#183A20;}
+[data-theme="parchment"]{--ink-void:#F5E6C8;--ink-deep:#EDDCB8;--ink-panel:#E8D4AA;--ink-mist:#DCC89A;--ink-field:#D0BC8A;--gold-bright:#8B1A1A;--gold-warm:#7A4040;--gold-pale:#6A3030;--blood-red:#AA2222;--blood-light:#CC3333;--parchment:#2A1A0A;--border:#B0A080;--border-gold:#8A7A5A;}
+.theme-dot{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;}.theme-dot:hover{transform:scale(1.2);}.theme-dot.active{border-color:var(--parchment);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--ink-void);color:var(--parchment);font-family:'Crimson Text',Georgia,serif;font-size:16px;min-height:100vh;}
+.app{max-width:1200px;margin:0 auto;padding:0 12px 40px;}
+.header{text-align:center;padding:28px 0 16px;border-bottom:1px solid var(--border-gold);position:relative;}
+.header-title{font-family:'Cinzel',serif;font-size:clamp(22px,4vw,38px);font-weight:900;color:var(--gold-bright);letter-spacing:.12em;text-shadow:0 0 40px rgba(221,68,68,.3);}
+.header-subtitle{font-family:'Cinzel',serif;font-size:12px;letter-spacing:.3em;color:var(--gold-warm);margin-top:4px;text-transform:uppercase;}
+.save-indicator{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;color:#555;font-family:'Cinzel',serif;letter-spacing:.1em;}.save-indicator.saved{color:#4A8A4A;}
+.identity-bar{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;gap:8px;padding:14px 0;border-bottom:1px solid var(--border);}
+.identity-field{display:flex;flex-direction:column;gap:3px;}
+.identity-field label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;color:var(--gold-warm);text-transform:uppercase;}
+.identity-field input,.field-group input,.field-group textarea,.field-group select{background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-family:'Crimson Text',serif;font-size:15px;padding:6px 8px;width:100%;}
+.identity-field input:focus,.field-group input:focus,.field-group textarea:focus{outline:none;border-color:var(--gold-warm);background:var(--ink-mist);}
+.field-group{margin-bottom:12px;}.field-group label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;color:var(--gold-warm);margin-bottom:4px;text-transform:uppercase;}
+.field-group textarea{resize:vertical;min-height:80px;line-height:1.5;}.field-group select option{background:var(--ink-panel);}
+.stat-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:12px 0;border-bottom:1px solid var(--border);}
+.stat-bubble{background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;text-align:center;padding:10px 6px;}
+.stat-bubble.computed{border-color:var(--blood-red);}
+.stat-bubble .val{font-family:'Cinzel',serif;font-size:26px;font-weight:700;color:var(--gold-pale);line-height:1;}
+.stat-bubble .lbl{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.2em;color:var(--gold-warm);text-transform:uppercase;margin-top:4px;}
+.hp-tracker{display:flex;align-items:center;justify-content:center;gap:4px;}
+.hp-tracker input{background:transparent;border:none;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:20px;font-weight:700;width:45px;text-align:center;}
+.hp-tracker input:focus{outline:none;color:var(--gold-bright);}
+.hp-tracker span{color:var(--gold-warm);font-size:16px;}
+.tabs{display:flex;gap:2px;padding:10px 0 0;border-bottom:2px solid var(--border-gold);overflow-x:auto;scrollbar-width:none;}.tabs::-webkit-scrollbar{display:none;}
+.tab-btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;padding:8px 16px;background:transparent;border:none;color:#555;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;}
+.tab-btn:hover{color:var(--gold-warm);}.tab-btn.active{color:var(--gold-bright);border-bottom-color:var(--gold-bright);}
+.panel{display:none;padding:16px 0;}.panel.active{display:block;}
+.section-header{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-warm);border-bottom:1px solid var(--border-gold);padding-bottom:6px;margin:20px 0 12px;}.section-header:first-child{margin-top:0;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.card{background:var(--ink-panel);border:1px solid var(--border);border-radius:6px;padding:14px;}.mb-8{margin-bottom:8px;}
+.ability-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;}
+.ability-block{background:var(--ink-panel);border:1px solid var(--border);border-radius:6px;text-align:center;padding:10px 4px;}
+.ability-name{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;color:var(--gold-warm);text-transform:uppercase;margin-bottom:6px;}
+.ability-score{font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:var(--gold-pale);background:transparent;border:none;width:100%;text-align:center;line-height:1;}
+.ability-score:focus{outline:none;color:var(--gold-bright);}
+.ability-mod{font-family:'Cinzel',serif;font-size:18px;font-weight:600;color:var(--gold-warm);margin-top:4px;background:var(--ink-mist);border-radius:4px;padding:2px 0;}
+.skills-list{display:flex;flex-direction:column;gap:2px;}
+.skill-row{display:grid;grid-template-columns:24px 24px 1fr 50px;align-items:center;gap:6px;padding:4px 8px;border-radius:4px;background:var(--ink-deep);border:1px solid transparent;}
+.skill-row:hover{border-color:var(--border);}
+.prof-toggle{width:18px;height:18px;border:1px solid #333;border-radius:3px;cursor:pointer;background:transparent;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;flex-shrink:0;}
+.prof-toggle.prof{border-color:var(--gold-warm);color:var(--gold-warm);background:rgba(200,112,96,.1);}
+.prof-toggle.expert{border-color:var(--gold-bright);color:var(--gold-bright);background:rgba(221,68,68,.15);}
+.skill-name{font-size:14px;}.skill-ability{font-size:10px;color:#555;font-family:'Cinzel',serif;}
+.skill-bonus{font-family:'Cinzel',serif;font-size:15px;font-weight:600;color:var(--gold-pale);text-align:right;}
+.saves-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.save-row{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--ink-deep);border-radius:4px;border:1px solid transparent;}
+.save-row.proficient{border-color:var(--blood-red);}
+.save-prof-dot{width:10px;height:10px;border-radius:50%;border:1px solid #333;cursor:pointer;flex-shrink:0;}
+.save-prof-dot.active{background:var(--blood-red);border-color:var(--blood-red);}
+.save-name{flex:1;font-size:13px;}.save-bonus{font-family:'Cinzel',serif;font-size:15px;font-weight:600;color:var(--gold-pale);}
+.use-tracker{display:flex;align-items:center;gap:8px;padding:10px;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;margin-bottom:8px;}
+.use-label{font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);min-width:130px;letter-spacing:.1em;}
+.use-pips{display:flex;gap:6px;}
+.use-pip{width:24px;height:24px;border-radius:4px;border:2px solid var(--gold-warm);cursor:pointer;background:rgba(200,112,96,.15);}
+.use-pip.used{border-color:#333;background:transparent;}
+.feature-card{background:var(--ink-panel);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:8px;}
+.feature-card.locked{opacity:.4;}
+.feature-header{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;}
+.feature-level-badge{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;padding:2px 6px;border-radius:3px;background:var(--blood-red);color:var(--parchment);flex-shrink:0;}
+.feature-title{font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--gold-pale);flex:1;}
+.feature-body{padding:0 14px 12px;font-size:14px;line-height:1.6;color:#CCC;display:none;}.feature-body.open{display:block;}.feature-body strong{color:var(--gold-pale);}
+.currency-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
+.currency-block{background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;text-align:center;padding:10px 6px;}
+.currency-block label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;color:var(--gold-warm);display:block;margin-bottom:4px;}
+.currency-block input{background:transparent;border:none;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:20px;font-weight:700;width:100%;text-align:center;}
+.currency-block input:focus{outline:none;color:var(--gold-bright);}
+.death-saves{display:flex;flex-direction:column;gap:6px;}
+.death-save-row{display:flex;align-items:center;gap:8px;}
+.death-save-row label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.15em;width:60px;}
+.death-save-row.success label{color:#4A8A4A;}.death-save-row.failure label{color:var(--blood-red);}
+.death-pip{width:22px;height:22px;border-radius:50%;border:2px solid #333;cursor:pointer;}
+.death-save-row.success .death-pip.filled{background:#4A8A4A;border-color:#4A8A4A;}
+.death-save-row.failure .death-pip.filled{background:var(--blood-red);border-color:var(--blood-red);}
+.btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;padding:8px 16px;border-radius:4px;border:1px solid var(--border);cursor:pointer;background:var(--ink-panel);color:var(--gold-warm);}
+.btn:hover{border-color:var(--gold-warm);color:var(--gold-bright);}
+.btn-primary{background:rgba(170,34,34,.3);border-color:var(--blood-red);color:var(--parchment);}.btn-sm{padding:5px 10px;font-size:10px;}
+.btn-remove{background:transparent;border:1px solid var(--blood-red);color:var(--blood-red);border-radius:3px;width:22px;height:22px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}.btn-remove:hover{background:var(--blood-red);color:white;}
+.export-bar{display:flex;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--border);margin-top:20px;}.export-bar .text-dim{margin-right:auto;font-size:12px;color:#555;}
+@media(max-width:700px){.ability-grid{grid-template-columns:repeat(3,1fr);}.stat-bar{grid-template-columns:repeat(3,1fr);}.identity-bar{grid-template-columns:1fr 1fr;}.saves-grid{grid-template-columns:1fr 1fr;}.grid-2{grid-template-columns:1fr;}.currency-row{grid-template-columns:repeat(3,1fr);}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-title">🪓 PATH OF THE BERSERKER 🪓</div>
+    <div class="header-subtitle">Rage is not anger — it is focus made flesh</div>
+    <div class="save-indicator" id="save-indicator">● Auto-saved</div>
+    <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);display:flex;gap:5px;align-items:center;">
+      <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:.15em;color:#555;margin-right:4px;">THEME</span>
+      <div class="theme-dot active" style="background:#DD4444;" onclick="setTheme('')" title="Blood"></div>
+      <div class="theme-dot" style="background:#FFD700;" onclick="setTheme('gold')" title="Gold"></div>
+      <div class="theme-dot" style="background:#6AB0FF;" onclick="setTheme('frost')" title="Frost"></div>
+      <div class="theme-dot" style="background:#B06AFF;" onclick="setTheme('arcane')" title="Arcane"></div>
+      <div class="theme-dot" style="background:#44DD66;" onclick="setTheme('emerald')" title="Emerald"></div>
+      <div class="theme-dot" style="background:#C8A060;" onclick="setTheme('parchment')" title="Parchment"></div>
+    </div>
+  </div>
+
+  <div class="identity-bar">
+    <div class="identity-field"><label>Character Name</label><input id="char-name"></div>
+    <div class="identity-field"><label>Level</label><input type="number" id="char-level" value="1" min="1" max="20"></div>
+    <div class="identity-field"><label>Race</label><input id="char-race"></div>
+    <div class="identity-field"><label>Background</label><input id="char-background"></div>
+    <div class="identity-field"><label>Alignment</label><input id="char-alignment"></div>
+    <div class="identity-field"><label>Player</label><input id="char-player"></div>
+  </div>
+
+  <div class="stat-bar">
+    <div class="stat-bubble computed"><div class="val" id="display-ac">—</div><div class="lbl">AC (Unarmored)</div></div>
+    <div class="stat-bubble"><div class="hp-tracker"><input type="number" id="hp-current" value="0"><span>/</span><input type="number" id="hp-max" value="0" style="width:40px;"></div><div class="lbl">Hit Points</div></div>
+    <div class="stat-bubble"><div class="val" id="display-temp-hp">0</div><div class="lbl">Temp HP</div></div>
+    <div class="stat-bubble computed"><div class="val" id="display-rage-dmg">+2</div><div class="lbl">Rage Damage</div></div>
+    <div class="stat-bubble computed"><div class="val" id="display-pb">+2</div><div class="lbl">Prof Bonus</div></div>
+    <div class="stat-bubble computed"><div class="val" id="display-speed">30</div><div class="lbl">Speed</div></div>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:.1em;">TEMP HP</span>
+    <input type="number" id="temp-hp-input" value="0" min="0" style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:14px;padding:3px 8px;width:70px;">
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:.1em;">INITIATIVE</span>
+    <span id="display-init" style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold-pale);">+0</span>
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:.1em;margin-left:12px;">HIT DICE</span>
+    <input type="text" id="char-hitdice" placeholder="e.g. 3d12" style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:14px;padding:3px 8px;width:80px;">
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:.1em;margin-left:12px;">CRIT RANGE</span>
+    <span id="display-crit" style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold-bright);">20</span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+      <span style="font-family:'Cinzel',serif;font-size:10px;color:#555;letter-spacing:.1em;">INSPIRATION</span>
+      <button onclick="adjustInsp(-1)" style="background:var(--ink-field);border:1px solid var(--border);border-radius:4px;color:var(--gold-warm);width:24px;height:24px;cursor:pointer;font-size:14px;font-weight:700;">−</button>
+      <span id="insp-count" style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold-bright);min-width:24px;text-align:center;">0</span>
+      <button onclick="adjustInsp(1)" style="background:var(--ink-field);border:1px solid var(--border);border-radius:4px;color:var(--gold-warm);width:24px;height:24px;cursor:pointer;font-size:14px;font-weight:700;">+</button>
+    </span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="switchTab('abilities')">Abilities & Skills</button>
+    <button class="tab-btn" onclick="switchTab('combat')">Combat</button>
+    <button class="tab-btn" onclick="switchTab('features')">Features</button>
+    <button class="tab-btn" onclick="switchTab('inventory')">Inventory</button>
+    <button class="tab-btn" onclick="switchTab('notes')">Notes</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="panel active" id="panel-overview">
+    <div class="grid-2">
+      <div>
+        <div class="section-header">Rage</div>
+        <div class="use-tracker"><span class="use-label">RAGE USES</span><div class="use-pips" id="rage-pips"></div><button class="btn btn-sm" onclick="resetRage()">Reset</button></div>
+        <div class="card mb-8">
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">RAGE</div>
+          <div style="font-size:13px;color:#CCC;line-height:1.6;">
+            <strong style="color:var(--gold-pale);">Bonus Action or Reaction</strong> (to taking damage). Lasts 1 min. Advantage on STR checks/saves. +<span id="rage-dmg-ref">PB</span> melee STR damage. Resistance to bludgeoning, piercing, slashing.
+            <br><strong style="color:var(--gold-pale);">Powerful Throw:</strong> Add Rage Damage to thrown weapon attacks using STR.
+            <span id="con-save-note" style="display:none;"><br><strong style="color:var(--gold-pale);">Lv7:</strong> Advantage on CON saves during rage.</span>
+          </div>
+        </div>
+
+        <div class="section-header">Reckless Attack</div>
+        <div class="card mb-8">
+          <div style="font-size:13px;color:#CCC;line-height:1.6;">
+            First attack of your turn: choose to attack recklessly. Advantage on melee STR attacks this turn, but attacks against you have advantage until your next turn.
+          </div>
+        </div>
+        <div id="focused-reckless-section" style="display:none;">
+          <div class="use-tracker"><span class="use-label">FOCUSED RECKLESS</span><div class="use-pips" id="fr-pips"></div><button class="btn btn-sm" onclick="resetFR()">Reset</button></div>
+          <div class="card mb-8"><div style="font-size:13px;color:#CCC;line-height:1.6;">Advantage on <strong style="color:var(--gold-pale);">first attack only</strong>. Enemies do NOT gain advantage against you. Cannot use Brutal Strike on this turn. <strong style="color:var(--gold-warm);">PB uses per Long Rest.</strong></div></div>
+        </div>
+
+        <div class="section-header">Resilient Rage</div>
+        <div id="resilient-rage-section" style="display:none;">
+          <div class="use-tracker"><span class="use-label">RESILIENT RAGE</span><div class="use-pips" id="rr-pips"></div><button class="btn btn-sm" onclick="resetRR()">Reset</button></div>
+          <div class="card mb-8"><div style="font-size:13px;color:#CCC;line-height:1.6;">Reaction when taking damage while raging: gain <strong style="color:var(--gold-pale);">Resistance to that damage type</strong> until rage ends. <strong style="color:var(--gold-warm);">CON mod uses per Long Rest.</strong></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-header">Death Saves</div>
+        <div class="card mb-8">
+          <div class="death-saves">
+            <div class="death-save-row success"><label>SUCCESSES</label><div class="death-pip" onclick="toggleDS(this,'s',0)"></div><div class="death-pip" onclick="toggleDS(this,'s',1)"></div><div class="death-pip" onclick="toggleDS(this,'s',2)"></div></div>
+            <div class="death-save-row failure"><label>FAILURES</label><div class="death-pip" onclick="toggleDS(this,'f',0)"></div><div class="death-pip" onclick="toggleDS(this,'f',1)"></div><div class="death-pip" onclick="toggleDS(this,'f',2)"></div></div>
+          </div>
+          <button class="btn btn-sm" style="margin-top:10px;" onclick="resetDSAll()">Reset</button>
+        </div>
+        <div class="section-header">Conditions</div>
+        <div class="card mb-8">
+          <div id="conditions-list"></div>
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <select id="condition-select" style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:13px;padding:4px 8px;">
+              <option value="">Add…</option><option>Blinded</option><option>Charmed</option><option>Deafened</option><option>Frightened</option><option>Grappled</option><option>Incapacitated</option><option>Invisible</option><option>Paralyzed</option><option>Petrified</option><option>Poisoned</option><option>Prone</option><option>Raging</option><option>Reckless</option><option>Restrained</option><option>Stunned</option><option>Unconscious</option>
+            </select>
+            <button class="btn btn-sm" onclick="addCondition()">Add</button>
+          </div>
+        </div>
+        <div class="section-header">Quick Reference</div>
+        <div class="card mb-8">
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">UNARMORED DEFENSE</div>
+          <div style="font-size:14px;">AC = 10 + DEX mod + CON mod</div>
+        </div>
+        <div class="card mb-8">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div><div style="font-family:'Cinzel',serif;font-size:9px;color:var(--gold-warm);">PASSIVE PERC</div><div style="font-family:'Cinzel',serif;font-size:22px;color:var(--gold-pale);" id="pp">—</div></div>
+            <div><div style="font-family:'Cinzel',serif;font-size:9px;color:var(--gold-warm);">RAGE SPEED</div><div style="font-family:'Cinzel',serif;font-size:22px;color:var(--gold-pale);" id="rage-speed">—</div></div>
+          </div>
+        </div>
+        <div id="powerful-build-card" style="display:none;" class="card mb-8">
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">POWERFUL BUILD (Lv7)</div>
+          <div style="font-size:13px;color:#CCC;">Count as one size larger for carrying, grappling, shoving, dragging.</div>
+        </div>
+        <div id="titanic-card" style="display:none;" class="card">
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">TITANIC STRENGTH (Lv11)</div>
+          <div style="font-size:13px;color:#CCC;line-height:1.6;">While raging: count as Huge, break through obstacles (STR check), STR(Athletics) minimum = STR score.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABILITIES -->
+  <div class="panel" id="panel-abilities">
+    <div class="section-header">Ability Scores</div>
+    <div class="ability-grid" id="ability-grid"></div>
+    <div class="grid-2">
+      <div>
+        <div class="section-header">Saving Throws</div>
+        <div class="saves-grid" id="saves-grid"></div>
+        <div class="section-header" style="margin-top:16px;">Proficiencies</div>
+        <div class="card">
+          <div class="field-group"><label>Languages</label><textarea id="note-languages" style="min-height:40px;"></textarea></div>
+          <div class="field-group"><label>Armor & Weapons</label><textarea id="note-armor" style="min-height:40px;" placeholder="Light armor, medium armor, shields, simple weapons, martial weapons"></textarea></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-header">Skills — ○ Prof, ○○ Expertise</div>
+        <div class="skills-list" id="skills-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMBAT -->
+  <div class="panel" id="panel-combat">
+    <div class="grid-2">
+      <div>
+        <div class="section-header">Brutal Strike</div>
+        <div id="brutal-section" style="display:none;">
+          <div class="card mb-8">
+            <div style="font-size:13px;color:#CCC;line-height:1.6;">
+              <strong style="color:var(--gold-pale);">When you use Reckless Attack (not Focused)</strong>, you can forgo advantage on one attack to deal extra damage.
+              <br><strong style="color:var(--gold-warm);">Damage:</strong> +<span id="brutal-dmg">1d10 + STR</span>
+              <br><strong style="color:var(--gold-warm);">Crit Range:</strong> <span id="brutal-crit">19-20</span>
+              <div id="brutal-mastery-note" style="display:none;margin-top:6px;"><strong style="color:var(--gold-warm);">Brutal Mastery (Lv13):</strong> Choose 2 riders instead of 1 (1/short rest). +PB to Brutal Strike damage.</div>
+            </div>
+          </div>
+          <div class="section-header">Rider Effects (choose 1)</div>
+          <div class="card mb-8" style="font-size:13px;color:#CCC;line-height:1.8;">
+            <strong style="color:var(--gold-pale);">Forceful Blow.</strong> Push target 15 ft. If it hits something, 1d6 bludgeon to both.<br>
+            <strong style="color:var(--gold-pale);">Hamstring Blow.</strong> Target speed reduced by 15 ft until start of your next turn.<br>
+            <strong style="color:var(--gold-pale);">Staggering Blow.</strong> Target has disadvantage on next saving throw.<br>
+            <strong style="color:var(--gold-pale);">Sundering Blow.</strong> Next attack roll vs target gains +PB.<br>
+            <strong style="color:var(--gold-pale);">Hemorrhage.</strong> Target takes Rage Damage as bleed at start of its next turn (nonstacking, ends with magical healing).<br>
+            <span id="expose-rider" style="display:none;"><strong style="color:var(--gold-pale);">Expose (Lv13).</strong> Target's AC reduced by 2 against you and chosen creatures until start of your next turn.</span>
+          </div>
+        </div>
+        <div id="no-brutal" class="card"><div style="color:#555;font-size:13px;">Brutal Strike unlocks at Level 9.</div></div>
+      </div>
+      <div>
+        <div class="section-header">Weapons</div>
+        <div id="weapons-list"></div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <input id="new-wpn-name" placeholder="Weapon name" style="flex:1;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;">
+          <input id="new-wpn-atk" placeholder="+5" style="width:50px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;text-align:center;">
+          <input id="new-wpn-dmg" placeholder="1d12+5" style="width:100px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;">
+          <button class="btn btn-sm btn-primary" onclick="addWeapon()">Add</button>
+        </div>
+        <div class="section-header" style="margin-top:16px;">Berserker Features</div>
+        <div class="card mb-8">
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">FRENZY (Lv3)</div>
+          <div style="font-size:13px;color:#CCC;line-height:1.6;">While raging, you can make one extra melee attack as part of the Attack action. You can use this a number of times equal to your PB, and you regain all uses on a long rest.</div>
+        </div>
+        <div class="use-tracker"><span class="use-label">FRENZY USES</span><div class="use-pips" id="frenzy-pips"></div><button class="btn btn-sm" onclick="resetFrenzy()">Reset</button></div>
+        <div id="mindless-card" style="display:none;" class="card mb-8">
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">MINDLESS RAGE (Lv6)</div>
+          <div style="font-size:13px;color:#CCC;">Can't be charmed or frightened while raging. If charmed/frightened when entering rage, the effect is suspended.</div>
+        </div>
+        <div id="retaliation-card" style="display:none;" class="card mb-8">
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">RETALIATION (Lv10)</div>
+          <div style="font-size:13px;color:#CCC;">When you take damage from a creature within 5 ft, you can use your reaction to make a melee weapon attack against that creature.</div>
+        </div>
+        <div id="intimidating-card" style="display:none;" class="card">
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">INTIMIDATING PRESENCE (Lv10)</div>
+          <div style="font-size:13px;color:#CCC;line-height:1.6;">Replace one attack with Intimidating Presence. Creature within 30 ft: WIS save (DC = 8 + PB + STR mod + CHA mod). Fail: frightened until end of your next turn. Immune for 24 hrs on success.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="panel" id="panel-features">
+    <div class="section-header">Class Features</div>
+    <div id="features-list"></div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="panel" id="panel-inventory">
+    <div class="section-header">Currency</div>
+    <div class="currency-row">
+      <div class="currency-block"><label>PP</label><input type="number" id="curr-pp" value="0" min="0"></div>
+      <div class="currency-block"><label>GP</label><input type="number" id="curr-gp" value="0" min="0"></div>
+      <div class="currency-block"><label>EP</label><input type="number" id="curr-ep" value="0" min="0"></div>
+      <div class="currency-block"><label>SP</label><input type="number" id="curr-sp" value="0" min="0"></div>
+      <div class="currency-block"><label>CP</label><input type="number" id="curr-cp" value="0" min="0"></div>
+    </div>
+    <div class="section-header">Equipment & Gear</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <input type="text" id="new-item-name" placeholder="Item name..." style="flex:1;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;" onkeydown="if(event.key==='Enter')addItem()">
+      <input type="number" id="new-item-qty" value="1" min="1" style="width:50px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;text-align:center;">
+      <button class="btn btn-sm btn-primary" onclick="addItem()">Add</button>
+    </div>
+    <div id="items-list"></div>
+    <div class="section-header" style="margin-top:20px;">Magic Items</div>
+    <div id="relics-list"></div>
+    <div style="margin-top:8px;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;padding:12px;">
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:.15em;color:var(--gold-bright);margin-bottom:8px;">ADD MAGIC ITEM</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div class="field-group" style="margin:0;"><label>Name</label><input id="new-relic-name"></div>
+        <div class="field-group" style="margin:0;"><label>Category</label><select id="new-relic-cat"><option>Weapon</option><option>Armor</option><option>Wondrous Item</option><option>Ring</option><option>Rod</option><option>Staff</option><option>Potion</option><option>Scroll</option><option>Other</option></select></div>
+        <div class="field-group" style="margin:0;"><label>Rarity</label><select id="new-relic-rarity"><option>Common</option><option>Uncommon</option><option>Rare</option><option>Very Rare</option><option>Legendary</option><option>Artifact</option></select></div>
+        <div class="field-group" style="margin:0;"><label>Attunement</label><div style="display:flex;align-items:center;gap:6px;padding:6px 0;"><input type="checkbox" id="new-relic-attune" style="accent-color:var(--gold-bright);width:16px;height:16px;"><span style="font-size:13px;">Requires</span></div></div>
+      </div>
+      <div class="field-group" style="margin:6px 0 0;"><label>Description</label><textarea id="new-relic-desc" style="min-height:50px;"></textarea></div>
+      <button class="btn btn-primary btn-sm" onclick="addRelic()">Add Magic Item</button>
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="panel" id="panel-notes">
+    <div class="grid-2">
+      <div>
+        <div class="section-header">Backstory</div><div class="field-group"><textarea id="note-backstory"></textarea></div>
+        <div class="section-header">Personality</div><div class="field-group"><textarea id="note-personality" style="min-height:60px;"></textarea></div>
+        <div class="section-header">Bonds & Ideals</div><div class="field-group"><textarea id="note-bonds" style="min-height:60px;"></textarea></div>
+        <div class="section-header">Flaws</div><div class="field-group"><textarea id="note-flaws" style="min-height:60px;"></textarea></div>
+      </div>
+      <div>
+        <div class="section-header">Session Notes</div><div class="field-group"><textarea id="note-session" style="min-height:120px;"></textarea></div>
+        <div class="section-header">Allies</div><div class="field-group"><textarea id="note-allies" style="min-height:80px;"></textarea></div>
+        <div class="section-header">Misc</div><div class="field-group"><textarea id="note-misc" style="min-height:80px;"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="export-bar">
+    <span class="text-dim">Auto-saves to browser & Firebase</span>
+    <button class="btn btn-sm" onclick="exportData()">Export</button>
+    <button class="btn btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
+    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+    <button class="btn btn-sm btn-primary" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+firebase.initializeApp({databaseURL:"https://fundnd-14377-default-rtdb.firebaseio.com"});
+const db=firebase.database(),MY_KEY=(localStorage.getItem('fundnd_username')||'').toLowerCase().replace(/[^a-z0-9]/g,'_');
+let firebaseReady=false,skipFB=false;
+function setTheme(t){if(t)document.documentElement.setAttribute('data-theme',t);else document.documentElement.removeAttribute('data-theme');localStorage.setItem('barb_theme',t);document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('active'));const m={'':'Blood',gold:'Gold',frost:'Frost',arcane:'Arcane',emerald:'Emerald',parchment:'Parchment'};document.querySelectorAll('.theme-dot').forEach(d=>{if(d.title===(m[t]||''))d.classList.add('active');});}
+const _st=localStorage.getItem('barb_theme');if(_st)setTheme(_st);else document.querySelector('.theme-dot[title="Blood"]')?.classList.add('active');
+
+const AB=['STR','DEX','CON','INT','WIS','CHA'];
+const SKA={Acrobatics:'DEX','Animal Handling':'WIS',Arcana:'INT',Athletics:'STR',Deception:'CHA',History:'INT',Insight:'WIS',Intimidation:'STR',Investigation:'INT',Medicine:'WIS',Nature:'INT',Perception:'WIS',Performance:'CHA',Persuasion:'CHA',Religion:'INT','Sleight of Hand':'DEX',Stealth:'DEX',Survival:'WIS'};
+
+const RAGE_USES={1:2,2:2,3:3,4:3,5:3,6:4,7:4,8:4,9:4,10:5,11:5,12:6,13:6,14:6,15:6,16:6,17:6,18:6,19:6,20:99};
+
+const FEATURES=[
+{level:1,name:'Rage',body:'Bonus Action or Reaction (to taking damage). 1 min. Advantage on STR checks/saves. Rage Damage = PB on melee STR attacks. Resistance to B/P/S. Extended by enemy damage. <strong>Powerful Throw:</strong> Add Rage Damage to thrown weapon STR attacks.'},
+{level:1,name:'Unarmored Defense',body:'AC = 10 + DEX mod + CON mod (no armor).'},
+{level:2,name:'Reckless Attack',body:'First attack of turn: choose to attack recklessly. Advantage on melee STR attacks, but attacks against you have advantage until next turn.'},
+{level:2,name:'Danger Sense',body:'Advantage on DEX saves against effects you can see (traps, spells). Not blinded, deafened, or incapacitated.'},
+{level:3,name:'Path of the Berserker',body:'Your subclass. Gain Frenzy.'},
+{level:3,name:'Frenzy',body:'While raging, make one extra melee attack as part of the Attack action. PB uses per long rest.'},
+{level:3,name:'Primal Knowledge',body:'Gain skill proficiency from Barb list. Always use STR for Intimidation. Gain expertise in 2 barbarian skills. Extra skill at Lv10.'},
+{level:4,name:'ASI / Feat',body:'Increase one ability score by 2, or two by 1. Or take a feat.'},
+{level:5,name:'Extra Attack',body:'Attack twice when you take the Attack action.'},
+{level:5,name:'Fast Movement',body:'+10 ft speed (not heavy armor). During rage: +5 × PB ft instead.'},
+{level:5,name:'Focused Reckless Attack',body:'Advantage on first attack only. Enemies do NOT gain advantage. Cannot Brutal Strike. PB uses per long rest.'},
+{level:6,name:'Mindless Rage',body:'Can\'t be charmed or frightened while raging. Existing effects suspended during rage.'},
+{level:6,name:'Resilient Rage',body:'Reaction while raging: gain Resistance to damage type taken until rage ends. CON mod uses per long rest.'},
+{level:7,name:'Feral Instinct',body:'Advantage on initiative. Can rage as reaction to initiative even when surprised. Can\'t be surprised if raging.'},
+{level:7,name:'Con Save Advantage',body:'While raging, advantage on Constitution saving throws.'},
+{level:7,name:'Powerful Build',body:'Count as one size larger for carrying, grappling, shoving, dragging.'},
+{level:8,name:'ASI / Feat',body:'Increase one ability score by 2, or two by 1. Or take a feat.'},
+{level:9,name:'Brutal Strike',body:'When using Reckless Attack (not Focused), deal extra 1d10 + STR damage. Crit window +1. Choose a rider effect. Cannot use if you chose Focused Reckless.'},
+{level:10,name:'ASI / Feat',body:'Increase one ability score by 2, or two by 1. Or take a feat.'},
+{level:10,name:'Retaliation',body:'Reaction when damaged by creature within 5 ft: make one melee attack against it.'},
+{level:10,name:'Intimidating Presence',body:'Replace one attack: creature within 30 ft WIS save (DC 8+PB+STR+CHA). Fail: frightened until end of next turn. Immune 24 hrs on success.'},
+{level:11,name:'Titanic Strength',body:'While raging: count as Huge for carrying/push/drag/lift. One size larger for grapple/shove. Break through obstacles (STR check). STR(Athletics) min = STR score.'},
+{level:12,name:'ASI / Feat',body:'Increase one ability score by 2, or two by 1. Or take a feat.'},
+{level:13,name:'Improved Brutal Strike',body:'Crit window +2 total. Brutal Mastery: choose 2 riders (1/short rest). +PB to Brutal Strike damage. New rider: <strong>Expose</strong> — target AC -2 against you and chosen creatures.'},
+{level:16,name:'ASI / Feat',body:'Increase one ability score by 2, or two by 1. Or take a feat.'},
+{level:19,name:'ASI / Feat',body:'Increase one ability score by 2, or two by 1. Or take a feat.'},
+{level:20,name:'Primal Champion',body:'+4 STR, +4 CON. Max for those scores is now 24.'},
+];
+
+const DS={identity:{name:'',level:1,race:'',background:'',alignment:'',player:''},
+abilities:{STR:10,DEX:10,CON:10,INT:10,WIS:10,CHA:10},hp:{current:0,max:0,temp:0},speed:30,hitDice:'',
+inspiration:0,deathSaves:{s:[false,false,false],f:[false,false,false]},skillProf:{},
+saveProf:{STR:true,DEX:false,CON:true,INT:false,WIS:false,CHA:false},
+conditions:[],rageUsed:0,frenzyUsed:0,frUsed:0,rrUsed:0,
+weapons:[],items:[],relics:[],currency:{pp:0,gp:0,ep:0,sp:0,cp:0},
+notes:{backstory:'',personality:'',bonds:'',flaws:'',session:'',allies:'',misc:'',languages:'',armor:'Light armor, medium armor, shields, simple weapons, martial weapons'}};
+let state=JSON.parse(JSON.stringify(DS));
+
+function mod(s){return Math.floor((s-10)/2);}function fm(n){return n>=0?'+'+n:''+n;}
+function pb(){return Math.ceil(state.identity.level/4)+1;}
+function acCalc(){return 10+mod(state.abilities.DEX)+mod(state.abilities.CON);}
+function critRange(){const l=state.identity.level;if(l>=13)return'18-20';if(l>=9)return'19-20';return'20';}
+function rageSpeed(){return 30+5*pb();}
+function skBonus(sk){const a=SKA[sk],m2=mod(state.abilities[a]),p=state.skillProf[sk]||0;return m2+(p===1?pb():p===2?pb()*2:0);}
+
+function saveState(){
+  state.identity.name=v('char-name');state.identity.level=parseInt(v('char-level'))||1;
+  state.identity.race=v('char-race');state.identity.background=v('char-background');
+  state.identity.alignment=v('char-alignment');state.identity.player=v('char-player');
+  state.hp.current=parseInt(v('hp-current'))||0;state.hp.max=parseInt(v('hp-max'))||0;
+  state.hp.temp=parseInt(v('temp-hp-input'))||0;state.hitDice=v('char-hitdice');
+  ['pp','gp','ep','sp','cp'].forEach(c=>state.currency[c]=parseInt(v('curr-'+c))||0);
+  ['backstory','personality','bonds','flaws','session','allies','misc','languages','armor'].forEach(k=>state.notes[k]=v('note-'+k));
+  try{localStorage.setItem('barb_berserker_sheet',JSON.stringify(state));}catch(e){}
+  const ind=document.getElementById('save-indicator');ind.textContent='● Saved';ind.className='save-indicator saved';
+  setTimeout(()=>{ind.textContent='● Auto-saved';ind.className='save-indicator';},1500);
+  if(MY_KEY){skipFB=true;db.ref('sheets/'+MY_KEY).set(state);
+    const ab=state.abilities;
+    db.ref('party/'+MY_KEY).set({player:state.identity.player||localStorage.getItem('fundnd_username')||'',name:state.identity.name,race:state.identity.race,className:'Berserker Barbarian',level:state.identity.level,ac:acCalc(),hp:state.hp.current,maxHp:state.hp.max,speed:state.speed,initiative:fm(mod(ab.DEX)),profBonus:pb(),str:ab.STR,dex:ab.DEX,con:ab.CON,int:ab.INT,wis:ab.WIS,cha:ab.CHA,rageDmg:'+'+pb(),ragesLeft:(RAGE_USES[state.identity.level]||2)-state.rageUsed,items:state.items.filter(i=>i.name).map(i=>({name:i.name,qty:i.qty||1,rarity:'Common'})),relics:(state.relics||[]).filter(r=>r.name).map(r=>({name:r.name,rarity:r.rarity||'',attuned:!!r.attuned,desc:r.desc||''})),currency:state.currency,equipment:state.items.map(i=>i.name).filter(Boolean).join(', '),notes:state.notes.session||'',sheetType:'barbarian_berserker',lastUpdated:Date.now()});
+  }
+}
+function loadState(){try{const r=localStorage.getItem('barb_berserker_sheet');if(r)state=Object.assign(JSON.parse(JSON.stringify(DS)),JSON.parse(r));}catch(e){}}
+function loadFB(){if(!MY_KEY)return;db.ref('sheets/'+MY_KEY).once('value',s=>{const d=s.val();if(d&&d.identity){state=Object.assign(JSON.parse(JSON.stringify(DS)),d);initAll();}firebaseReady=true;});db.ref('sheets/'+MY_KEY).on('value',s=>{if(!firebaseReady||skipFB){skipFB=false;return;}const d=s.val();if(d&&d.identity){state=Object.assign(JSON.parse(JSON.stringify(DS)),d);initAll();}});}
+function v(id){const el=document.getElementById(id);return el?el.value:'';}
+function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+
+function updateAll(){
+  const l=state.identity.level;
+  setText('display-ac',acCalc());setText('display-rage-dmg','+'+pb());setText('display-pb','+'+pb());
+  setText('display-speed',l>=5?30+10:30);setText('display-init',fm(mod(state.abilities.DEX)+(l>=7?pb():0)));
+  setText('display-temp-hp',state.hp.temp||0);setText('display-crit',critRange());
+  setText('rage-dmg-ref','+'+pb());setText('rage-speed',rageSpeed()+' ft');
+  setText('pp',10+skBonus('Perception'));setText('insp-count',state.inspiration||0);
+  // Show/hide level features
+  document.getElementById('focused-reckless-section').style.display=l>=5?'block':'none';
+  document.getElementById('resilient-rage-section').style.display=l>=6?'block':'none';
+  document.getElementById('con-save-note').style.display=l>=7?'inline':'none';
+  document.getElementById('powerful-build-card').style.display=l>=7?'block':'none';
+  document.getElementById('titanic-card').style.display=l>=11?'block':'none';
+  document.getElementById('mindless-card').style.display=l>=6?'block':'none';
+  document.getElementById('retaliation-card').style.display=l>=10?'block':'none';
+  document.getElementById('intimidating-card').style.display=l>=10?'block':'none';
+  document.getElementById('brutal-section').style.display=l>=9?'block':'none';
+  document.getElementById('no-brutal').style.display=l>=9?'none':'block';
+  document.getElementById('brutal-mastery-note').style.display=l>=13?'block':'none';
+  document.getElementById('expose-rider').style.display=l>=13?'inline':'none';
+  setText('brutal-dmg','1d10 + '+mod(state.abilities.STR)+(l>=13?' + '+pb():''));
+  setText('brutal-crit',critRange());
+  renderRage();renderFrenzy();if(l>=5)renderFR();if(l>=6)renderRR();
+  document.querySelectorAll('.ability-mod').forEach(el=>{if(el.dataset.ab)el.textContent=fm(mod(state.abilities[el.dataset.ab]));});
+  document.querySelectorAll('.skill-bonus[data-skill]').forEach(el=>el.textContent=fm(skBonus(el.dataset.skill)));
+  document.querySelectorAll('.save-bonus[data-save]').forEach(el=>{const a=el.dataset.save;el.textContent=fm(mod(state.abilities[a])+(state.saveProf[a]?pb():0));});
+  document.querySelectorAll('.feature-card[data-min-level]').forEach(c=>c.classList.toggle('locked',l<parseInt(c.dataset.minLevel)));
+}
+
+function renderAbilities(){document.getElementById('ability-grid').innerHTML=AB.map(a=>`<div class="ability-block"><div class="ability-name">${a}</div><input class="ability-score" type="number" min="1" max="30" value="${state.abilities[a]}" onchange="state.abilities['${a}']=parseInt(this.value)||10;updateAll();saveState();" onclick="this.select()"><div class="ability-mod" data-ab="${a}">${fm(mod(state.abilities[a]))}</div></div>`).join('');}
+function renderSaves(){document.getElementById('saves-grid').innerHTML=AB.map(a=>{const p=state.saveProf[a];return`<div class="save-row ${p?'proficient':''}"><div class="save-prof-dot ${p?'active':''}" onclick="state.saveProf['${a}']=!state.saveProf['${a}'];renderSaves();updateAll();saveState();"></div><span class="save-name">${a}</span><span class="save-bonus" data-save="${a}">${fm(mod(state.abilities[a])+(p?pb():0))}</span></div>`;}).join('');}
+function renderSkills(){document.getElementById('skills-list').innerHTML=Object.keys(SKA).map(sk=>{const p=state.skillProf[sk]||0;return`<div class="skill-row"><div class="prof-toggle ${p===2?'expert':p===1?'prof':''}" onclick="state.skillProf['${sk}']=((state.skillProf['${sk}']||0)+1)%3;renderSkills();updateAll();saveState();">${p===2?'E':p===1?'✦':''}</div><span class="skill-ability">${SKA[sk]}</span><span class="skill-name">${sk}${sk==='Intimidation'?' (STR)':''}</span><span class="skill-bonus" data-skill="${sk}">${fm(skBonus(sk))}</span></div>`;}).join('');}
+
+// Trackers
+function makePips(id,max,used,type){document.getElementById(id).innerHTML=Array.from({length:max},(_,i)=>`<div class="use-pip ${i<used?'used':''}" onclick="toggle_${type}(${i})"></div>`).join('');}
+function renderRage(){makePips('rage-pips',RAGE_USES[state.identity.level]||2,state.rageUsed,'rage');}
+window.toggle_rage=i=>{if(i<state.rageUsed)state.rageUsed--;else state.rageUsed++;renderRage();saveState();};
+function resetRage(){state.rageUsed=0;renderRage();saveState();}
+
+function renderFrenzy(){makePips('frenzy-pips',pb(),state.frenzyUsed,'frenzy');}
+window.toggle_frenzy=i=>{if(i<state.frenzyUsed)state.frenzyUsed--;else state.frenzyUsed++;renderFrenzy();saveState();};
+function resetFrenzy(){state.frenzyUsed=0;renderFrenzy();saveState();}
+
+function renderFR(){makePips('fr-pips',pb(),state.frUsed,'fr');}
+window.toggle_fr=i=>{if(i<state.frUsed)state.frUsed--;else state.frUsed++;renderFR();saveState();};
+function resetFR(){state.frUsed=0;renderFR();saveState();}
+
+function renderRR(){makePips('rr-pips',Math.max(1,mod(state.abilities.CON)),state.rrUsed,'rr');}
+window.toggle_rr=i=>{if(i<state.rrUsed)state.rrUsed--;else state.rrUsed++;renderRR();saveState();};
+function resetRR(){state.rrUsed=0;renderRR();saveState();}
+
+function adjustInsp(d){state.inspiration=Math.max(0,(state.inspiration||0)+d);setText('insp-count',state.inspiration);saveState();}
+
+// Weapons
+function renderWeapons(){const l=document.getElementById('weapons-list');if(!state.weapons||!state.weapons.length){l.innerHTML='<div style="color:#444;font-size:13px;">No weapons.</div>';return;}l.innerHTML=state.weapons.map((w,i)=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 10px;background:var(--ink-deep);border:1px solid var(--border);border-radius:4px;margin-bottom:4px;"><span style="flex:1;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:13px;">${w.name}</span><span style="color:var(--blood-light);font-family:'Cinzel',serif;font-size:14px;">${w.atk}</span><span style="color:var(--parchment);font-size:13px;">${w.dmg}</span><button class="btn-remove" onclick="state.weapons.splice(${i},1);renderWeapons();saveState();">×</button></div>`).join('');}
+function addWeapon(){const n=document.getElementById('new-wpn-name').value.trim();if(!n)return;state.weapons.push({name:n,atk:document.getElementById('new-wpn-atk').value||'+0',dmg:document.getElementById('new-wpn-dmg').value||'1d6'});document.getElementById('new-wpn-name').value='';document.getElementById('new-wpn-atk').value='';document.getElementById('new-wpn-dmg').value='';renderWeapons();saveState();}
+
+// Items & Relics
+function renderItems(){const l=document.getElementById('items-list');if(!state.items.length){l.innerHTML='<div style="color:#444;font-size:13px;padding:4px;">No items.</div>';return;}l.innerHTML=state.items.map((it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--ink-deep);border-radius:4px;margin-bottom:3px;border:1px solid var(--border);"><span style="flex:1;font-size:14px;">${it.name}</span><span style="color:var(--gold-warm);font-size:13px;">×${it.qty||1}</span><button class="btn-remove" onclick="state.items.splice(${i},1);renderItems();saveState();">×</button></div>`).join('');}
+function addItem(){const el=document.getElementById('new-item-name'),qel=document.getElementById('new-item-qty'),name=el.value.trim();if(!name)return;state.items.push({name,qty:parseInt(qel.value)||1});el.value='';qel.value='1';renderItems();saveState();}
+
+const RC={Common:'#888',Uncommon:'#4A8A4A',Rare:'#4A6A8A','Very Rare':'#6A4A8A',Legendary:'#8A6A2A',Artifact:'#C8A000'};
+function renderRelics(){const l=document.getElementById('relics-list');if(!state.relics||!state.relics.length){l.innerHTML='<div style="color:#444;font-size:13px;padding:4px;">No magic items.</div>';return;}l.innerHTML=state.relics.map((r,i)=>`<div style="background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;margin-bottom:6px;overflow:hidden;"><div style="display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"><span style="font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--gold-pale);flex:1;">${r.name}</span><span style="font-family:'Cinzel',serif;font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid ${RC[r.rarity]||'#555'};color:${RC[r.rarity]||'#555'};">${r.rarity||'Common'}</span>${r.category?'<span style="font-size:9px;color:#666;font-family:Cinzel,serif;">'+r.category+'</span>':''}${r.attuned?'<span style="font-size:9px;color:var(--gold-bright);font-family:Cinzel,serif;">✦ ATTUNED</span>':''}<span style="color:#555;font-size:12px;">▼</span></div><div style="display:none;padding:0 12px 10px;"><div style="font-size:13px;color:#AAA;line-height:1.6;margin-bottom:8px;">${r.desc||'No description.'}</div><div style="display:flex;gap:6px;"><label style="font-size:11px;color:#666;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ${r.attuned?'checked':''} onchange="state.relics[${i}].attuned=this.checked;renderRelics();saveState();" style="accent-color:var(--gold-bright);"> Attuned</label><button class="btn btn-sm" onclick="editRelic(${i})" style="font-size:9px;padding:2px 8px;">Edit</button><button class="btn-remove" onclick="state.relics.splice(${i},1);renderRelics();saveState();">×</button></div></div></div>`).join('');}
+let editingRelicIdx=-1;
+function addRelic(){const name=document.getElementById('new-relic-name').value.trim();if(!name)return;const r={name,category:document.getElementById('new-relic-cat').value,rarity:document.getElementById('new-relic-rarity').value,attuned:document.getElementById('new-relic-attune').checked,desc:document.getElementById('new-relic-desc').value};if(editingRelicIdx>=0){state.relics[editingRelicIdx]=r;editingRelicIdx=-1;}else{if(!state.relics)state.relics=[];state.relics.push(r);}document.getElementById('new-relic-name').value='';document.getElementById('new-relic-desc').value='';document.getElementById('new-relic-attune').checked=false;renderRelics();saveState();}
+function editRelic(i){editingRelicIdx=i;const r=state.relics[i];document.getElementById('new-relic-name').value=r.name||'';document.getElementById('new-relic-cat').value=r.category||'Weapon';document.getElementById('new-relic-rarity').value=r.rarity||'Common';document.getElementById('new-relic-attune').checked=!!r.attuned;document.getElementById('new-relic-desc').value=r.desc||'';document.getElementById('new-relic-name').scrollIntoView({behavior:'smooth',block:'center'});}
+
+// Features
+function renderFeatures(){document.getElementById('features-list').innerHTML=FEATURES.map(f=>{const u=state.identity.level>=f.level;return`<div class="feature-card ${u?'':'locked'}" data-min-level="${f.level}"><div class="feature-header" onclick="this.nextElementSibling.classList.toggle('open')"><span class="feature-level-badge">Lv ${f.level}</span><span class="feature-title">${f.name}</span><span style="color:#555;font-size:12px;">▼</span></div><div class="feature-body">${f.body}</div></div>`;}).join('');}
+
+// Death Saves / Conditions
+function toggleDS(el,t,i){state.deathSaves[t][i]=!state.deathSaves[t][i];el.classList.toggle('filled');saveState();}
+function resetDSAll(){state.deathSaves={s:[false,false,false],f:[false,false,false]};document.querySelectorAll('.death-pip').forEach(e=>e.classList.remove('filled'));saveState();}
+function renderDS(){document.querySelectorAll('.death-save-row.success .death-pip').forEach((e,i)=>e.classList.toggle('filled',state.deathSaves.s[i]));document.querySelectorAll('.death-save-row.failure .death-pip').forEach((e,i)=>e.classList.toggle('filled',state.deathSaves.f[i]));}
+function renderConditions(){const l=document.getElementById('conditions-list');if(!state.conditions.length){l.innerHTML='<span style="color:#444;font-size:13px;">No conditions</span>';return;}l.innerHTML=state.conditions.map((c,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(170,34,34,.3);border:1px solid var(--blood-red);border-radius:3px;padding:3px 8px;margin:2px;font-size:12px;font-family:'Cinzel',serif;">${c} <span onclick="state.conditions.splice(${i},1);renderConditions();saveState();" style="cursor:pointer;color:var(--blood-red);">×</span></span>`).join('');}
+function addCondition(){const s=document.getElementById('condition-select');if(s.value&&!state.conditions.includes(s.value)){state.conditions.push(s.value);renderConditions();saveState();}s.value='';}
+
+function switchTab(n){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('panel-'+n)?.classList.add('active');event.target.classList.add('active');}
+function exportData(){saveState();const b=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(state.identity.name||'barbarian')+'_sheet.json';a.click();}
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=x=>{try{state=JSON.parse(x.target.result);initAll();}catch{alert('Invalid.');}};r.readAsText(f);}
+function resetAll(){if(!confirm('Reset ALL?'))return;state=JSON.parse(JSON.stringify(DS));localStorage.removeItem('barb_berserker_sheet');initAll();}
+
+function syncIdentity(){
+  document.getElementById('char-name').value=state.identity.name;document.getElementById('char-level').value=state.identity.level;
+  document.getElementById('char-race').value=state.identity.race;document.getElementById('char-background').value=state.identity.background;
+  document.getElementById('char-alignment').value=state.identity.alignment;document.getElementById('char-player').value=state.identity.player||localStorage.getItem('fundnd_username')||'';
+  document.getElementById('hp-current').value=state.hp.current;document.getElementById('hp-max').value=state.hp.max;
+  document.getElementById('temp-hp-input').value=state.hp.temp;document.getElementById('char-hitdice').value=state.hitDice;
+  ['pp','gp','ep','sp','cp'].forEach(c=>document.getElementById('curr-'+c).value=state.currency[c]||0);
+  ['backstory','personality','bonds','flaws','session','allies','misc','languages','armor'].forEach(k=>{const el=document.getElementById('note-'+k);if(el)el.value=state.notes[k]||'';});
+}
+
+function initAll(){syncIdentity();renderAbilities();renderSaves();renderSkills();renderDS();renderConditions();renderWeapons();renderItems();renderRelics();renderFeatures();updateAll();}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  loadState();initAll();loadFB();
+  const un=localStorage.getItem('fundnd_username')||'';
+  if(un){const pr=db.ref('presence/'+un);db.ref('.info/connected').on('value',s=>{if(s.val()){pr.set(true);pr.onDisconnect().remove();}});}
+  document.addEventListener('input',e=>{
+    if(e.target.id==='char-level'){state.identity.level=parseInt(e.target.value)||1;updateAll();}
+    if(e.target.id==='hp-current')state.hp.current=parseInt(e.target.value)||0;
+    if(e.target.id==='temp-hp-input'){state.hp.temp=parseInt(e.target.value)||0;setText('display-temp-hp',state.hp.temp);}
+    clearTimeout(window._st2);window._st2=setTimeout(saveState,600);
+  });
+});
+</script>
+</body>
+</html>
