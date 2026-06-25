@@ -1675,9 +1675,13 @@ function updateAll() {
   const tempInput = document.getElementById('temp-hp-input');
   if (tempInput) { tempInput.value = state.hp.temp; setText('display-temp-hp', state.hp.temp || 0); }
 
-  // Currency total
-  const c = state.currency;
-  setText('total-gp', (c.pp*10 + c.gp + c.ep*0.5 + c.sp*0.1 + c.cp*0.01).toFixed(2));
+  // Currency total (read live from inputs)
+  const cPP = parseInt(document.getElementById('curr-pp')?.value) || 0;
+  const cGP = parseInt(document.getElementById('curr-gp')?.value) || 0;
+  const cEP = parseInt(document.getElementById('curr-ep')?.value) || 0;
+  const cSP = parseInt(document.getElementById('curr-sp')?.value) || 0;
+  const cCP = parseInt(document.getElementById('curr-cp')?.value) || 0;
+  setText('total-gp', (cPP*10 + cGP + cEP*0.5 + cSP*0.1 + cCP*0.01).toFixed(2));
 
   // Update FP pips
   renderFPPips();
@@ -2415,7 +2419,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (id === 'hp-current') { state.hp.current = parseInt(e.target.value) || 0; }
     if (id === 'temp-hp-input') { state.hp.temp = parseInt(e.target.value) || 0; setText('display-temp-hp', state.hp.temp); }
     ['pp','gp','ep','sp','cp'].forEach(c => {
-      if (id === 'curr-'+c) { state.currency[c] = parseInt(e.target.value) || 0; }
+      if (id === 'curr-'+c) { state.currency[c] = parseInt(e.target.value) || 0; updateAll(); }
     });
     // Debounced save
     clearTimeout(window._saveTimer);
