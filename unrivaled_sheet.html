@@ -1289,7 +1289,11 @@ body {
     </div>
     <div id="items-list"></div>
 
-    <div class="section-header" style="margin-top:20px;">Magic Items</div>
+    <div class="section-header" style="margin-top:20px;">Unrivaled Relics</div>
+    <p style="font-size:12px;color:#555;margin-bottom:8px;">Toggle owned — click to expand details. Relics do not count toward attunement slots.</p>
+    <div id="relic-library-list"></div>
+
+    <div class="section-header" style="margin-top:20px;">Other Magic Items</div>
     <div id="relics-list"></div>
     <div style="margin-top:8px;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;padding:12px;">
       <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--gold-bright);margin-bottom:8px;">ADD MAGIC ITEM</div>
@@ -1475,6 +1479,23 @@ const SEAL_LIBRARY = [
 {id:'yuentomo',name:'Yūen-Tomo — The Friend Beyond Fate',tier:'M',size:'C',type:'W',activation:'Action',desc:'Replaces Shade Sprite. Permanent martial spirit. AC = your base+1. HP = (MM+PB)×level. STR 18 DEX 16 CON 16. Resistance to physical+force. Shadow-Guard (reaction: take damage for you). Ink-Spear: +PB+4, 1d10+4+MM force. Shadow-Step Requiem (1/SR): both teleport and attack, if both hit +2×MM+PB force, no reactions. Ink-Cross Guard: halve damage to ally within 20 ft. Bond Overdrive: on crit, other attacks with advantage. Costs 4 seal slots permanently. At 0 HP: leftover damage to you + 1 exhaustion.'},
 ];
 
+const RELIC_LIBRARY = [
+{id:'hai_haori',name:'Hai Haori (Ash Haori)',rarity:'Uncommon',category:'Clothing',attune:false,
+desc:'<strong>War Fit:</strong> Add your proficiency bonus to initiative rolls.<br><strong>Comfortable:</strong> You no longer need sleep. Instead you may meditate deeply, remaining semi-conscious, for 4 hours a day.'},
+
+{id:'kokuyo_fude',name:'Kokuyō Fude (Ink-Black Brush)',rarity:'Uncommon',category:'Wondrous Item',attune:true,
+desc:'Attune by spending 10 min painting a meaningful memory.<br><strong>Air Ink:</strong> Write on air — ink stays as long as you\'re within 5 ft, or 5 min if you leave. Feels indefinite.<br><strong>Extra Seal Slots:</strong> +2 active seals beyond your normal maximum.<br><strong>Meditative Aid:</strong> Halves meditation downtime (min 5 min). 1/LR: advantage on one Insight or History check related to your meditation subject.'},
+
+{id:'byakko',name:'Byakko, the White Tiger Wakizashi',rarity:'Rare',category:'Weapon',attune:true,
+desc:'+1 to attack and damage rolls.<br><strong>Snow Veil:</strong> Once/turn on hit, choose an ally within 10 ft — they gain temp HP = PB. 3 uses per encounter.<br><strong>Stillness of Snow:</strong> Advantage on first Acrobatics or Insight check each short rest.<br><strong>Merciful Reflection:</strong> 1/LR — when ally within 30 ft fails a save, let them reroll (must use new result).<br><strong>White Tiger\'s Warning:</strong> When a creature attacks an ally within 30 ft, mark it. Until start of your next turn: marked creature has disadvantage on that attack, your next attack against it deals +2d4 psychic. WIS mod uses/LR.'},
+
+{id:'kosho_kanmuri',name:'Kōshō no Kanmuri: Crown of Ascension',rarity:'Common → Mythic',category:'Wondrous Item',attune:true,
+desc:'A thin circlet that remembers every duel you win. Earns <strong>Marks of Ascension</strong> through true duels, tournaments, defeating champions/rivals, relic trials, and legendary challenges.<br><br><strong>Milestones:</strong><br>• <strong>1 Mark (Common):</strong> Duelist\'s Breath — on initiative, gain temp HP = WIS mod + Level.<br>• <strong>3 Marks (Uncommon):</strong> Duelist\'s Reserve — 2 charges/SR. Spend 1: +2d8 weapon damage. Spend 2: +4 AC until next turn.<br>• <strong>6 Marks (Rare):</strong> Radiant Afterimage — first attack each encounter: teleport 10 ft, +2d8 radiant damage.<br>• <strong>12 Marks (Very Rare):</strong> Duelist\'s Momentum — on hit gain 1 Momentum (max 3). Spend all as bonus action: Flowing Assault (extra attacks), Untouchable Step (+3 AC each), or Blinking Advance (teleport 10 ft each).<br>• <strong>20 Marks (Legendary):</strong> Absolute Duel — 1/LR bonus action challenge creature within 60 ft for 1 min. +3 atk/saves vs target, +1d8 force per hit, target disadv on attacks vs others, +3 AC when target hits you.<br>• <strong>35 Marks (Artifact):</strong> Crowned Dominion — 20-ft aura. 1/turn impose disadv on save vs your abilities. Allies +2 all saves. Kill = WIS save or frightened. Missed attacks deal PB+WIS force. Enemies provoke OA even on teleport.<br>• <strong>50 Marks (Mythic):</strong> Mythic Duelist Ascension — 3 Legendary Action charges (regain 1 per hit, 2/turn). Quick Strike, Redirect, Calm, Duelist\'s Step, Crowned Judgment (4d10 radiant/force).'},
+
+{id:'kokuryu',name:'Kokuryū, the Black Dragon Katana',rarity:'Artifact',category:'Weapon',attune:true,
+desc:'+3 to attack and damage rolls.<br><strong>Void-Edge Technique:</strong> 1/turn on hit choose: +2d6 force, teleport 10 ft, ignore resistance, or force target to move 10 ft.<br><strong>Void Step:</strong> 1/SR — during movement: no OA, move through hostiles, ignore difficult terrain.<br><strong>Shadow-Tiger Rhythm:</strong> (with Byakko) 1/turn on hit, free attack with the other blade (no ability mod to damage, can trigger features).<br><strong>Eclipse Guard:</strong> 1/SR — +5 AC against one attack as reaction.<br><strong>Twin-Spirit Synergy (with Byakko):</strong> Byakko becomes +3. Tiger\'s Warning: 2d4→3d8 psychic, disadv on all attacks vs you.<br><strong>Heart of the Devoured Sun:</strong> 1/LR bonus action, 1 min: Void Edge triggers every hit, shed black sunlight, force damage ignores resistance.<br><strong>Eclipse Strike:</strong> 1/SR — on hit, don\'t roll damage. Start of next turn: target takes all damage doubled.<br><strong>Devour Light:</strong> 1/LR action — extinguish all nonmagical light within 120 ft.'},
+];
+
 const DEFAULT_STATE = {
   identity: { name:'', level:3, race:'', background:'', alignment:'', player:'' },
   abilities: { STR:10, DEX:17, CON:15, INT:10, WIS:20, CHA:10 },
@@ -1498,6 +1519,7 @@ const DEFAULT_STATE = {
   bonusSealSlots: 0,
   knownSeals: {},
   preparedSeals: {},
+  ownedRelics: {},
   feats: [
     { name:'Elven Accuracy', desc:'When you have advantage on an attack roll using Dexterity, Intelligence, Wisdom, or Charisma, you can reroll one of the dice once. DEX +1.' },
     { name:'Skill Expert', desc:'+1 to one ability score, proficiency in one skill, expertise in one skill (Insight).' },
@@ -1569,7 +1591,10 @@ function saveState() {
     feats: state.feats.map(f => f.name).join(', '),
     equipment: state.items.map(i => i.name).filter(Boolean).join(', '),
     items: state.items.filter(i => i.name).map(i => ({ name: i.name, qty: i.qty || 1, weight: i.weight || '', value: i.value || '', rarity: i.rarity || 'Common' })),
-    relics: state.relics.filter(r => r.name).map(r => ({ name: r.name, rarity: r.rarity || '', attuned: !!r.attuned, desc: r.desc || '' })),
+    relics: [
+      ...RELIC_LIBRARY.filter(r => state.ownedRelics[r.id]).map(r => ({ name: r.name, rarity: r.rarity, attuned: !!r.attune, desc: '' })),
+      ...state.relics.filter(r => r.name).map(r => ({ name: r.name, rarity: r.rarity || '', attuned: !!r.attuned, desc: r.desc || '' }))
+    ],
     currency: state.currency,
     features: 'Unarmored Defense, Muscle Memory, Focus Points, Niten Ichi-Ryū, Calm Within the Storm',
     notes: state.notes.session || '',
@@ -2114,7 +2139,36 @@ function addItem() {
   renderItems(); saveState();
 }
 
-const RARITY_COLORS = { Common:'#888', Uncommon:'#4A8A4A', Rare:'#4A6A8A', 'Very Rare':'#6A4A8A', Legendary:'#8A6A2A', Artifact:'#C8A000' };
+const RARITY_COLORS = { Common:'#888', Uncommon:'#4A8A4A', Rare:'#4A6A8A', 'Very Rare':'#6A4A8A', Legendary:'#8A6A2A', Artifact:'#C8A000', 'Common → Mythic':'#C8A000' };
+
+function renderRelicLibrary() {
+  const list = document.getElementById('relic-library-list');
+  if (!list) return;
+  list.innerHTML = RELIC_LIBRARY.map(r => {
+    const owned = state.ownedRelics[r.id] || false;
+    const rc = RARITY_COLORS[r.rarity] || '#888';
+    return `<div style="background:var(--ink-panel);border:1px solid ${owned ? 'var(--gold-bright)' : 'var(--border)'};border-radius:6px;margin-bottom:6px;overflow:hidden;${owned ? '' : 'opacity:0.5;'}">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <div style="width:20px;height:20px;border:2px solid ${owned ? 'var(--gold-bright)' : '#333'};border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:${owned ? 'var(--gold-bright)' : 'transparent'};background:${owned ? 'rgba(200,169,126,0.15)' : 'transparent'};flex-shrink:0;"
+          onclick="event.stopPropagation();toggleOwnedRelic('${r.id}')">✓</div>
+        <span style="font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:${owned ? 'var(--gold-pale)' : '#666'};flex:1;">${r.name}</span>
+        <span style="font-family:'Cinzel',serif;font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid ${rc};color:${rc};">${r.rarity}</span>
+        <span style="font-size:9px;color:#666;font-family:'Cinzel',serif;">${r.category}</span>
+        ${r.attune ? '<span style="font-size:9px;color:var(--gold-warm);font-family:Cinzel,serif;">⚡ ATTUNE</span>' : ''}
+        <span style="color:#555;font-size:12px;">▼</span>
+      </div>
+      <div style="display:none;padding:0 12px 12px;">
+        <div style="font-size:13px;color:#AAA;line-height:1.7;">${r.desc}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleOwnedRelic(id) {
+  state.ownedRelics[id] = !state.ownedRelics[id];
+  renderRelicLibrary();
+  saveState();
+}
 
 function renderRelics() {
   const list = document.getElementById('relics-list');
@@ -2384,6 +2438,7 @@ function initAll() {
   renderFeatures();
   renderItems();
   renderRelics();
+  renderRelicLibrary();
   renderWeapons();
   renderFeats();
   renderCrownMilestones();
