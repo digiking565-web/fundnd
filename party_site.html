@@ -348,10 +348,7 @@
 
   <!-- All Items -->
   <h3>All Party Items</h3>
-  <table class="inv-table">
-    <thead><tr><th>Item</th><th>Qty</th><th>Owner</th><th>Rarity</th><th>Details</th></tr></thead>
-    <tbody id="invBody"><tr><td colspan="5" class="empty-state">No items yet</td></tr></tbody>
-  </table>
+  <div id="invBody"><div class="empty-state">No items yet</div></div>
 
   <!-- Shared Items -->
   <h3 style="margin-top:24px;">Shared Party Items</h3>
@@ -750,29 +747,38 @@ db.ref('party').on('value', snap => {
 
 function renderAllItems() {
   const body = document.getElementById('invBody');
-  let rows = [];
+  const members = {};
   Object.entries(allPartyData).forEach(([k, c]) => {
     const owner = c.player || c.name || k;
+    const items = [];
     if (c.items && Array.isArray(c.items)) {
-      c.items.forEach(item => {
-        rows.push({ name: item.name, qty: item.qty || 1, owner: owner, rarity: item.rarity || '', detail: item.weight ? 'Wt: ' + item.weight : '' });
-      });
+      c.items.forEach(item => items.push({ name: item.name, qty: item.qty || 1, rarity: item.rarity || '', magic: false }));
     }
     if (c.relics && Array.isArray(c.relics)) {
-      c.relics.forEach(r => {
-        rows.push({ name: r.name + (r.attuned ? ' (attuned)' : ''), qty: 1, owner: owner, rarity: r.rarity || '', detail: r.desc || '' });
-      });
+      c.relics.forEach(r => items.push({ name: r.name + (r.attuned ? ' (attuned)' : ''), qty: 1, rarity: r.rarity || '', magic: true }));
     }
+    if (items.length) members[owner] = items;
   });
-  if (!rows.length) { body.innerHTML = '<tr><td colspan="5" class="empty-state">No items yet -- items from character sheets sync here automatically</td></tr>'; return; }
-  body.innerHTML = rows.map(r => `
-    <tr>
-      <td>${esc(r.name)}</td>
-      <td>${r.qty}</td>
-      <td style="color:var(--accent);">${esc(r.owner)}</td>
-      <td style="color:var(--gold-dim);">${esc(r.rarity)}</td>
-      <td style="color:var(--text-dim);font-size:0.85rem;">${esc(r.detail)}</td>
-    </tr>`).join('');
+  if (!Object.keys(members).length) { body.innerHTML = '<div class="empty-state">No items yet -- items from character sheets sync here automatically</div>'; return; }
+  body.innerHTML = Object.entries(members).map(([owner, items]) => {
+    const count = items.length;
+    return `<div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.inv-chev').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'">
+        <span class="inv-chev" style="color:var(--text-faint);font-size:12px;">▶</span>
+        <span style="font-family:'Cinzel',serif;font-size:1rem;color:var(--accent);">${esc(owner)}</span>
+        <span style="color:var(--text-dim);font-size:0.85rem;">${count} item${count !== 1 ? 's' : ''}</span>
+      </div>
+      <div style="display:none;padding:0 16px 12px;">
+        <table class="inv-table" style="margin:0;"><thead><tr><th>Item</th><th>Qty</th><th>Rarity</th></tr></thead><tbody>
+        ${items.map(it => `<tr>
+          <td>${it.magic ? '✦ ' : ''}${esc(it.name)}</td>
+          <td>${it.qty}</td>
+          <td style="color:var(--gold-dim);">${esc(it.rarity)}</td>
+        </tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function adjustGold(sign) {
