@@ -292,20 +292,19 @@ body{background:var(--ink-void);color:var(--parchment);font-family:'Crimson Text
         <div class="section-header" style="margin-top:16px;">Berserker Features</div>
         <div class="card mb-8">
           <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">FRENZY (Lv3)</div>
-          <div style="font-size:13px;color:#CCC;line-height:1.6;">While raging, you can make one extra melee attack as part of the Attack action. You can use this a number of times equal to your PB, and you regain all uses on a long rest.</div>
+          <div style="font-size:13px;color:#CCC;line-height:1.6;">If you use <strong style="color:var(--gold-pale);">Reckless Attack</strong> while raging, deal extra damage to the first target hit on your turn with a STR attack. Roll <strong style="color:var(--gold-pale);">PB d6s</strong> — same damage type as the weapon.</div>
         </div>
-        <div class="use-tracker"><span class="use-label">FRENZY USES</span><div class="use-pips" id="frenzy-pips"></div><button class="btn btn-sm" onclick="resetFrenzy()">Reset</button></div>
         <div id="mindless-card" style="display:none;" class="card mb-8">
           <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">MINDLESS RAGE (Lv6)</div>
-          <div style="font-size:13px;color:#CCC;">Can't be charmed or frightened while raging. If charmed/frightened when entering rage, the effect is suspended.</div>
+          <div style="font-size:13px;color:#CCC;">Immunity to Charmed and Frightened while raging. If Charmed or Frightened when entering rage, the condition ends.</div>
         </div>
         <div id="retaliation-card" style="display:none;" class="card mb-8">
           <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">RETALIATION (Lv10)</div>
-          <div style="font-size:13px;color:#CCC;">When you take damage from a creature within 5 ft, you can use your reaction to make a melee weapon attack against that creature.</div>
+          <div style="font-size:13px;color:#CCC;">When you take damage from a creature within 5 ft, you can take a Reaction to make one melee attack against that creature, using a weapon or Unarmed Strike.</div>
         </div>
         <div id="intimidating-card" style="display:none;" class="card">
-          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">INTIMIDATING PRESENCE (Lv10)</div>
-          <div style="font-size:13px;color:#CCC;line-height:1.6;">Replace one attack with Intimidating Presence. Creature within 30 ft: WIS save (DC = 8 + PB + STR mod + CHA mod). Fail: frightened until end of your next turn. Immune for 24 hrs on success.</div>
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">INTIMIDATING PRESENCE (Lv14)</div>
+          <div style="font-size:13px;color:#CCC;line-height:1.6;">Bonus Action. Each creature of your choice in 30-ft Emanation: WIS save (DC 8 + STR mod + PB). Fail: Frightened for 1 minute (repeats save each turn). 1/Long Rest, or expend a Rage use to restore it.</div>
         </div>
       </div>
     </div>
@@ -395,13 +394,13 @@ const FEATURES=[
 {level:2,name:'Reckless Attack',body:'First attack of turn: choose to attack recklessly. Advantage on melee STR attacks, but attacks against you have advantage until next turn.'},
 {level:2,name:'Danger Sense',body:'Advantage on DEX saves against effects you can see (traps, spells). Not blinded, deafened, or incapacitated.'},
 {level:3,name:'Path of the Berserker',body:'Your subclass. Gain Frenzy.'},
-{level:3,name:'Frenzy',body:'While raging, make one extra melee attack as part of the Attack action. PB uses per long rest.'},
+{level:3,name:'Frenzy',body:'If you use <strong>Reckless Attack</strong> while your Rage is active, you deal extra damage to the first target you hit on your turn with a Strength-based attack. Roll a number of <strong>d6s equal to your Rage Damage bonus</strong> (PB) and add them together. The damage has the same type as the weapon or Unarmed Strike used.'},
 {level:3,name:'Primal Knowledge',body:'Gain skill proficiency from Barb list. Always use STR for Intimidation. Gain expertise in 2 barbarian skills. Extra skill at Lv10.'},
 {level:4,name:'ASI / Feat',body:'Increase one ability score by 2, or two by 1. Or take a feat.'},
 {level:5,name:'Extra Attack',body:'Attack twice when you take the Attack action.'},
 {level:5,name:'Fast Movement',body:'+10 ft speed (not heavy armor). During rage: +5 × PB ft instead.'},
 {level:5,name:'Focused Reckless Attack',body:'Advantage on first attack only. Enemies do NOT gain advantage. Cannot Brutal Strike. PB uses per long rest.'},
-{level:6,name:'Mindless Rage',body:'Can\'t be charmed or frightened while raging. Existing effects suspended during rage.'},
+{level:6,name:'Mindless Rage',body:'You have <strong>Immunity</strong> to the Charmed and Frightened conditions while your Rage is active. If you\'re Charmed or Frightened when you enter your Rage, the condition <strong>ends</strong> on you.'},
 {level:6,name:'Resilient Rage',body:'Reaction while raging: gain Resistance to damage type taken until rage ends. CON mod uses per long rest.'},
 {level:7,name:'Feral Instinct',body:'Advantage on initiative. Can rage as reaction to initiative even when surprised. Can\'t be surprised if raging.'},
 {level:7,name:'Con Save Advantage',body:'While raging, advantage on Constitution saving throws.'},
@@ -409,8 +408,8 @@ const FEATURES=[
 {level:8,name:'ASI / Feat',body:'Increase one ability score by 2, or two by 1. Or take a feat.'},
 {level:9,name:'Brutal Strike',body:'When using Reckless Attack (not Focused), deal extra 1d10 + STR damage. Crit window +1. Choose a rider effect. Cannot use if you chose Focused Reckless.'},
 {level:10,name:'ASI / Feat',body:'Increase one ability score by 2, or two by 1. Or take a feat.'},
-{level:10,name:'Retaliation',body:'Reaction when damaged by creature within 5 ft: make one melee attack against it.'},
-{level:10,name:'Intimidating Presence',body:'Replace one attack: creature within 30 ft WIS save (DC 8+PB+STR+CHA). Fail: frightened until end of next turn. Immune 24 hrs on success.'},
+{level:10,name:'Retaliation',body:'When you take damage from a creature that is within 5 feet of you, you can take a <strong>Reaction</strong> to make one melee attack against that creature, using a weapon or an Unarmed Strike.'},
+{level:14,name:'Intimidating Presence',body:'<strong>Bonus Action.</strong> Each creature of your choice in a 30-foot Emanation makes a Wisdom saving throw (DC 8 + STR mod + PB). Fail: <strong>Frightened for 1 minute</strong>. Creature repeats save at end of each of its turns, ending on success. <strong>1/Long Rest</strong>, or expend a use of Rage (no action) to restore it.'},
 {level:11,name:'Titanic Strength',body:'While raging: count as Huge for carrying/push/drag/lift. One size larger for grapple/shove. Break through obstacles (STR check). STR(Athletics) min = STR score.'},
 {level:12,name:'ASI / Feat',body:'Increase one ability score by 2, or two by 1. Or take a feat.'},
 {level:13,name:'Improved Brutal Strike',body:'Crit window +2 total. Brutal Mastery: choose 2 riders (1/short rest). +PB to Brutal Strike damage. New rider: <strong>Expose</strong> — target AC -2 against you and chosen creatures.'},
@@ -471,7 +470,7 @@ function updateAll(){
   document.getElementById('titanic-card').style.display=l>=11?'block':'none';
   document.getElementById('mindless-card').style.display=l>=6?'block':'none';
   document.getElementById('retaliation-card').style.display=l>=10?'block':'none';
-  document.getElementById('intimidating-card').style.display=l>=10?'block':'none';
+  document.getElementById('intimidating-card').style.display=l>=14?'block':'none';
   document.getElementById('brutal-section').style.display=l>=9?'block':'none';
   document.getElementById('no-brutal').style.display=l>=9?'none':'block';
   document.getElementById('brutal-mastery-note').style.display=l>=13?'block':'none';
