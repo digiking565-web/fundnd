@@ -1138,15 +1138,23 @@ db.ref('map').on('value', snap => {
     pinsContainer.innerHTML = '';
     return;
   }
-  imgContainer.innerHTML = '<img src="' + esc(data.imageUrl) + '" style="width:100%;height:auto;display:block;border-radius:10px;" alt="Campaign Map">';
+  imgContainer.innerHTML = '<img src="' + esc(data.imageUrl) + '" style="width:100%;height:auto;display:block;border-radius:10px;" alt="Campaign Map" draggable="false">';
   if (data.pins) {
-    const pins = Object.values(data.pins);
-    pinsContainer.innerHTML = pins.map(p => `
-      <div style="position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-100%);cursor:pointer;" title="${esc(p.label || '')}">
-        <div style="font-size:1.4rem;">📍</div>
+    const pins = Object.entries(data.pins);
+    pinsContainer.innerHTML = pins.map(([k, p]) => `
+      <div style="position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-100%);cursor:pointer;z-index:10;" onclick="this.querySelector('.pin-tooltip').style.display=this.querySelector('.pin-tooltip').style.display==='block'?'none':'block'">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="font-size:10px;font-family:'Cinzel',serif;color:#fff;background:${p.color || '#c9a84c'};padding:2px 6px;border-radius:3px;white-space:nowrap;">${esc(p.label || '?')}</div>
+          <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid ${p.color || '#c9a84c'};"></div>
+        </div>
+        <div class="pin-tooltip" style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:4px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 12px;min-width:150px;max-width:250px;z-index:20;">
+          <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:0.9rem;margin-bottom:4px;">${esc(p.label || '?')}</div>
+          <div style="color:var(--text-dim);font-size:0.85rem;line-height:1.4;">${esc(p.desc || 'No description.')}</div>
+        </div>
       </div>`).join('');
-    pinList.innerHTML = '<h3>Locations</h3>' + pins.map(p => `
-      <div style="display:flex;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border-light);">
+    pinList.innerHTML = '<h3>Locations</h3>' + pins.map(([k, p]) => `
+      <div style="display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border-light);">
+        <div style="width:10px;height:10px;border-radius:50%;background:${p.color || '#c9a84c'};flex-shrink:0;"></div>
         <span style="color:var(--gold);font-family:'Cinzel',serif;">${esc(p.label || 'Unknown')}</span>
         <span style="color:var(--text-dim);font-size:0.9rem;">${esc(p.desc || '')}</span>
       </div>`).join('');

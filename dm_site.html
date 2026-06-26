@@ -255,16 +255,43 @@
       <input class="si" id="mapUrl" placeholder="Paste image URL (Imgur, Discord, etc.)">
       <button class="btn btn-sm" onclick="saveMapUrl()">Set Map</button>
     </div>
-    <div id="mapPreview" style="margin-top:12px;"></div>
   </div>
-  <h3>Map Pins</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:8px;">Click on the map to place a pin. Drag pins to reposition. Click a pin to edit.</p>
+  <div id="dm-map-container" style="position:relative;background:var(--panel);border:1px solid #333;border-radius:8px;overflow:hidden;min-height:400px;cursor:crosshair;">
+    <div id="dm-map-empty" style="display:flex;align-items:center;justify-content:center;height:400px;color:var(--text-dim);">No map image set — paste a URL above</div>
+    <img id="dm-map-img" style="display:none;width:100%;height:auto;" draggable="false">
+    <div id="dm-map-pins"></div>
+  </div>
+
+  <h3 style="margin-top:16px;">Pin List</h3>
   <div id="pinsList"></div>
-  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:flex-end;">
-    <div><div class="field-label">Label</div><input class="si" id="pin_label" style="width:140px;"></div>
-    <div><div class="field-label">X %</div><input class="si" id="pin_x" type="number" style="width:60px;" min="0" max="100"></div>
-    <div><div class="field-label">Y %</div><input class="si" id="pin_y" type="number" style="width:60px;" min="0" max="100"></div>
-    <div><div class="field-label">Description</div><input class="si" id="pin_desc" style="width:200px;"></div>
-    <button class="btn btn-sm" onclick="addPin()">Add Pin</button>
+
+  <!-- Pin Edit Modal -->
+  <div id="pinModal" style="display:none;position:fixed;inset:0;background:#000000cc;z-index:300;display:none;align-items:center;justify-content:center;" onclick="if(event.target===this)closePinModal()">
+    <div style="background:var(--panel);border:1px solid #333;border-radius:10px;padding:24px;max-width:400px;width:100%;position:relative;">
+      <button onclick="closePinModal()" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;">✕</button>
+      <h3 style="color:var(--red);margin-bottom:12px;font-family:'Cinzel',serif;" id="pinModalTitle">Edit Pin</h3>
+      <div class="field-label">Label</div>
+      <input class="si" id="pinEdit_label" style="margin-bottom:8px;">
+      <div class="field-label">Description</div>
+      <textarea class="si" id="pinEdit_desc" style="min-height:60px;margin-bottom:8px;resize:vertical;"></textarea>
+      <div class="field-label">Color</div>
+      <select class="si" id="pinEdit_color" style="margin-bottom:12px;">
+        <option value="#DD4444">Red</option>
+        <option value="#44AA44">Green</option>
+        <option value="#4488DD">Blue</option>
+        <option value="#DD9944">Orange</option>
+        <option value="#AA44DD">Purple</option>
+        <option value="#DDDD44">Yellow</option>
+        <option value="#FFFFFF">White</option>
+      </select>
+      <input type="hidden" id="pinEdit_key">
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" onclick="savePinEdit()" style="background:var(--red);color:#fff;border-color:var(--red);">Save</button>
+        <button class="btn btn-sm" onclick="deletePinEdit()" style="color:var(--red);">Delete Pin</button>
+        <button class="btn btn-sm" onclick="closePinModal()">Cancel</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -564,40 +591,120 @@ function removeNPC(key) { db.ref('npcs/' + key).remove(); }
 function closeNPCModal() { document.getElementById('npcModal').style.display = 'none'; }
 
 // ════════════════════════════════════
-// MAP MANAGER
+// MAP MANAGER — Click to place, drag to move
 // ════════════════════════════════════
+let mapPinsData = {};
+let draggingPin = null;
+
 db.ref('map').on('value', snap => {
   const data = snap.val() || {};
   document.getElementById('mapUrl').value = data.imageUrl || '';
-  const preview = document.getElementById('mapPreview');
-  if (data.imageUrl) preview.innerHTML = '<img src="' + esc(data.imageUrl) + '" style="max-width:100%;max-height:300px;border-radius:8px;">';
-  else preview.innerHTML = '';
-  const pinsList = document.getElementById('pinsList');
-  if (data.pins) {
-    pinsList.innerHTML = Object.entries(data.pins).map(([k, p]) => `
-      <div style="display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid #222;">
-        <span style="color:var(--gold);font-family:'Cinzel',serif;min-width:120px;">${esc(p.label || '')}</span>
-        <span style="color:var(--text-dim);font-size:0.85rem;">(${p.x}%, ${p.y}%)</span>
-        <span style="flex:1;color:var(--text-dim);font-size:0.9rem;">${esc(p.desc || '')}</span>
-        <button class="remove-btn" onclick="db.ref('map/pins/${k}').remove()">✕</button>
-      </div>`).join('');
-  } else { pinsList.innerHTML = '<div style="color:var(--text-faint);">No pins yet</div>'; }
+  const img = document.getElementById('dm-map-img');
+  const empty = document.getElementById('dm-map-empty');
+  if (data.imageUrl) {
+    img.src = data.imageUrl; img.style.display = 'block'; empty.style.display = 'none';
+  } else {
+    img.style.display = 'none'; empty.style.display = 'flex';
+  }
+  mapPinsData = data.pins || {};
+  renderMapPins();
+  renderPinList();
 });
 
-function saveMapUrl() { db.ref('map/imageUrl').set(document.getElementById('mapUrl').value.trim()); }
+function saveMapUrl() {
+  const url = document.getElementById('mapUrl').value.trim();
+  db.ref('map/imageUrl').set(url);
+}
 
-function addPin() {
-  const label = document.getElementById('pin_label').value.trim();
-  if (!label) return;
-  db.ref('map/pins').push({
-    label, x: Number(document.getElementById('pin_x').value) || 50,
-    y: Number(document.getElementById('pin_y').value) || 50,
-    desc: document.getElementById('pin_desc').value.trim()
-  });
-  document.getElementById('pin_label').value = '';
-  document.getElementById('pin_x').value = '';
-  document.getElementById('pin_y').value = '';
-  document.getElementById('pin_desc').value = '';
+function renderMapPins() {
+  const container = document.getElementById('dm-map-pins');
+  container.innerHTML = Object.entries(mapPinsData).map(([k, p]) => `
+    <div class="map-pin" data-key="${k}" style="position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-100%);cursor:grab;z-index:10;user-select:none;"
+      onmousedown="startDragPin(event,'${k}')" onclick="openPinModal('${k}')">
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:10px;font-family:'Cinzel',serif;color:#fff;background:${p.color || '#DD4444'};padding:2px 6px;border-radius:3px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;">${esc(p.label || '?')}</div>
+        <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid ${p.color || '#DD4444'};"></div>
+      </div>
+    </div>`).join('');
+}
+
+function renderPinList() {
+  const list = document.getElementById('pinsList');
+  const entries = Object.entries(mapPinsData);
+  if (!entries.length) { list.innerHTML = '<div style="color:var(--text-faint);">No pins yet — click on the map to place one</div>'; return; }
+  list.innerHTML = entries.map(([k, p]) => `
+    <div style="display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid #222;cursor:pointer;" onclick="openPinModal('${k}')">
+      <div style="width:12px;height:12px;border-radius:50%;background:${p.color || '#DD4444'};flex-shrink:0;"></div>
+      <span style="color:var(--gold);font-family:'Cinzel',serif;min-width:100px;">${esc(p.label || '?')}</span>
+      <span style="flex:1;color:var(--text-dim);font-size:0.9rem;">${esc(p.desc || '')}</span>
+      <span style="color:var(--text-faint);font-size:0.8rem;">(${Math.round(p.x)}%, ${Math.round(p.y)}%)</span>
+    </div>`).join('');
+}
+
+// Click map to place new pin
+document.getElementById('dm-map-container').addEventListener('click', function(e) {
+  if (draggingPin || e.target.closest('.map-pin')) return;
+  const img = document.getElementById('dm-map-img');
+  if (img.style.display === 'none') return;
+  const rect = this.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width) * 100;
+  const y = ((e.clientY - rect.top) / rect.height) * 100;
+  const key = db.ref('map/pins').push().key;
+  db.ref('map/pins/' + key).set({ label: 'New Pin', x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, desc: '', color: '#DD4444' });
+  setTimeout(() => openPinModal(key), 300);
+});
+
+// Drag pins
+function startDragPin(e, key) {
+  e.preventDefault(); e.stopPropagation();
+  draggingPin = key;
+  const container = document.getElementById('dm-map-container');
+  const onMove = (ev) => {
+    const rect = container.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100));
+    const pin = document.querySelector('.map-pin[data-key="' + key + '"]');
+    if (pin) { pin.style.left = x + '%'; pin.style.top = y + '%'; }
+  };
+  const onUp = (ev) => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    const rect = container.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100));
+    db.ref('map/pins/' + key + '/x').set(Math.round(x * 10) / 10);
+    db.ref('map/pins/' + key + '/y').set(Math.round(y * 10) / 10);
+    setTimeout(() => { draggingPin = null; }, 100);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// Pin edit modal
+function openPinModal(key) {
+  if (draggingPin) return;
+  const p = mapPinsData[key];
+  if (!p) return;
+  document.getElementById('pinEdit_label').value = p.label || '';
+  document.getElementById('pinEdit_desc').value = p.desc || '';
+  document.getElementById('pinEdit_color').value = p.color || '#DD4444';
+  document.getElementById('pinEdit_key').value = key;
+  document.getElementById('pinModalTitle').textContent = p.label || 'Edit Pin';
+  document.getElementById('pinModal').style.display = 'flex';
+}
+function closePinModal() { document.getElementById('pinModal').style.display = 'none'; }
+function savePinEdit() {
+  const key = document.getElementById('pinEdit_key').value;
+  if (!key) return;
+  db.ref('map/pins/' + key + '/label').set(document.getElementById('pinEdit_label').value.trim() || 'Pin');
+  db.ref('map/pins/' + key + '/desc').set(document.getElementById('pinEdit_desc').value);
+  db.ref('map/pins/' + key + '/color').set(document.getElementById('pinEdit_color').value);
+  closePinModal();
+}
+function deletePinEdit() {
+  const key = document.getElementById('pinEdit_key').value;
+  if (key) db.ref('map/pins/' + key).remove();
+  closePinModal();
 }
 
 // ════════════════════════════════════
