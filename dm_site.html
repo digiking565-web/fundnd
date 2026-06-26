@@ -130,8 +130,9 @@
 <div class="pw-overlay" id="pwOverlay">
   <div class="pw-box">
     <h2>⚔ DM Access ⚔</h2>
-    <p style="color:var(--text-dim);margin-bottom:16px;">Enter the DM password</p>
-    <input class="si" type="password" id="pwInput" placeholder="Password..." onkeydown="if(event.key==='Enter')checkPW()">
+    <p style="color:var(--text-dim);margin-bottom:16px;">Admin login required</p>
+    <input class="si" type="text" id="dmLoginName" placeholder="Your name..." onkeydown="if(event.key==='Enter')document.getElementById('dmLoginPass').focus()" style="margin-bottom:10px;">
+    <input class="si" type="password" id="dmLoginPass" placeholder="Password..." onkeydown="if(event.key==='Enter')checkPW()">
     <br>
     <button class="btn" onclick="checkPW()">Enter</button>
     <div class="pw-error" id="pwError">Wrong password</div>
@@ -393,25 +394,37 @@ const db = firebase.database();
 const ABILITIES = ['str','dex','con','int','wis','cha'];
 
 // ════════════════════════════════════
-// PASSWORD GATE
+// AUTH GATE — admin role required
 // ════════════════════════════════════
-const DM_PASS = 'fundnd';
+async function hashPassword(pass) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pass + '_fundnd_salt');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 let authenticated = false;
 
-if (localStorage.getItem('dm_auth') === 'true') {
+if (localStorage.getItem('dm_auth_key')) {
   authenticated = true;
   document.getElementById('pwOverlay').style.display = 'none';
 }
 
-function checkPW() {
-  const pw = document.getElementById('pwInput').value;
-  if (pw === DM_PASS) {
-    authenticated = true;
-    localStorage.setItem('dm_auth', 'true');
-    document.getElementById('pwOverlay').style.display = 'none';
-  } else {
-    document.getElementById('pwError').style.display = 'block';
-  }
+async function checkPW() {
+  const name = document.getElementById('dmLoginName').value.trim();
+  const pass = document.getElementById('dmLoginPass').value;
+  const errEl = document.getElementById('pwError');
+  if (!name || !pass) { errEl.textContent = 'Enter name and password.'; errEl.style.display = 'block'; return; }
+  const key = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const snap = await db.ref('users/' + key).once('value');
+  const user = snap.val();
+  if (!user) { errEl.textContent = 'Account not found.'; errEl.style.display = 'block'; return; }
+  const hashed = await hashPassword(pass);
+  if (user.passwordHash !== hashed && user.password !== pass) { errEl.textContent = 'Wrong password.'; errEl.style.display = 'block'; return; }
+  if (user.role !== 'admin') { errEl.textContent = 'You are not an admin.'; errEl.style.display = 'block'; return; }
+  authenticated = true;
+  localStorage.setItem('dm_auth_key', key);
+  document.getElementById('pwOverlay').style.display = 'none';
 }
 
 // Connection
