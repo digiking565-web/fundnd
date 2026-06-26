@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>FunDnd — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Crimson Text',serif;background:#0a0a0a;color:#e8dcc8;min-height:100vh;padding:20px;}
+  .container{max-width:900px;margin:0 auto;}
+  h1{font-family:'Cinzel',serif;color:#c94040;font-size:2rem;text-align:center;margin-bottom:8px;letter-spacing:3px;}
+  h2{font-family:'Cinzel',serif;color:#c94040;font-size:1.3rem;margin:24px 0 12px;border-bottom:1px solid #333;padding-bottom:6px;}
+  .subtitle{text-align:center;color:#888;margin-bottom:24px;font-size:0.9rem;}
+
+  .login-box{max-width:360px;margin:80px auto;background:#1a1a1a;border:2px solid #c9404044;border-radius:12px;padding:40px;text-align:center;}
+  .login-box h2{color:#c94040;border:none;margin:0 0 16px;}
+  .si{background:#222;border:1px solid #333;border-radius:4px;color:#e8dcc8;padding:10px;font-family:'Crimson Text',serif;font-size:1rem;width:100%;margin-bottom:10px;}
+  .si:focus{outline:none;border-color:#c94040;}
+  select.si option{background:#222;}
+  .btn{padding:10px 24px;background:#c94040;color:#fff;border:none;border-radius:6px;font-family:'Cinzel',serif;font-weight:700;cursor:pointer;font-size:0.9rem;}
+  .btn:hover{background:#d55;}
+  .btn-sm{padding:6px 14px;font-size:0.8rem;}
+  .btn-danger{background:#600;}.btn-danger:hover{background:#900;}
+  .btn-outline{background:none;color:#c94040;border:1px solid #c94040;}.btn-outline:hover{background:#c9404015;}
+  .error{color:#d66;font-size:0.85rem;margin-top:8px;display:none;}
+
+  .card{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:16px;margin-bottom:12px;}
+  .user-row{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1a1a1a;border:1px solid #333;border-radius:8px;margin-bottom:8px;}
+  .user-name{font-family:'Cinzel',serif;color:#c9a84c;font-size:1.1rem;min-width:100px;}
+  .user-email{color:#888;font-size:0.9rem;flex:1;}
+  .user-role{font-family:'Cinzel',serif;font-size:0.75rem;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
+  .user-role.admin{background:#c9404033;color:#c94040;border:1px solid #c94040;}
+  .user-role.player{background:#4a8a4a33;color:#6d4;border:1px solid #4a8a4a;}
+  .user-class{color:#666;font-size:0.85rem;}
+  .user-status{font-size:0.75rem;color:#888;}
+  .field-label{font-family:'Cinzel',serif;font-size:0.7rem;color:#888;letter-spacing:1px;margin-bottom:4px;}
+
+  .add-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .add-form .full{grid-column:1/-1;}
+  .hidden{display:none;}
+
+  a{color:#c94040;text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  .nav{text-align:center;margin-bottom:20px;}
+  .nav a{margin:0 10px;font-family:'Cinzel',serif;font-size:0.85rem;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚔ Admin Panel ⚔</h1>
+  <div class="subtitle">User Management</div>
+  <div class="nav">
+    <a href="party_site.html">Party Hub</a>
+    <a href="dm_site.html">DM Screen</a>
+  </div>
+
+  <!-- Login Gate -->
+  <div id="adminLogin" class="login-box">
+    <h2>Admin Login</h2>
+    <input class="si" type="text" id="adminUser" placeholder="Your name..." onkeydown="if(event.key==='Enter')document.getElementById('adminPass').focus()">
+    <input class="si" type="password" id="adminPass" placeholder="Password..." onkeydown="if(event.key==='Enter')adminLogin()">
+    <div class="error" id="adminError"></div>
+    <br>
+    <button class="btn" onclick="adminLogin()">Enter</button>
+  </div>
+
+  <!-- Admin Content (hidden until login) -->
+  <div id="adminContent" class="hidden">
+
+    <h2>Add New User</h2>
+    <div class="card">
+      <div class="add-form">
+        <div><div class="field-label">Display Name</div><input class="si" id="newName" placeholder="e.g. Greg"></div>
+        <div><div class="field-label">Email</div><input class="si" type="email" id="newEmail" placeholder="e.g. greg@email.com"></div>
+        <div><div class="field-label">Class</div>
+          <select class="si" id="newClass">
+            <option value="">— Choose class —</option>
+            <option value="unrivaled">The Unrivaled</option>
+            <option value="wizard_chronurgy">Chronurgy Wizard</option>
+            <option value="barbarian_berserker">Berserker Barbarian</option>
+            <option value="bard_eloquence">Eloquence Bard</option>
+            <option value="generic">Other / Generic 5e</option>
+          </select>
+        </div>
+        <div><div class="field-label">Role</div>
+          <select class="si" id="newRole">
+            <option value="player">Player</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div><div class="field-label">Temporary Password</div><input class="si" id="newTempPass" placeholder="They'll change this on first login"></div>
+        <div style="display:flex;align-items:flex-end;"><button class="btn" onclick="addUser()">Add User</button></div>
+      </div>
+      <div class="error" id="addError"></div>
+    </div>
+
+    <h2>All Users</h2>
+    <div id="userList"><div style="color:#555;">Loading...</div></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+firebase.initializeApp({ databaseURL: "https://fundnd-14377-default-rtdb.firebaseio.com" });
+const db = firebase.database();
+
+async function hashPassword(pass) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pass + '_fundnd_salt');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = String(s ?? ''); return d.innerHTML; }
+
+// Admin login
+async function adminLogin() {
+  const name = document.getElementById('adminUser').value.trim();
+  const pass = document.getElementById('adminPass').value;
+  const errEl = document.getElementById('adminError');
+  if (!name || !pass) { errEl.textContent = 'Enter name and password.'; errEl.style.display = 'block'; return; }
+  const key = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const snap = await db.ref('users/' + key).once('value');
+  const user = snap.val();
+  if (!user) { errEl.textContent = 'Account not found.'; errEl.style.display = 'block'; return; }
+  const hashed = await hashPassword(pass);
+  if (user.passwordHash !== hashed && user.password !== pass) { errEl.textContent = 'Wrong password.'; errEl.style.display = 'block'; return; }
+  if (user.role !== 'admin') { errEl.textContent = 'You are not an admin.'; errEl.style.display = 'block'; return; }
+  document.getElementById('adminLogin').style.display = 'none';
+  document.getElementById('adminContent').classList.remove('hidden');
+  loadUsers();
+}
+
+// Add user
+async function addUser() {
+  const name = document.getElementById('newName').value.trim();
+  const email = document.getElementById('newEmail').value.trim();
+  const cls = document.getElementById('newClass').value;
+  const role = document.getElementById('newRole').value;
+  const tempPass = document.getElementById('newTempPass').value;
+  const errEl = document.getElementById('addError');
+  errEl.style.display = 'none';
+
+  if (!name) { errEl.textContent = 'Name is required.'; errEl.style.display = 'block'; return; }
+  if (!email) { errEl.textContent = 'Email is required.'; errEl.style.display = 'block'; return; }
+  if (!tempPass || tempPass.length < 3) { errEl.textContent = 'Temp password must be at least 3 characters.'; errEl.style.display = 'block'; return; }
+
+  const key = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const existing = await db.ref('users/' + key).once('value');
+  if (existing.val()) { errEl.textContent = 'A user with that name already exists.'; errEl.style.display = 'block'; return; }
+
+  const hashed = await hashPassword(tempPass);
+  await db.ref('users/' + key).set({
+    displayName: name,
+    email: email,
+    classType: cls,
+    role: role,
+    passwordHash: hashed,
+    mustChangePassword: true,
+    created: Date.now()
+  });
+
+  document.getElementById('newName').value = '';
+  document.getElementById('newEmail').value = '';
+  document.getElementById('newTempPass').value = '';
+  errEl.textContent = 'User "' + name + '" created! Temp password: ' + tempPass;
+  errEl.style.color = '#6d4';
+  errEl.style.display = 'block';
+  setTimeout(() => { errEl.style.display = 'none'; errEl.style.color = '#d66'; }, 5000);
+}
+
+// Load all users
+function loadUsers() {
+  db.ref('users').on('value', snap => {
+    const data = snap.val();
+    const list = document.getElementById('userList');
+    if (!data) { list.innerHTML = '<div style="color:#555;">No users yet.</div>'; return; }
+    list.innerHTML = Object.entries(data).map(([key, u]) => `
+      <div class="user-row">
+        <div class="user-name">${esc(u.displayName || key)}</div>
+        <div class="user-email">${esc(u.email || 'No email')}</div>
+        <span class="user-role ${u.role || 'player'}">${(u.role || 'player').toUpperCase()}</span>
+        <div class="user-class">${esc(u.classType || 'No class')}</div>
+        <div class="user-status">${u.mustChangePassword ? '⚠ Must change password' : '✓ Active'}</div>
+        <button class="btn btn-sm btn-outline" onclick="resetUserPassword('${key}')">Reset PW</button>
+        <button class="btn btn-sm btn-outline" onclick="toggleRole('${key}','${u.role || 'player'}')">Toggle Role</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteUser('${key}','${esc(u.displayName || key)}')">Delete</button>
+      </div>`).join('');
+  });
+}
+
+async function resetUserPassword(key) {
+  const newPass = prompt('Enter new temporary password for this user:');
+  if (!newPass || newPass.length < 3) { alert('Password must be at least 3 characters.'); return; }
+  const hashed = await hashPassword(newPass);
+  await db.ref('users/' + key + '/passwordHash').set(hashed);
+  await db.ref('users/' + key + '/mustChangePassword').set(true);
+  await db.ref('users/' + key + '/password').remove();
+  alert('Password reset. Temp password: ' + newPass + '\nUser will be asked to change it on next login.');
+}
+
+async function toggleRole(key, currentRole) {
+  const newRole = currentRole === 'admin' ? 'player' : 'admin';
+  await db.ref('users/' + key + '/role').set(newRole);
+}
+
+async function deleteUser(key, name) {
+  if (!confirm('Delete user "' + name + '"? This cannot be undone.')) return;
+  await db.ref('users/' + key).remove();
+}
+</script>
+</body>
+</html>

@@ -224,13 +224,7 @@
 <div class="name-modal" id="nameModal">
   <div class="name-modal-inner">
     <h2>Who Goes There?</h2>
-    <!-- Login/Register Toggle -->
-    <div style="display:flex;gap:0;margin-bottom:16px;border-radius:6px;overflow:hidden;border:1px solid var(--border);">
-      <button id="tab-login" onclick="showAuthTab('login')" style="flex:1;padding:8px;font-family:'Cinzel',serif;font-size:0.85rem;cursor:pointer;border:none;background:var(--accent);color:var(--bg-void);">Log In</button>
-      <button id="tab-register" onclick="showAuthTab('register')" style="flex:1;padding:8px;font-family:'Cinzel',serif;font-size:0.85rem;cursor:pointer;border:none;background:var(--bg-void);color:var(--text-dim);">New Character</button>
-    </div>
-
-    <!-- Login Form -->
+    <p style="color:var(--gold-dim);margin-bottom:16px;">Log in to access the Party Hub</p>
     <div id="auth-login">
       <input type="text" id="loginName" placeholder="Your name..." style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
       <input type="password" id="loginPass" placeholder="Password..." onkeydown="if(event.key==='Enter')doLogin()">
@@ -238,26 +232,19 @@
       <br>
       <button onclick="doLogin()" style="margin-top:8px;">Enter</button>
     </div>
+  </div>
+</div>
 
-    <!-- Register Form -->
-    <div id="auth-register" style="display:none;">
-      <input type="text" id="regName" placeholder="Your name..." style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('regPass').focus()">
-      <input type="password" id="regPass" placeholder="Create a password..." style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('regPassConfirm').focus()">
-      <input type="password" id="regPassConfirm" placeholder="Confirm password..." onkeydown="if(event.key==='Enter')document.getElementById('regClass').focus()">
-      <div style="margin:12px 0;">
-        <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:var(--gold-dim);letter-spacing:1px;margin-bottom:6px;">YOUR CLASS</div>
-        <select id="regClass" style="width:100%;padding:10px;background:var(--bg-void);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Crimson Text',serif;font-size:1.1rem;text-align:center;">
-          <option value="">— Choose your class —</option>
-          <option value="unrivaled">The Unrivaled (Homebrew)</option>
-          <option value="wizard_chronurgy">Chronurgy Wizard</option>
-          <option value="barbarian_berserker">Berserker Barbarian</option>
-          <option value="bard_eloquence">Eloquence Bard</option>
-          <option value="generic">Other / Generic 5e</option>
-        </select>
-      </div>
-      <div id="regError" style="color:var(--red,#d66);font-size:0.85rem;margin-top:8px;display:none;"></div>
-      <button onclick="doRegister()" style="margin-top:8px;">Create Character</button>
-    </div>
+<!-- Force Password Change Modal -->
+<div class="name-modal" id="pwChangeModal" style="display:none;">
+  <div class="name-modal-inner">
+    <h2>Set Your Password</h2>
+    <p style="color:var(--gold-dim);margin-bottom:16px;">You must set a new password before continuing.</p>
+    <input type="password" id="pwNew1" placeholder="New password..." style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('pwNew2').focus()">
+    <input type="password" id="pwNew2" placeholder="Confirm new password..." onkeydown="if(event.key==='Enter')doPasswordChange()">
+    <div id="pwChangeError" style="color:var(--red,#d66);font-size:0.85rem;margin-top:8px;display:none;"></div>
+    <br>
+    <button onclick="doPasswordChange()" style="margin-top:8px;">Set Password</button>
   </div>
 </div>
 
@@ -535,66 +522,71 @@ const CLASS_SHEETS = {
   generic: { file: 'generic_sheet.html', label: 'Generic 5e' },
 };
 
-// Auth system
-function showAuthTab(tab) {
-  document.getElementById('auth-login').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('auth-register').style.display = tab === 'register' ? 'block' : 'none';
-  document.getElementById('tab-login').style.background = tab === 'login' ? 'var(--accent)' : 'var(--bg-void)';
-  document.getElementById('tab-login').style.color = tab === 'login' ? 'var(--bg-void)' : 'var(--text-dim)';
-  document.getElementById('tab-register').style.background = tab === 'register' ? 'var(--accent)' : 'var(--bg-void)';
-  document.getElementById('tab-register').style.color = tab === 'register' ? 'var(--bg-void)' : 'var(--text-dim)';
+// Auth system with SHA-256 hashing
+async function hashPassword(pass) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pass + '_fundnd_salt');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function doLogin() {
+let pendingLoginKey = '';
+
+async function doLogin() {
   const name = document.getElementById('loginName').value.trim();
   const pass = document.getElementById('loginPass').value;
   const errEl = document.getElementById('loginError');
   if (!name || !pass) { errEl.textContent = 'Enter name and password.'; errEl.style.display = 'block'; return; }
   const key = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-  db.ref('users/' + key).once('value', snap => {
-    const user = snap.val();
-    if (!user) { errEl.textContent = 'No account found. Click "New Character" to register.'; errEl.style.display = 'block'; return; }
-    if (user.password !== pass) { errEl.textContent = 'Wrong password.'; errEl.style.display = 'block'; return; }
-    currentUser = user.displayName || name;
-    myKey = key;
-    localStorage.setItem('fundnd_username', currentUser);
-    localStorage.setItem('fundnd_class', user.classType || '');
-    localStorage.setItem('fundnd_key', key);
+  const snap = await db.ref('users/' + key).once('value');
+  const user = snap.val();
+  if (!user) { errEl.textContent = 'No account found. Ask your DM to add you.'; errEl.style.display = 'block'; return; }
+  const hashed = await hashPassword(pass);
+  if (user.passwordHash !== hashed && user.password !== pass) {
+    errEl.textContent = 'Wrong password.'; errEl.style.display = 'block'; return;
+  }
+  // Check if must change password
+  if (user.mustChangePassword) {
+    pendingLoginKey = key;
     document.getElementById('nameModal').style.display = 'none';
-    goOnline();
-    updateMySheetTab();
-  });
+    document.getElementById('pwChangeModal').style.display = 'flex';
+    return;
+  }
+  completeLogin(key, user);
 }
 
-function doRegister() {
-  const name = document.getElementById('regName').value.trim();
-  const pass = document.getElementById('regPass').value;
-  const passConfirm = document.getElementById('regPassConfirm').value;
-  const cls = document.getElementById('regClass').value;
-  const errEl = document.getElementById('regError');
-  if (!name) { errEl.textContent = 'Enter a name.'; errEl.style.display = 'block'; return; }
-  if (!pass || pass.length < 3) { errEl.textContent = 'Password must be at least 3 characters.'; errEl.style.display = 'block'; return; }
-  if (pass !== passConfirm) { errEl.textContent = 'Passwords don\'t match.'; errEl.style.display = 'block'; return; }
-  if (!cls) { errEl.textContent = 'Choose a class.'; errEl.style.display = 'block'; return; }
-  const key = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-  db.ref('users/' + key).once('value', snap => {
-    if (snap.val()) { errEl.textContent = 'That name is already taken. Try logging in.'; errEl.style.display = 'block'; return; }
-    db.ref('users/' + key).set({ displayName: name, password: pass, classType: cls, created: Date.now() });
-    currentUser = name;
-    myKey = key;
-    localStorage.setItem('fundnd_username', name);
-    localStorage.setItem('fundnd_class', cls);
-    localStorage.setItem('fundnd_key', key);
-    document.getElementById('nameModal').style.display = 'none';
-    goOnline();
-    updateMySheetTab();
-  });
+function completeLogin(key, user) {
+  currentUser = user.displayName || key;
+  myKey = key;
+  localStorage.setItem('fundnd_username', currentUser);
+  localStorage.setItem('fundnd_class', user.classType || '');
+  localStorage.setItem('fundnd_key', key);
+  localStorage.setItem('fundnd_role', user.role || 'player');
+  document.getElementById('nameModal').style.display = 'none';
+  document.getElementById('pwChangeModal').style.display = 'none';
+  goOnline();
+  updateMySheetTab();
+}
+
+async function doPasswordChange() {
+  const pw1 = document.getElementById('pwNew1').value;
+  const pw2 = document.getElementById('pwNew2').value;
+  const errEl = document.getElementById('pwChangeError');
+  if (!pw1 || pw1.length < 4) { errEl.textContent = 'Password must be at least 4 characters.'; errEl.style.display = 'block'; return; }
+  if (pw1 !== pw2) { errEl.textContent = 'Passwords don\'t match.'; errEl.style.display = 'block'; return; }
+  const hashed = await hashPassword(pw1);
+  await db.ref('users/' + pendingLoginKey + '/passwordHash').set(hashed);
+  await db.ref('users/' + pendingLoginKey + '/mustChangePassword').set(false);
+  await db.ref('users/' + pendingLoginKey + '/password').remove();
+  const snap = await db.ref('users/' + pendingLoginKey).once('value');
+  completeLogin(pendingLoginKey, snap.val());
 }
 
 function logout() {
   localStorage.removeItem('fundnd_username');
   localStorage.removeItem('fundnd_class');
   localStorage.removeItem('fundnd_key');
+  localStorage.removeItem('fundnd_role');
   currentUser = '';
   myKey = '';
   location.reload();
