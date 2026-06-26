@@ -256,12 +256,18 @@
       <button class="btn btn-sm" onclick="saveMapUrl()">Set Map</button>
     </div>
   </div>
-  <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:8px;">Click on the map to place a pin. Drag pins to reposition. Click a pin to edit. Scroll to zoom.</p>
-  <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
-    <button onclick="dmMapZoom(-0.25)" style="padding:6px 14px;background:var(--panel);border:1px solid #333;border-radius:6px;color:#ccc;font-size:1.1rem;cursor:pointer;font-weight:700;">−</button>
-    <span id="dmMapZoomLevel" style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--text-dim);min-width:50px;text-align:center;">100%</span>
-    <button onclick="dmMapZoom(0.25)" style="padding:6px 14px;background:var(--panel);border:1px solid #333;border-radius:6px;color:#ccc;font-size:1.1rem;cursor:pointer;font-weight:700;">+</button>
-    <button onclick="dmMapZoomReset()" style="padding:6px 12px;background:var(--panel);border:1px solid #333;border-radius:6px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:0.75rem;cursor:pointer;">Reset</button>
+  <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">
+    <div style="display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid #333;">
+      <button id="dm-mode-pin" onclick="setMapMode('pin')" style="padding:6px 14px;background:var(--red);color:#fff;border:none;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;">📌 Pin</button>
+      <button id="dm-mode-pan" onclick="setMapMode('pan')" style="padding:6px 14px;background:var(--panel);color:#999;border:none;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;">✋ Pan</button>
+    </div>
+    <span style="color:#555;font-size:0.8rem;" id="dm-mode-hint">Click to place pins</span>
+    <span style="margin-left:auto;"></span>
+    <button onclick="dmMapZoom(-25)" style="padding:6px 14px;background:var(--panel);border:1px solid #333;border-radius:6px;color:#ccc;font-size:1.1rem;cursor:pointer;font-weight:700;">−</button>
+    <input id="dmMapZoomInput" type="number" value="100" min="50" max="500" step="25" style="width:65px;text-align:center;background:var(--panel);border:1px solid #333;border-radius:6px;color:#ccc;font-family:'Cinzel',serif;font-size:0.85rem;padding:6px;" onchange="dmMapZoomTo(this.value)">
+    <span style="font-size:0.8rem;color:#555;">%</span>
+    <button onclick="dmMapZoom(25)" style="padding:6px 14px;background:var(--panel);border:1px solid #333;border-radius:6px;color:#ccc;font-size:1.1rem;cursor:pointer;font-weight:700;">+</button>
+    <button onclick="dmMapZoomTo(100)" style="padding:6px 12px;background:var(--panel);border:1px solid #333;border-radius:6px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:0.75rem;cursor:pointer;">Reset</button>
   </div>
   <div id="dm-map-container" style="position:relative;background:var(--panel);border:1px solid #333;border-radius:8px;overflow:auto;min-height:400px;cursor:crosshair;">
     <div id="dm-map-inner" style="position:relative;transform-origin:0 0;">
@@ -599,18 +605,47 @@ function removeNPC(key) { db.ref('npcs/' + key).remove(); }
 function closeNPCModal() { document.getElementById('npcModal').style.display = 'none'; }
 
 // ════════════════════════════════════
-// MAP — zoom
-let dmMapScale = 1;
-function dmMapZoom(delta) {
-  dmMapScale = Math.max(0.5, Math.min(5, dmMapScale + delta));
-  document.getElementById('dm-map-inner').style.transform = 'scale(' + dmMapScale + ')';
-  document.getElementById('dmMapZoomLevel').textContent = Math.round(dmMapScale * 100) + '%';
+// MAP — zoom + mode toggle (no scroll zoom)
+let dmMapScale = 100;
+let dmMapMode = 'pin';
+function dmMapZoom(delta) { dmMapZoomTo(dmMapScale + delta); }
+function dmMapZoomTo(val) {
+  dmMapScale = Math.max(50, Math.min(500, parseInt(val) || 100));
+  document.getElementById('dm-map-inner').style.transform = 'scale(' + (dmMapScale / 100) + ')';
+  document.getElementById('dmMapZoomInput').value = dmMapScale;
 }
-function dmMapZoomReset() { dmMapScale = 1; document.getElementById('dm-map-inner').style.transform = 'scale(1)'; document.getElementById('dmMapZoomLevel').textContent = '100%'; }
-document.getElementById('dm-map-container').addEventListener('wheel', function(e) {
-  e.preventDefault();
-  dmMapZoom(e.deltaY < 0 ? 0.15 : -0.15);
-}, { passive: false });
+function setMapMode(mode) {
+  dmMapMode = mode;
+  const container = document.getElementById('dm-map-container');
+  document.getElementById('dm-mode-pin').style.background = mode === 'pin' ? 'var(--red)' : 'var(--panel)';
+  document.getElementById('dm-mode-pin').style.color = mode === 'pin' ? '#fff' : '#999';
+  document.getElementById('dm-mode-pan').style.background = mode === 'pan' ? 'var(--red)' : 'var(--panel)';
+  document.getElementById('dm-mode-pan').style.color = mode === 'pan' ? '#fff' : '#999';
+  container.style.cursor = mode === 'pin' ? 'crosshair' : 'grab';
+  document.getElementById('dm-mode-hint').textContent = mode === 'pin' ? 'Click to place pins' : 'Click and drag to pan';
+}
+
+// Pan mode drag
+(function() {
+  const container = document.getElementById('dm-map-container');
+  let isPanning = false, startX, startY, scrollL, scrollT;
+  container.addEventListener('mousedown', function(e) {
+    if (dmMapMode !== 'pan' || e.target.closest('.map-pin')) return;
+    isPanning = true;
+    container.style.cursor = 'grabbing';
+    startX = e.clientX; startY = e.clientY;
+    scrollL = container.scrollLeft; scrollT = container.scrollTop;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!isPanning) return;
+    container.scrollLeft = scrollL - (e.clientX - startX);
+    container.scrollTop = scrollT - (e.clientY - startY);
+  });
+  document.addEventListener('mouseup', function() {
+    if (isPanning) { isPanning = false; document.getElementById('dm-map-container').style.cursor = dmMapMode === 'pan' ? 'grab' : 'crosshair'; }
+  });
+})();
 
 // MAP MANAGER — Click to place, drag to move
 // ════════════════════════════════════
@@ -664,10 +699,11 @@ function renderPinList() {
 
 // Click map to place new pin
 document.getElementById('dm-map-container').addEventListener('click', function(e) {
-  if (draggingPin || e.target.closest('.map-pin')) return;
+  if (dmMapMode !== 'pin' || draggingPin || e.target.closest('.map-pin')) return;
   const img = document.getElementById('dm-map-img');
   if (img.style.display === 'none') return;
-  const rect = this.getBoundingClientRect();
+  const inner = document.getElementById('dm-map-inner');
+  const rect = inner.getBoundingClientRect();
   const x = ((e.clientX - rect.left) / rect.width) * 100;
   const y = ((e.clientY - rect.top) / rect.height) * 100;
   const key = db.ref('map/pins').push().key;
