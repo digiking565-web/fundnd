@@ -255,13 +255,14 @@
   <div class="card" style="margin-bottom:16px;">
     <div class="field-label">Map Image URL</div>
     <div style="display:flex;gap:8px;">
-      <input class="si" id="mapUrl" placeholder="Paste image URL (Imgur, Discord, etc.)">
+      <input class="si" id="mapUrl" placeholder="Paste image URL (i.imgur.com/xxx.jpg)">
       <button class="btn btn-sm" onclick="saveMapUrl()">Set Map</button>
     </div>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">
     <div style="display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid #333;">
       <button id="dm-mode-pin" onclick="setMapMode('pin')" style="padding:6px 14px;background:var(--red);color:#fff;border:none;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;">📌 Pin</button>
+      <button id="dm-mode-line" onclick="setMapMode('line')" style="padding:6px 14px;background:var(--panel);color:#999;border:none;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;">📏 Line</button>
       <button id="dm-mode-pan" onclick="setMapMode('pan')" style="padding:6px 14px;background:var(--panel);color:#999;border:none;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;">✋ Pan</button>
     </div>
     <span style="color:#555;font-size:0.8rem;" id="dm-mode-hint">Click to place pins</span>
@@ -276,37 +277,80 @@
     <div id="dm-map-inner" style="position:relative;transform-origin:0 0;">
       <div id="dm-map-empty" style="display:flex;align-items:center;justify-content:center;height:400px;color:var(--text-dim);">No map image set — paste a URL above</div>
       <img id="dm-map-img" style="display:none;width:100%;height:auto;" draggable="false">
+      <svg id="dm-map-lines" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></svg>
       <div id="dm-map-pins"></div>
     </div>
   </div>
 
-  <h3 style="margin-top:16px;">Pin List</h3>
+  <h3 style="margin-top:16px;">Pins</h3>
   <div id="pinsList"></div>
 
+  <h3 style="margin-top:16px;">Lines</h3>
+  <div id="linesList"></div>
+
   <!-- Pin Edit Modal -->
-  <div id="pinModal" style="display:none;position:fixed;inset:0;background:#000000cc;z-index:300;display:none;align-items:center;justify-content:center;" onclick="if(event.target===this)closePinModal()">
-    <div style="background:var(--panel);border:1px solid #333;border-radius:10px;padding:24px;max-width:400px;width:100%;position:relative;">
+  <div id="pinModal" style="display:none;position:fixed;inset:0;background:#000000cc;z-index:300;align-items:center;justify-content:center;" onclick="if(event.target===this)closePinModal()">
+    <div style="background:var(--panel);border:1px solid #333;border-radius:10px;padding:24px;max-width:450px;width:100%;position:relative;max-height:90vh;overflow-y:auto;">
       <button onclick="closePinModal()" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;">✕</button>
       <h3 style="color:var(--red);margin-bottom:12px;font-family:'Cinzel',serif;" id="pinModalTitle">Edit Pin</h3>
       <div class="field-label">Label</div>
       <input class="si" id="pinEdit_label" style="margin-bottom:8px;">
       <div class="field-label">Description</div>
       <textarea class="si" id="pinEdit_desc" style="min-height:60px;margin-bottom:8px;resize:vertical;"></textarea>
-      <div class="field-label">Color</div>
-      <select class="si" id="pinEdit_color" style="margin-bottom:12px;">
-        <option value="#DD4444">Red</option>
-        <option value="#44AA44">Green</option>
-        <option value="#4488DD">Blue</option>
-        <option value="#DD9944">Orange</option>
-        <option value="#AA44DD">Purple</option>
-        <option value="#DDDD44">Yellow</option>
-        <option value="#FFFFFF">White</option>
-      </select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div>
+          <div class="field-label">Color</div>
+          <select class="si" id="pinEdit_color">
+            <option value="#DD4444">Red</option><option value="#44AA44">Green</option><option value="#4488DD">Blue</option>
+            <option value="#DD9944">Orange</option><option value="#AA44DD">Purple</option><option value="#DDDD44">Yellow</option><option value="#FFFFFF">White</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label">Visibility</div>
+          <select class="si" id="pinEdit_visibility">
+            <option value="visible">Visible to players</option>
+            <option value="hidden">Hidden from players</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-label">Sub-Map Image URL (optional)</div>
+      <input class="si" id="pinEdit_submap" style="margin-bottom:4px;" placeholder="Paste image URL for location detail map...">
+      <div id="pinEdit_submapPreview" style="margin-bottom:8px;"></div>
       <input type="hidden" id="pinEdit_key">
       <div style="display:flex;gap:8px;">
         <button class="btn btn-sm" onclick="savePinEdit()" style="background:var(--red);color:#fff;border-color:var(--red);">Save</button>
         <button class="btn btn-sm" onclick="deletePinEdit()" style="color:var(--red);">Delete Pin</button>
         <button class="btn btn-sm" onclick="closePinModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Line Edit Modal -->
+  <div id="lineModal" style="display:none;position:fixed;inset:0;background:#000000cc;z-index:300;align-items:center;justify-content:center;" onclick="if(event.target===this)closeLineModal()">
+    <div style="background:var(--panel);border:1px solid #333;border-radius:10px;padding:24px;max-width:350px;width:100%;position:relative;">
+      <button onclick="closeLineModal()" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;">✕</button>
+      <h3 style="color:var(--red);margin-bottom:12px;font-family:'Cinzel',serif;">Edit Line</h3>
+      <div class="field-label">Label (optional)</div>
+      <input class="si" id="lineEdit_label" style="margin-bottom:8px;">
+      <div class="field-label">Color</div>
+      <select class="si" id="lineEdit_color" style="margin-bottom:8px;">
+        <option value="#DD4444">Red</option><option value="#44AA44">Green</option><option value="#4488DD">Blue</option>
+        <option value="#DD9944">Orange</option><option value="#AA44DD">Purple</option><option value="#888888">Grey</option><option value="#FFFFFF">White</option>
+      </select>
+      <div class="field-label">Style</div>
+      <select class="si" id="lineEdit_style" style="margin-bottom:8px;">
+        <option value="solid">Solid</option><option value="dashed">Dashed</option><option value="dotted">Dotted</option>
+      </select>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:#888;display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="lineEdit_hidden" style="accent-color:var(--red);width:16px;height:16px;"> Hidden from players
+        </label>
+      </div>
+      <input type="hidden" id="lineEdit_key">
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" onclick="saveLineEdit()" style="background:var(--red);color:#fff;border-color:var(--red);">Save</button>
+        <button class="btn btn-sm" onclick="deleteLineEdit()" style="color:var(--red);">Delete Line</button>
+        <button class="btn btn-sm" onclick="closeLineModal()">Cancel</button>
       </div>
     </div>
   </div>
@@ -608,163 +652,204 @@ function removeNPC(key) { db.ref('npcs/' + key).remove(); }
 function closeNPCModal() { document.getElementById('npcModal').style.display = 'none'; }
 
 // ════════════════════════════════════
-// MAP — zoom + mode toggle (no scroll zoom)
-let dmMapScale = 100;
-let dmMapMode = 'pin';
-function dmMapZoom(delta) { dmMapZoomTo(dmMapScale + delta); }
-function dmMapZoomTo(val) {
-  dmMapScale = Math.max(50, Math.min(500, parseInt(val) || 100));
-  document.getElementById('dm-map-inner').style.transform = 'scale(' + (dmMapScale / 100) + ')';
-  document.getElementById('dmMapZoomInput').value = dmMapScale;
-}
+// MAP — zoom + mode toggle
+let dmMapScale = 100, dmMapMode = 'pin';
+let mapPinsData = {}, mapLinesData = {}, draggingPin = null, lineStartPoint = null;
+
+function dmMapZoom(d) { dmMapZoomTo(dmMapScale + d); }
+function dmMapZoomTo(v) { dmMapScale = Math.max(50, Math.min(500, parseInt(v) || 100)); document.getElementById('dm-map-inner').style.transform = 'scale(' + (dmMapScale/100) + ')'; document.getElementById('dmMapZoomInput').value = dmMapScale; }
+
 function setMapMode(mode) {
-  dmMapMode = mode;
-  const container = document.getElementById('dm-map-container');
-  document.getElementById('dm-mode-pin').style.background = mode === 'pin' ? 'var(--red)' : 'var(--panel)';
-  document.getElementById('dm-mode-pin').style.color = mode === 'pin' ? '#fff' : '#999';
-  document.getElementById('dm-mode-pan').style.background = mode === 'pan' ? 'var(--red)' : 'var(--panel)';
-  document.getElementById('dm-mode-pan').style.color = mode === 'pan' ? '#fff' : '#999';
-  container.style.cursor = mode === 'pin' ? 'crosshair' : 'grab';
-  document.getElementById('dm-mode-hint').textContent = mode === 'pin' ? 'Click to place pins' : 'Click and drag to pan';
+  dmMapMode = mode; lineStartPoint = null;
+  ['pin','line','pan'].forEach(m => {
+    const b = document.getElementById('dm-mode-' + m);
+    b.style.background = mode === m ? 'var(--red)' : 'var(--panel)';
+    b.style.color = mode === m ? '#fff' : '#999';
+  });
+  const hints = { pin: 'Click to place pins', line: 'Click two points to draw a line', pan: 'Click and drag to pan' };
+  const cursors = { pin: 'crosshair', line: 'crosshair', pan: 'grab' };
+  document.getElementById('dm-mode-hint').textContent = hints[mode];
+  document.getElementById('dm-map-container').style.cursor = cursors[mode];
 }
 
-// Pan mode drag
+// Pan
 (function() {
-  const container = document.getElementById('dm-map-container');
-  let isPanning = false, startX, startY, scrollL, scrollT;
-  container.addEventListener('mousedown', function(e) {
+  const c = document.getElementById('dm-map-container');
+  let panning = false, sx, sy, sl, st;
+  c.addEventListener('mousedown', function(e) {
     if (dmMapMode !== 'pan' || e.target.closest('.map-pin')) return;
-    isPanning = true;
-    container.style.cursor = 'grabbing';
-    startX = e.clientX; startY = e.clientY;
-    scrollL = container.scrollLeft; scrollT = container.scrollTop;
-    e.preventDefault();
+    panning = true; c.style.cursor = 'grabbing'; sx = e.clientX; sy = e.clientY; sl = c.scrollLeft; st = c.scrollTop; e.preventDefault();
   });
-  document.addEventListener('mousemove', function(e) {
-    if (!isPanning) return;
-    container.scrollLeft = scrollL - (e.clientX - startX);
-    container.scrollTop = scrollT - (e.clientY - startY);
-  });
-  document.addEventListener('mouseup', function() {
-    if (isPanning) { isPanning = false; document.getElementById('dm-map-container').style.cursor = dmMapMode === 'pan' ? 'grab' : 'crosshair'; }
-  });
+  document.addEventListener('mousemove', function(e) { if (panning) { c.scrollLeft = sl - (e.clientX - sx); c.scrollTop = st - (e.clientY - sy); } });
+  document.addEventListener('mouseup', function() { if (panning) { panning = false; c.style.cursor = 'grab'; } });
 })();
 
-// MAP MANAGER — Click to place, drag to move
-// ════════════════════════════════════
-let mapPinsData = {};
-let draggingPin = null;
-
+// Firebase listener
 db.ref('map').on('value', snap => {
   const data = snap.val() || {};
   document.getElementById('mapUrl').value = data.imageUrl || '';
-  const img = document.getElementById('dm-map-img');
-  const empty = document.getElementById('dm-map-empty');
-  if (data.imageUrl) {
-    img.src = data.imageUrl; img.style.display = 'block'; empty.style.display = 'none';
-  } else {
-    img.style.display = 'none'; empty.style.display = 'flex';
-  }
+  const img = document.getElementById('dm-map-img'), empty = document.getElementById('dm-map-empty');
+  if (data.imageUrl) { img.src = data.imageUrl; img.style.display = 'block'; empty.style.display = 'none'; }
+  else { img.style.display = 'none'; empty.style.display = 'flex'; }
   mapPinsData = data.pins || {};
-  renderMapPins();
-  renderPinList();
+  mapLinesData = data.lines || {};
+  renderMapPins(); renderMapLines(); renderPinList(); renderLineList();
 });
 
-function saveMapUrl() {
-  const url = document.getElementById('mapUrl').value.trim();
-  db.ref('map/imageUrl').set(url);
-}
+function saveMapUrl() { db.ref('map/imageUrl').set(document.getElementById('mapUrl').value.trim()); }
 
+// Render pins
 function renderMapPins() {
-  const container = document.getElementById('dm-map-pins');
-  container.innerHTML = Object.entries(mapPinsData).map(([k, p]) => `
-    <div class="map-pin" data-key="${k}" style="position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-100%);cursor:grab;z-index:10;user-select:none;"
+  document.getElementById('dm-map-pins').innerHTML = Object.entries(mapPinsData).map(([k, p]) => `
+    <div class="map-pin" data-key="${k}" style="position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-100%);cursor:grab;z-index:10;user-select:none;${p.hidden ? 'opacity:0.4;' : ''}"
       onmousedown="startDragPin(event,'${k}')" onclick="openPinModal('${k}')">
       <div style="display:flex;flex-direction:column;align-items:center;">
-        <div style="font-size:10px;font-family:'Cinzel',serif;color:#fff;background:${p.color || '#DD4444'};padding:2px 6px;border-radius:3px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;">${esc(p.label || '?')}</div>
+        <div style="font-size:10px;font-family:'Cinzel',serif;color:#fff;background:${p.color || '#DD4444'};padding:2px 6px;border-radius:3px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;">${esc(p.label || '?')}${p.hidden ? ' 👁' : ''}${p.submap ? ' 🗺' : ''}</div>
         <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid ${p.color || '#DD4444'};"></div>
       </div>
     </div>`).join('');
 }
 
+// Render lines
+function renderMapLines() {
+  const svg = document.getElementById('dm-map-lines');
+  svg.innerHTML = Object.entries(mapLinesData).map(([k, l]) => {
+    const dash = l.style === 'dashed' ? 'stroke-dasharray="8,4"' : l.style === 'dotted' ? 'stroke-dasharray="3,3"' : '';
+    return `<line x1="${l.x1}%" y1="${l.y1}%" x2="${l.x2}%" y2="${l.y2}%" stroke="${l.color || '#888'}" stroke-width="2" ${dash} style="pointer-events:stroke;cursor:pointer;${l.hidden ? 'opacity:0.3;' : ''}" onclick="openLineModal('${k}')"/>`;
+  }).join('');
+}
+
 function renderPinList() {
-  const list = document.getElementById('pinsList');
-  const entries = Object.entries(mapPinsData);
-  if (!entries.length) { list.innerHTML = '<div style="color:var(--text-faint);">No pins yet — click on the map to place one</div>'; return; }
+  const list = document.getElementById('pinsList'), entries = Object.entries(mapPinsData);
+  if (!entries.length) { list.innerHTML = '<div style="color:#555;">No pins yet</div>'; return; }
   list.innerHTML = entries.map(([k, p]) => `
     <div style="display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid #222;cursor:pointer;" onclick="openPinModal('${k}')">
-      <div style="width:12px;height:12px;border-radius:50%;background:${p.color || '#DD4444'};flex-shrink:0;"></div>
+      <div style="width:12px;height:12px;border-radius:50%;background:${p.color || '#DD4444'};flex-shrink:0;${p.hidden ? 'opacity:0.3;' : ''}"></div>
       <span style="color:var(--gold);font-family:'Cinzel',serif;min-width:100px;">${esc(p.label || '?')}</span>
-      <span style="flex:1;color:var(--text-dim);font-size:0.9rem;">${esc(p.desc || '')}</span>
-      <span style="color:var(--text-faint);font-size:0.8rem;">(${Math.round(p.x)}%, ${Math.round(p.y)}%)</span>
+      ${p.hidden ? '<span style="font-size:0.7rem;color:var(--red);">HIDDEN</span>' : ''}
+      ${p.submap ? '<span style="font-size:0.7rem;color:var(--gold);">🗺</span>' : ''}
+      <span style="flex:1;color:#666;font-size:0.9rem;">${esc(p.desc || '').substring(0, 40)}</span>
     </div>`).join('');
 }
 
-// Click map to place new pin
+function renderLineList() {
+  const list = document.getElementById('linesList'), entries = Object.entries(mapLinesData);
+  if (!entries.length) { list.innerHTML = '<div style="color:#555;">No lines yet — use Line mode</div>'; return; }
+  list.innerHTML = entries.map(([k, l]) => `
+    <div style="display:flex;gap:10px;align-items:center;padding:6px;border-bottom:1px solid #222;cursor:pointer;" onclick="openLineModal('${k}')">
+      <div style="width:20px;height:3px;background:${l.color || '#888'};${l.style === 'dashed' ? 'border-top:2px dashed ' + (l.color||'#888') + ';background:none;' : ''}"></div>
+      <span style="color:#ccc;font-size:0.9rem;">${esc(l.label || 'Unnamed line')}</span>
+      ${l.hidden ? '<span style="font-size:0.7rem;color:var(--red);">HIDDEN</span>' : ''}
+    </div>`).join('');
+}
+
+// Click handler — pin or line mode
 document.getElementById('dm-map-container').addEventListener('click', function(e) {
-  if (dmMapMode !== 'pin' || draggingPin || e.target.closest('.map-pin')) return;
+  if (draggingPin || e.target.closest('.map-pin') || e.target.tagName === 'line') return;
   const img = document.getElementById('dm-map-img');
   if (img.style.display === 'none') return;
   const inner = document.getElementById('dm-map-inner');
   const rect = inner.getBoundingClientRect();
-  const x = ((e.clientX - rect.left) / rect.width) * 100;
-  const y = ((e.clientY - rect.top) / rect.height) * 100;
-  const key = db.ref('map/pins').push().key;
-  db.ref('map/pins/' + key).set({ label: 'New Pin', x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, desc: '', color: '#DD4444' });
-  setTimeout(() => openPinModal(key), 300);
+  const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10;
+  const y = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10;
+
+  if (dmMapMode === 'pin') {
+    const key = db.ref('map/pins').push().key;
+    db.ref('map/pins/' + key).set({ label: 'New Pin', x, y, desc: '', color: '#DD4444', hidden: false, submap: '' });
+    setTimeout(() => openPinModal(key), 300);
+  } else if (dmMapMode === 'line') {
+    if (!lineStartPoint) {
+      lineStartPoint = { x, y };
+      document.getElementById('dm-mode-hint').textContent = 'Click second point to complete line';
+    } else {
+      const key = db.ref('map/lines').push().key;
+      db.ref('map/lines/' + key).set({ x1: lineStartPoint.x, y1: lineStartPoint.y, x2: x, y2: y, color: '#888888', style: 'solid', label: '', hidden: false });
+      lineStartPoint = null;
+      document.getElementById('dm-mode-hint').textContent = 'Click two points to draw a line';
+      setTimeout(() => openLineModal(key), 300);
+    }
+  }
 });
 
 // Drag pins
 function startDragPin(e, key) {
-  e.preventDefault(); e.stopPropagation();
-  draggingPin = key;
-  const container = document.getElementById('dm-map-container');
+  e.preventDefault(); e.stopPropagation(); draggingPin = key;
+  const inner = document.getElementById('dm-map-inner');
   const onMove = (ev) => {
-    const rect = container.getBoundingClientRect();
+    const rect = inner.getBoundingClientRect();
     const x = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100));
     const y = Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100));
     const pin = document.querySelector('.map-pin[data-key="' + key + '"]');
     if (pin) { pin.style.left = x + '%'; pin.style.top = y + '%'; }
   };
   const onUp = (ev) => {
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-    const rect = container.getBoundingClientRect();
+    document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp);
+    const rect = inner.getBoundingClientRect();
     const x = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100));
     const y = Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100));
     db.ref('map/pins/' + key + '/x').set(Math.round(x * 10) / 10);
     db.ref('map/pins/' + key + '/y').set(Math.round(y * 10) / 10);
     setTimeout(() => { draggingPin = null; }, 100);
   };
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', onUp);
+  document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
 }
 
-// Pin edit modal
+// Pin modal
 function openPinModal(key) {
   if (draggingPin) return;
-  const p = mapPinsData[key];
-  if (!p) return;
+  const p = mapPinsData[key]; if (!p) return;
   document.getElementById('pinEdit_label').value = p.label || '';
   document.getElementById('pinEdit_desc').value = p.desc || '';
   document.getElementById('pinEdit_color').value = p.color || '#DD4444';
+  document.getElementById('pinEdit_visibility').value = p.hidden ? 'hidden' : 'visible';
+  document.getElementById('pinEdit_submap').value = p.submap || '';
+  document.getElementById('pinEdit_submapPreview').innerHTML = p.submap ? '<img src="' + esc(p.submap) + '" style="max-width:100%;max-height:150px;border-radius:6px;margin-top:4px;">' : '';
   document.getElementById('pinEdit_key').value = key;
   document.getElementById('pinModalTitle').textContent = p.label || 'Edit Pin';
   document.getElementById('pinModal').style.display = 'flex';
 }
 function closePinModal() { document.getElementById('pinModal').style.display = 'none'; }
 function savePinEdit() {
-  const key = document.getElementById('pinEdit_key').value;
-  if (!key) return;
-  db.ref('map/pins/' + key + '/label').set(document.getElementById('pinEdit_label').value.trim() || 'Pin');
-  db.ref('map/pins/' + key + '/desc').set(document.getElementById('pinEdit_desc').value);
-  db.ref('map/pins/' + key + '/color').set(document.getElementById('pinEdit_color').value);
+  const key = document.getElementById('pinEdit_key').value; if (!key) return;
+  const updates = {
+    label: document.getElementById('pinEdit_label').value.trim() || 'Pin',
+    desc: document.getElementById('pinEdit_desc').value,
+    color: document.getElementById('pinEdit_color').value,
+    hidden: document.getElementById('pinEdit_visibility').value === 'hidden',
+    submap: document.getElementById('pinEdit_submap').value.trim()
+  };
+  Object.entries(updates).forEach(([k, v]) => db.ref('map/pins/' + key + '/' + k).set(v));
   closePinModal();
 }
 function deletePinEdit() {
   const key = document.getElementById('pinEdit_key').value;
   if (key) db.ref('map/pins/' + key).remove();
   closePinModal();
+}
+
+// Line modal
+function openLineModal(key) {
+  const l = mapLinesData[key]; if (!l) return;
+  document.getElementById('lineEdit_label').value = l.label || '';
+  document.getElementById('lineEdit_color').value = l.color || '#888888';
+  document.getElementById('lineEdit_style').value = l.style || 'solid';
+  document.getElementById('lineEdit_hidden').checked = !!l.hidden;
+  document.getElementById('lineEdit_key').value = key;
+  document.getElementById('lineModal').style.display = 'flex';
+}
+function closeLineModal() { document.getElementById('lineModal').style.display = 'none'; }
+function saveLineEdit() {
+  const key = document.getElementById('lineEdit_key').value; if (!key) return;
+  db.ref('map/lines/' + key + '/label').set(document.getElementById('lineEdit_label').value.trim());
+  db.ref('map/lines/' + key + '/color').set(document.getElementById('lineEdit_color').value);
+  db.ref('map/lines/' + key + '/style').set(document.getElementById('lineEdit_style').value);
+  db.ref('map/lines/' + key + '/hidden').set(document.getElementById('lineEdit_hidden').checked);
+  closeLineModal();
+}
+function deleteLineEdit() {
+  const key = document.getElementById('lineEdit_key').value;
+  if (key) db.ref('map/lines/' + key).remove();
+  closeLineModal();
 }
 
 // ════════════════════════════════════

@@ -410,22 +410,35 @@
 <!-- ═══ MAP ═══ -->
 <div class="tab-content" id="tab-map">
   <h2>Campaign Map</h2>
-  <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+  <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">
     <button onclick="mapZoom(-25)" style="padding:6px 14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:1.1rem;cursor:pointer;font-weight:700;">−</button>
     <input id="mapZoomInput" type="number" value="100" min="50" max="500" step="25" style="width:65px;text-align:center;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Cinzel',serif;font-size:0.85rem;padding:6px;" onchange="mapZoomTo(this.value)">
     <span style="font-size:0.8rem;color:var(--text-dim);">%</span>
     <button onclick="mapZoom(25)" style="padding:6px 14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:1.1rem;cursor:pointer;font-weight:700;">+</button>
     <button onclick="mapZoomTo(100)" style="padding:6px 12px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:0.75rem;cursor:pointer;">Reset</button>
+    <label style="margin-left:auto;font-family:'Cinzel',serif;font-size:0.8rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;cursor:pointer;">
+      <input type="checkbox" id="hidePinsToggle" onchange="toggleHidePins()" style="accent-color:var(--accent);width:16px;height:16px;"> Hide Pins
+    </label>
   </div>
-  <div id="mapContainer" style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;min-height:500px;position:relative;overflow:auto;cursor:grab;" onmousedown="startMapPan(event)" >
+  <div id="mapContainer" style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;min-height:500px;position:relative;overflow:auto;cursor:grab;" onmousedown="startMapPan(event)">
     <div id="mapInner" style="position:relative;transform-origin:0 0;">
       <div id="mapImage" style="width:100%;display:flex;align-items:center;justify-content:center;min-height:500px;">
         <div class="empty-state">No map loaded yet — the DM will set this up</div>
       </div>
+      <svg id="mapLines" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></svg>
       <div id="mapPins"></div>
     </div>
   </div>
   <div id="mapPinList" style="margin-top:16px;"></div>
+</div>
+
+<!-- Sub-Map Overlay -->
+<div class="party-detail-overlay" id="submapOverlay" onclick="if(event.target===this)closeSubmap()">
+  <div class="party-detail" style="max-width:800px;">
+    <button class="close-btn" onclick="closeSubmap()">✕</button>
+    <h2 style="border:none;margin-bottom:12px;" id="submapTitle">Location Map</h2>
+    <div id="submapContent"></div>
+  </div>
 </div>
 
 <!-- ═══ SHOP ═══ -->
@@ -1160,44 +1173,77 @@ function startMapPan(e) {
   e.preventDefault();
 }
 
-// MAP (framework — DM populates via DM site)
+// MAP
 // ════════════════════════════════════
+let pinsHidden = false;
+function toggleHidePins() {
+  pinsHidden = document.getElementById('hidePinsToggle').checked;
+  document.getElementById('mapPins').style.display = pinsHidden ? 'none' : 'block';
+}
+function openSubmap(label, submapUrl) {
+  document.getElementById('submapTitle').textContent = label || 'Location Map';
+  document.getElementById('submapContent').innerHTML = '<img src="' + esc(submapUrl) + '" style="width:100%;height:auto;border-radius:8px;" draggable="false">';
+  document.getElementById('submapOverlay').classList.add('open');
+}
+function closeSubmap() { document.getElementById('submapOverlay').classList.remove('open'); }
+
 db.ref('map').on('value', snap => {
   const data = snap.val();
   const imgContainer = document.getElementById('mapImage');
   const pinList = document.getElementById('mapPinList');
   const pinsContainer = document.getElementById('mapPins');
+  const linesContainer = document.getElementById('mapLines');
   if (!data || !data.imageUrl) {
     imgContainer.innerHTML = '<div class="empty-state">No map loaded yet — the DM will set this up</div>';
-    pinList.innerHTML = '';
-    pinsContainer.innerHTML = '';
+    pinList.innerHTML = ''; pinsContainer.innerHTML = ''; linesContainer.innerHTML = '';
     return;
   }
   imgContainer.innerHTML = '<img src="' + esc(data.imageUrl) + '" style="width:100%;height:auto;display:block;border-radius:10px;" alt="Campaign Map" draggable="false">';
+
+  // Lines (filter hidden)
+  if (data.lines) {
+    linesContainer.innerHTML = Object.entries(data.lines).filter(([k, l]) => !l.hidden).map(([k, l]) => {
+      const dash = l.style === 'dashed' ? 'stroke-dasharray="8,4"' : l.style === 'dotted' ? 'stroke-dasharray="3,3"' : '';
+      return '<line x1="' + l.x1 + '%" y1="' + l.y1 + '%" x2="' + l.x2 + '%" y2="' + l.y2 + '%" stroke="' + (l.color || '#888') + '" stroke-width="2" ' + dash + '/>';
+    }).join('');
+  } else { linesContainer.innerHTML = ''; }
+
+  // Pins (filter hidden)
   if (data.pins) {
-    const pins = Object.entries(data.pins);
-    pinsContainer.innerHTML = pins.map(([k, p]) => `
-      <div style="position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-100%);cursor:pointer;z-index:10;" onclick="this.querySelector('.pin-tooltip').style.display=this.querySelector('.pin-tooltip').style.display==='block'?'none':'block'">
-        <div style="display:flex;flex-direction:column;align-items:center;">
-          <div style="font-size:10px;font-family:'Cinzel',serif;color:#fff;background:${p.color || '#c9a84c'};padding:2px 6px;border-radius:3px;white-space:nowrap;">${esc(p.label || '?')}</div>
-          <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid ${p.color || '#c9a84c'};"></div>
-        </div>
-        <div class="pin-tooltip" style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:4px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 12px;min-width:150px;max-width:250px;z-index:20;">
-          <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:0.9rem;margin-bottom:4px;">${esc(p.label || '?')}</div>
-          <div style="color:var(--text-dim);font-size:0.85rem;line-height:1.4;">${esc(p.desc || 'No description.')}</div>
-        </div>
-      </div>`).join('');
-    pinList.innerHTML = '<h3>Locations</h3>' + pins.map(([k, p]) => `
-      <div style="display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border-light);">
+    const visiblePins = Object.entries(data.pins).filter(([k, p]) => !p.hidden);
+    pinsContainer.innerHTML = visiblePins.map(([k, p]) => {
+      const hasSubmap = p.submap ? true : false;
+      return '<div style="position:absolute;left:' + p.x + '%;top:' + p.y + '%;transform:translate(-50%,-100%);cursor:pointer;z-index:10;" onclick="onPinClick(event,this,\'' + esc(p.label || '?') + '\',\'' + esc(p.desc || '') + '\',\'' + esc(p.submap || '') + '\')">' +
+        '<div style="display:flex;flex-direction:column;align-items:center;">' +
+        '<div style="font-size:10px;font-family:Cinzel,serif;color:#fff;background:' + (p.color || '#c9a84c') + ';padding:2px 6px;border-radius:3px;white-space:nowrap;">' + esc(p.label || '?') + (hasSubmap ? ' 🗺' : '') + '</div>' +
+        '<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid ' + (p.color || '#c9a84c') + ';"></div>' +
+        '</div>' +
+        '<div class="pin-tooltip" style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:4px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 12px;min-width:150px;max-width:280px;z-index:20;">' +
+        '<div style="font-family:Cinzel,serif;color:var(--gold);font-size:0.9rem;margin-bottom:4px;">' + esc(p.label || '?') + '</div>' +
+        '<div style="color:var(--text-dim);font-size:0.85rem;line-height:1.4;">' + esc(p.desc || 'No description.') + '</div>' +
+        (hasSubmap ? '<button onclick="event.stopPropagation();openSubmap(\'' + esc(p.label || '') + '\',\'' + esc(p.submap) + '\')" style="margin-top:6px;padding:4px 10px;background:var(--accent);color:var(--bg-void);border:none;border-radius:4px;font-family:Cinzel,serif;font-size:0.75rem;cursor:pointer;">View Location Map</button>' : '') +
+        '</div></div>';
+    }).join('');
+
+    pinList.innerHTML = '<h3>Locations</h3>' + visiblePins.map(([k, p]) => `
+      <div style="display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border-light);${p.submap ? 'cursor:pointer;' : ''}" ${p.submap ? 'onclick="openSubmap(\'' + esc(p.label) + '\',\'' + esc(p.submap) + '\')"' : ''}>
         <div style="width:10px;height:10px;border-radius:50%;background:${p.color || '#c9a84c'};flex-shrink:0;"></div>
         <span style="color:var(--gold);font-family:'Cinzel',serif;">${esc(p.label || 'Unknown')}</span>
-        <span style="color:var(--text-dim);font-size:0.9rem;">${esc(p.desc || '')}</span>
+        <span style="color:var(--text-dim);font-size:0.9rem;flex:1;">${esc(p.desc || '')}</span>
+        ${p.submap ? '<span style="font-size:0.8rem;color:var(--accent);">🗺 Map</span>' : ''}
       </div>`).join('');
   } else {
-    pinsContainer.innerHTML = '';
-    pinList.innerHTML = '';
+    pinsContainer.innerHTML = ''; pinList.innerHTML = '';
   }
 });
+
+function onPinClick(e, el, label, desc, submap) {
+  e.stopPropagation();
+  const tooltip = el.querySelector('.pin-tooltip');
+  const isOpen = tooltip.style.display === 'block';
+  document.querySelectorAll('.pin-tooltip').forEach(t => t.style.display = 'none');
+  if (!isOpen) tooltip.style.display = 'block';
+}
 
 function sendChat() {
   const input = document.getElementById('chatInput');
