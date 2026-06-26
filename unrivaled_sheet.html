@@ -1486,8 +1486,8 @@ const RELIC_LIBRARY = [
 {id:'hai_haori',name:'Hai Haori (Ash Haori)',rarity:'Uncommon',category:'Clothing',attune:false,
 desc:'<strong>War Fit:</strong> Add your proficiency bonus to initiative rolls.<br><strong>Comfortable:</strong> You no longer need sleep. Instead you may meditate deeply, remaining semi-conscious, for 4 hours a day.'},
 
-{id:'kokuyo_fude',name:'Kokuyō Fude (Ink-Black Brush)',rarity:'Uncommon',category:'Wondrous Item',attune:true,
-desc:'Attune by spending 10 min painting a meaningful memory.<br><strong>Air Ink:</strong> Write on air — ink stays as long as you\'re within 5 ft, or 5 min if you leave. Feels indefinite.<br><strong>Extra Seal Slots:</strong> +2 active seals beyond your normal maximum.<br><strong>Meditative Aid:</strong> Halves meditation downtime (min 5 min). 1/LR: advantage on one Insight or History check related to your meditation subject.'},
+{id:'kokuyo_fude',name:'Kokuyō Fude — Ink-Black Brush',rarity:'Relic',category:'Wondrous Item',attune:true,
+desc:'A slender cedar brush whose bristles are stained the color of ink-stone. It never dries, never spills, and never falters.<br><br><strong>Attunement Ritual:</strong> Spend 10 minutes painting a meaningful memory. The image fades as the brush absorbs it, binding itself to you.<br><br><strong>Air Ink:</strong> Write or paint on air. Ink remains suspended for 10 minutes, or indefinitely while within 30 ft. Only you may alter or dismiss it.<br><br><strong>Endless Medium:</strong> Never requires ink. Creates mundane ink of any color or texture. Ink cannot be dispersed by wind or rain unless you allow it.<br><br><strong>Extra Seal Slots:</strong> +2 active Seal Slots beyond your normal maximum.<br><br><strong>Living Grimoire:</strong> Learn additional Seals equal to your Unrivaled level. These don\'t count against Seals known. On level up, you may replace any number of these with other Seals you qualify for.<br><br><strong>Layered Calligraphy:</strong> When preparing Seals on Long Rest, layer two Seals into the same prepared space. Choose up to WIS mod Seal Groups — each contains two Seals of the same category and size, occupying only one set of Seal Slots. When you activate one Seal from a Group, the other is locked until Short/Long Rest.'},
 
 {id:'byakko',name:'Byakko, the White Tiger Wakizashi',rarity:'Rare',category:'Weapon',attune:true,
 desc:'+1 to attack and damage rolls.<br><strong>Snow Veil:</strong> Once/turn on hit, choose an ally within 10 ft — they gain temp HP = PB. 3 uses per encounter.<br><strong>Stillness of Snow:</strong> Advantage on first Acrobatics or Insight check each short rest.<br><strong>Merciful Reflection:</strong> 1/LR — when ally within 30 ft fails a save, let them reroll (must use new result).<br><strong>White Tiger\'s Warning:</strong> When a creature attacks an ally within 30 ft, mark it. Until start of your next turn: marked creature has disadvantage on that attack, your next attack against it deals +2d4 psychic. WIS mod uses/LR.'},
@@ -2168,7 +2168,12 @@ const RARITY_COLORS = { Common:'#888', Uncommon:'#4A8A4A', Rare:'#4A6A8A', 'Very
 function renderRelicLibrary() {
   const list = document.getElementById('relic-library-list');
   if (!list) return;
-  list.innerHTML = RELIC_LIBRARY.map(r => {
+  const sorted = [...RELIC_LIBRARY].sort((a, b) => {
+    const ao = state.ownedRelics[a.id] ? 0 : 1;
+    const bo = state.ownedRelics[b.id] ? 0 : 1;
+    return ao - bo;
+  });
+  list.innerHTML = sorted.map(r => {
     const owned = state.ownedRelics[r.id] || false;
     const rc = RARITY_COLORS[r.rarity] || '#888';
     return `<div style="background:var(--ink-panel);border:1px solid ${owned ? 'var(--gold-bright)' : 'var(--border)'};border-radius:6px;margin-bottom:6px;overflow:hidden;${owned ? '' : 'opacity:0.5;'}">
