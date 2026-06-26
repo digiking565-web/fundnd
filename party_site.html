@@ -407,11 +407,19 @@
 <!-- ═══ MAP ═══ -->
 <div class="tab-content" id="tab-map">
   <h2>Campaign Map</h2>
-  <div id="mapContainer" style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;min-height:500px;position:relative;overflow:hidden;">
-    <div id="mapImage" style="width:100%;height:500px;display:flex;align-items:center;justify-content:center;">
-      <div class="empty-state">No map loaded yet — the DM will set this up</div>
+  <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+    <button onclick="mapZoom(-0.25)" style="padding:6px 14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:1.1rem;cursor:pointer;font-weight:700;">−</button>
+    <span id="mapZoomLevel" style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--text-dim);min-width:50px;text-align:center;">100%</span>
+    <button onclick="mapZoom(0.25)" style="padding:6px 14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:1.1rem;cursor:pointer;font-weight:700;">+</button>
+    <button onclick="mapZoomReset()" style="padding:6px 12px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:0.75rem;cursor:pointer;">Reset</button>
+  </div>
+  <div id="mapContainer" style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;min-height:500px;position:relative;overflow:auto;cursor:grab;">
+    <div id="mapInner" style="position:relative;transform-origin:0 0;">
+      <div id="mapImage" style="width:100%;display:flex;align-items:center;justify-content:center;min-height:500px;">
+        <div class="empty-state">No map loaded yet — the DM will set this up</div>
+      </div>
+      <div id="mapPins"></div>
     </div>
-    <div id="mapPins"></div>
   </div>
   <div id="mapPinList" style="margin-top:16px;"></div>
 </div>
@@ -1125,6 +1133,19 @@ db.ref('chat').orderByChild('time').limitToLast(100).on('value', snap => {
 });
 
 // ════════════════════════════════════
+// MAP — zoom + pan
+let mapScale = 1;
+function mapZoom(delta) {
+  mapScale = Math.max(0.5, Math.min(5, mapScale + delta));
+  document.getElementById('mapInner').style.transform = 'scale(' + mapScale + ')';
+  document.getElementById('mapZoomLevel').textContent = Math.round(mapScale * 100) + '%';
+}
+function mapZoomReset() { mapScale = 1; document.getElementById('mapInner').style.transform = 'scale(1)'; document.getElementById('mapZoomLevel').textContent = '100%'; }
+document.getElementById('mapContainer').addEventListener('wheel', function(e) {
+  e.preventDefault();
+  mapZoom(e.deltaY < 0 ? 0.15 : -0.15);
+}, { passive: false });
+
 // MAP (framework — DM populates via DM site)
 // ════════════════════════════════════
 db.ref('map').on('value', snap => {
