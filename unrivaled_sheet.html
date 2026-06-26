@@ -2022,17 +2022,41 @@ function renderSealCard(seal) {
   </div>`;
 }
 
+const TIER_ORDER = ['B','A','M','D'];
+const TIER_COLORS = { B:'#888', A:'var(--gold-warm)', M:'var(--gold-bright)', D:'#FF6600' };
+
+function renderSealsByTier(seals) {
+  let html = '';
+  TIER_ORDER.forEach(tier => {
+    const tierSeals = seals.filter(s => s.tier === tier);
+    if (!tierSeals.length) return;
+    const cards = tierSeals.map(s => renderSealCard(s)).filter(Boolean).join('');
+    if (!cards) return;
+    const minLvl = TIER_MIN_LEVEL[tier] || 1;
+    const locked = state.identity.level < minLvl;
+    html += `<div style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 0;user-select:none;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.tier-chev').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'">
+        <span class="tier-chev" style="color:#555;font-size:12px;">▼</span>
+        <span style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;color:${TIER_COLORS[tier]};${locked ? 'opacity:0.4;' : ''}">${TIER_NAMES[tier].toUpperCase()} SEALS</span>
+        <span style="font-size:10px;color:#555;">(Lv${minLvl}+)</span>
+        <span style="font-size:10px;color:#555;">${tierSeals.length} seals</span>
+      </div>
+      <div>${cards}</div>
+    </div>`;
+  });
+  return html;
+}
+
 function renderSeals() {
   const warList = document.getElementById('war-seals-list');
   const supList = document.getElementById('support-seals-list');
   if (!warList || !supList) return;
 
-  const allSeals = SEAL_LIBRARY;
-  const warSeals = allSeals.filter(s => s.type === 'W');
-  const supSeals = allSeals.filter(s => s.type === 'S');
+  const warSeals = SEAL_LIBRARY.filter(s => s.type === 'W');
+  const supSeals = SEAL_LIBRARY.filter(s => s.type === 'S');
 
-  const warHTML = warSeals.map(s => renderSealCard(s)).filter(Boolean).join('');
-  const supHTML = supSeals.map(s => renderSealCard(s)).filter(Boolean).join('');
+  const warHTML = renderSealsByTier(warSeals);
+  const supHTML = renderSealsByTier(supSeals);
 
   warList.innerHTML = warHTML || '<div style="color:#444;font-size:13px;padding:8px;">No matching war seals.</div>';
   supList.innerHTML = supHTML || '<div style="color:#444;font-size:13px;padding:8px;">No matching support seals.</div>';
