@@ -313,8 +313,9 @@
     <p style="color:var(--accent); font-size:1rem; margin-bottom:4px;" id="mySheetClass">No class selected</p>
     <p style="color:var(--text-faint); margin-bottom:24px;">Your dedicated class sheet syncs to this hub automatically.</p>
     <a id="mySheetLink" href="#" target="_blank" style="display:none; padding:14px 32px; background:var(--accent); color:var(--bg-void); text-decoration:none; border-radius:8px; font-family:'Cinzel',serif; font-weight:700; font-size:1rem;">Open My Sheet</a>
-    <div style="margin-top:12px;">
+    <div style="margin-top:12px;display:flex;gap:10px;justify-content:center;">
       <button id="changeClassBtn" onclick="changeClass()" style="display:none;padding:8px 18px;background:none;color:var(--text-dim);border:1px solid var(--border);border-radius:6px;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;">Change Class</button>
+      <button onclick="logout()" style="padding:8px 18px;background:none;color:var(--red,#d66);border:1px solid var(--red,#d66);border-radius:6px;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;">Log Out</button>
     </div>
     <div style="margin-top:40px; max-width:500px; margin-left:auto; margin-right:auto;">
       <div class="sheet-panel" style="text-align:left;">
