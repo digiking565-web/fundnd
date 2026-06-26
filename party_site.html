@@ -603,7 +603,8 @@ function updateMySheetTab() {
     link.style.display = 'inline-block';
   }
   if (label) label.textContent = info ? info.label : 'No class selected';
-  if (changeBtn) changeBtn.style.display = cls ? 'inline-block' : 'none';
+  const isAdmin = localStorage.getItem('fundnd_role') === 'admin';
+  if (changeBtn) changeBtn.style.display = (cls && isAdmin) ? 'inline-block' : 'none';
 }
 
 function changeClass() {
