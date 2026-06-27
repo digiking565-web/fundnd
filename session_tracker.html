@@ -530,6 +530,20 @@ tbody tr.derived-row:hover { background: #FFFCE8; }
     <button class="btn btn-primary" onclick="openLeaderboard()">👑 Leaderboard</button>
     <button class="btn" onclick="resetCurrentSession()">Reset Session</button>
     <button class="btn" onclick="openImportExport()">Import / Export</button>
+    <button class="btn" onclick="openPlayerManager()">👤 Players</button>
+  </div>
+
+  <!-- Player Manager Modal -->
+  <div id="player-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;" onclick="if(event.target===this)closePlayerManager()">
+    <div style="background:var(--panel);border:2px solid var(--gold-border);border-radius:12px;padding:24px;max-width:400px;width:100%;position:relative;">
+      <button onclick="closePlayerManager()" style="position:absolute;top:8px;right:12px;background:none;border:none;color:var(--text-dim);font-size:1.3rem;cursor:pointer;">✕</button>
+      <h3 style="font-family:'Cinzel',serif;color:var(--gold);margin-bottom:16px;text-align:center;">Manage Players</h3>
+      <div id="player-list-manager" style="margin-bottom:16px;"></div>
+      <div style="display:flex;gap:8px;">
+        <input class="session-input" type="text" id="new-player-name" placeholder="New player name..." style="flex:1;" onkeydown="if(event.key==='Enter')addPlayer()">
+        <button class="btn btn-green" onclick="addPlayer()" style="padding:8px 16px;">Add</button>
+      </div>
+    </div>
   </div>
 
   <!-- MAIN TABLE -->
@@ -1006,6 +1020,58 @@ function importData(e) {
   };
   reader.readAsText(file);
 }
+// ── PLAYER MANAGER ──
+function openPlayerManager() {
+  renderPlayerList();
+  document.getElementById('player-modal').style.display = 'flex';
+}
+function closePlayerManager() { document.getElementById('player-modal').style.display = 'none'; }
+
+function renderPlayerList() {
+  const list = document.getElementById('player-list-manager');
+  list.innerHTML = state.players.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;">
+      <button onclick="movePlayer(${i},-1)" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text-dim);width:28px;height:28px;cursor:pointer;font-size:14px;" ${i === 0 ? 'disabled style="opacity:0.3;cursor:default;"' : ''}>▲</button>
+      <button onclick="movePlayer(${i},1)" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text-dim);width:28px;height:28px;cursor:pointer;font-size:14px;" ${i === state.players.length - 1 ? 'disabled style="opacity:0.3;cursor:default;"' : ''}>▼</button>
+      <span style="flex:1;font-family:'Cinzel',serif;color:var(--gold);font-size:1rem;">${p}</span>
+      <button onclick="removePlayer(${i})" style="background:none;border:1px solid var(--red,#8B1A1A);border-radius:4px;color:var(--red,#8B1A1A);width:28px;height:28px;cursor:pointer;font-size:14px;">✕</button>
+    </div>`).join('');
+}
+
+function addPlayer() {
+  const input = document.getElementById('new-player-name');
+  const name = input.value.trim();
+  if (!name) return;
+  if (state.players.includes(name)) { alert('Player already exists!'); return; }
+  state.players.push(name);
+  state.current[name] = emptySessionData();
+  input.value = '';
+  renderPlayerList();
+  renderTable();
+  save();
+}
+
+function removePlayer(i) {
+  const name = state.players[i];
+  if (!confirm('Remove ' + name + '? Their current session data will be lost.')) return;
+  state.players.splice(i, 1);
+  delete state.current[name];
+  renderPlayerList();
+  renderTable();
+  save();
+}
+
+function movePlayer(i, dir) {
+  const newI = i + dir;
+  if (newI < 0 || newI >= state.players.length) return;
+  const temp = state.players[i];
+  state.players[i] = state.players[newI];
+  state.players[newI] = temp;
+  renderPlayerList();
+  renderTable();
+  save();
+}
+
 function resetAll() {
   if (!confirm('Reset ALL data including history?')) return;
   localStorage.removeItem('dnd_tracker');
