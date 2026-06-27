@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Party Session Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F8F4EC;
+  --bg2: #F0EAD8;
+  --bg3: #E8DFC8;
+  --panel: #FFFFFF;
+  --gold: #B8860B;
+  --gold-bright: #D4A017;
+  --gold-light: #F0C040;
+  --gold-pale: #FFF0B0;
+  --gold-border: #C8A030;
+  --text: #2A1F0A;
+  --text-mid: #5A4A20;
+  --text-dim: #9A8A60;
+  --red: #8B1A1A;
+  --red-light: #C04040;
+  --green: #1A5A1A;
+  --green-light: #2A8A2A;
+  --border: #D8C890;
+  --shadow: rgba(180,140,20,0.15);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 16px;
+  min-height: 100vh;
+}
+.app { max-width: 1400px; margin: 0 auto; padding: 0 12px 60px; }
+
+/* HEADER */
+.header {
+  text-align: center;
+  padding: 24px 0 16px;
+  border-bottom: 2px solid var(--gold-border);
+  margin-bottom: 20px;
+  background: linear-gradient(180deg, #FFF8E8 0%, var(--bg) 100%);
+}
+.header-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(22px, 4vw, 40px);
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  text-shadow: 0 1px 3px rgba(180,140,20,0.3);
+}
+.header-sub {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* TOOLBAR */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.session-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+}
+.session-input {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  padding: 6px 10px;
+}
+.session-input:focus { outline: none; border-color: var(--gold); }
+.session-num {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--gold);
+  min-width: 50px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+.session-num:focus { outline: none; border-color: var(--gold); }
+
+/* BUTTONS */
+.btn {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  padding: 8px 16px;
+  border-radius: 5px;
+  border: 1px solid var(--gold-border);
+  cursor: pointer;
+  background: var(--panel);
+  color: var(--gold);
+  transition: all 0.15s;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.btn:hover { background: var(--gold-pale); border-color: var(--gold); color: var(--text); }
+.btn-primary {
+  background: var(--gold);
+  color: #FFF8E8;
+  border-color: var(--gold);
+}
+.btn-primary:hover { background: var(--gold-bright); color: white; }
+.btn-red {
+  background: var(--panel);
+  color: var(--red);
+  border-color: #C09090;
+}
+.btn-red:hover { background: #FFF0F0; }
+.btn-green {
+  background: var(--panel);
+  color: var(--green);
+  border-color: #90C090;
+}
+.btn-green:hover { background: #F0FFF0; }
+.btn-sm { padding: 5px 10px; font-size: 9px; }
+
+/* MAIN TABLE */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 16px var(--shadow);
+  border: 1px solid var(--gold-border);
+  background: var(--panel);
+  margin-bottom: 20px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+thead tr {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+}
+thead th {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #FFF8E8;
+  padding: 12px 8px;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  white-space: nowrap;
+}
+thead th:first-child { text-align: left; padding-left: 16px; min-width: 160px; }
+thead th:last-child { border-right: none; }
+
+/* Player header cells */
+.player-header {
+  padding: 10px 8px !important;
+}
+.player-name-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.player-name-display {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFF8E8;
+  letter-spacing: 0.1em;
+}
+.player-name-input {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 3px;
+  color: white;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  padding: 2px 6px;
+  text-align: center;
+  width: 100px;
+}
+.player-name-input:focus { outline: none; background: rgba(255,255,255,0.3); }
+
+/* Party total header */
+.party-header {
+  background: rgba(0,0,0,0.15) !important;
+}
+
+/* Category rows */
+.cat-row td {
+  background: linear-gradient(90deg, var(--bg2) 0%, var(--bg) 100%);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 6px 16px;
+  border-top: 1px solid var(--gold-border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Stat rows */
+tbody tr.stat-row {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+tbody tr.stat-row:hover { background: var(--gold-pale); }
+tbody tr.stat-row:hover .stat-label { color: var(--gold); }
+
+.stat-label {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--text-mid);
+  padding: 6px 8px 6px 16px;
+  white-space: nowrap;
+}
+.stat-label.highlight { color: var(--gold); font-weight: 600; }
+
+/* Stat cell */
+.stat-cell {
+  padding: 4px 6px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  min-width: 110px;
+}
+.stat-cell:last-child { border-right: none; }
+
+.stat-cell-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.val-btn {
+  width: 24px; height: 24px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--gold);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.val-btn:hover { background: var(--gold-pale); border-color: var(--gold); color: var(--text); }
+.val-btn:active { transform: scale(0.92); }
+.val-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 600;
+  width: 44px;
+  text-align: center;
+  padding: 2px 0;
+  transition: border-color 0.15s;
+}
+.val-input:focus { outline: none; border-bottom-color: var(--gold); color: var(--gold); }
+.val-input::-webkit-inner-spin-button { display: none; }
+
+/* Party total cell */
+.total-cell {
+  background: var(--gold-pale);
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  text-align: center;
+  padding: 6px 12px;
+  border-left: 2px solid var(--gold-border);
+  min-width: 80px;
+}
+
+/* Derived row */
+tbody tr.derived-row {
+  border-bottom: 1px solid var(--border);
+}
+tbody tr.derived-row:hover { background: #FFFCE8; }
+.derived-cell {
+  padding: 4px 6px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--gold);
+  font-weight: 600;
+}
+.derived-cell:last-child { border-right: none; }
+
+/* SESSION HISTORY */
+.history-section {
+  background: var(--panel);
+  border: 1px solid var(--gold-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.history-header {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.history-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #FFF8E8;
+}
+.history-list { max-height: 320px; overflow-y: auto; }
+.history-list::-webkit-scrollbar { width: 6px; }
+.history-list::-webkit-scrollbar-track { background: var(--bg2); }
+.history-list::-webkit-scrollbar-thumb { background: var(--gold-border); border-radius: 3px; }
+.history-item {
+  display: grid;
+  grid-template-columns: 60px 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+  cursor: pointer;
+}
+.history-item:hover { background: var(--gold-pale); }
+.history-item:last-child { border-bottom: none; }
+.history-sess {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.history-date {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.history-highlights {
+  font-size: 13px;
+  color: var(--text-mid);
+}
+.history-actions { display: flex; gap: 4px; }
+
+/* LEADERBOARD MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(42,31,10,0.6);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--panel);
+  border: 2px solid var(--gold-border);
+  border-radius: 12px;
+  padding: 28px;
+  width: min(700px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(180,140,20,0.3);
+}
+.modal-title {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  margin-bottom: 20px;
+  text-align: center;
+  border-bottom: 1px solid var(--gold-border);
+  padding-bottom: 12px;
+}
+
+/* LEADERBOARD */
+.lb-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.lb-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+}
+.lb-card-title {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.lb-rank {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  width: 24px;
+  text-align: center;
+}
+.lb-rank.r1 { color: var(--gold); }
+.lb-rank.r2 { color: var(--text-dim); }
+.lb-rank.r3 { color: #CD7F32; }
+.lb-name { flex: 1; font-size: 14px; color: var(--text); }
+.lb-val { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--gold); }
+
+/* SECTION HEADER */
+.section-label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin: 16px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* NOTIF */
+.notif {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--gold);
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: white;
+  z-index: 200;
+  transition: transform 0.3s;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(180,140,20,0.4);
+}
+.notif.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 700px) {
+  .lb-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB9TVbHrVo_AURPEKGfNqhk4tVZcs3FJMU",
+    authDomain: "fundnd-14377.firebaseapp.com",
+    databaseURL: "https://fundnd-14377-default-rtdb.firebaseio.com",
+    projectId: "fundnd-14377",
+    storageBucket: "fundnd-14377.firebasestorage.app",
+    messagingSenderId: "17397097598",
+    appId: "1:17397097598:web:dd6569a819b88a7050e42f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Expose Firebase functions to global scope for the rest of the script
+  window._fbSet = (path, data) => set(ref(db, path), data);
+  window._fbListen = (path, callback) => onValue(ref(db, path), snap => callback(snap.val()));
+  window._fbReady = true;
+
+  // Signal that Firebase is ready
+  document.dispatchEvent(new Event('firebase-ready'));
+</script>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-title">⚔ PARTY SESSION TRACKER ⚔</div>
+    <div class="header-sub">Sean · Mateo · Greg · Gorkoh · Ben</div>
+  <div style="margin-top:6px;">
+    <span id="sync-status" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--text-dim);">
+      ● Connecting…
+    </span>
+  </div>
+
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="session-info">
+      <span class="session-label">SESSION</span>
+      <input class="session-num" type="number" id="session-num" value="6" min="1">
+      <input class="session-input" type="text" id="session-date" placeholder="Date (e.g. Jun 22)">
+      <input class="session-input" type="text" id="session-name" placeholder="Session name / notes…" style="flex:1;min-width:160px;">
+    </div>
+    <button class="btn btn-green" onclick="saveSession()">✦ Save Session</button>
+    <button class="btn btn-primary" onclick="openLeaderboard()">👑 Leaderboard</button>
+    <button class="btn" onclick="resetCurrentSession()">Reset Session</button>
+    <button class="btn" onclick="openImportExport()">Import / Export</button>
+  </div>
+
+  <!-- MAIN TABLE -->
+  <div class="table-wrapper">
+    <table id="main-table">
+      <thead>
+        <tr id="header-row">
+          <th style="text-align:left;padding-left:16px;">Stat</th>
+          <!-- Player headers injected by JS -->
+          <th class="party-header">Party Total</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- SESSION HISTORY -->
+  <div class="history-section">
+    <div class="history-header">
+      <span class="history-title">📜 SESSION HISTORY</span>
+      <span style="font-family:'Cinzel',serif;font-size:10px;color:rgba(255,248,232,0.7);letter-spacing:0.1em;" id="history-count">0 sessions</span>
+    </div>
+    <div class="history-list" id="history-list">
+      <div style="text-align:center;padding:30px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.1em;">
+        No sessions saved yet
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD MODAL -->
+<div class="modal-overlay" id="lb-modal">
+  <div class="modal">
+    <div class="modal-title">👑 CAMPAIGN LEADERBOARDS</div>
+    <div class="lb-grid" id="lb-grid"></div>
+    <div style="margin-top:16px;text-align:center;">
+      <button class="btn" onclick="closeLB()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT/EXPORT MODAL -->
+<div class="modal-overlay" id="ie-modal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-title">Import / Export</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-primary" onclick="exportData()">Download JSON Backup</button>
+      <input type="file" id="import-file" accept=".json"
+        style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:8px;font-family:'Crimson Text',serif;"
+        onchange="importData(event)">
+      <button class="btn btn-red" onclick="resetAll()">Reset All Data</button>
+      <button class="btn" onclick="closeIE()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIF -->
+<div class="notif" id="notif"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════
+const STAT_GROUPS = [
+  {
+    label: 'Combat',
+    stats: [
+      { key:'kills',      label:'Kills',             highlight:true },
+      { key:'finalBlows', label:'Final Blows' },
+      { key:'crits',      label:'Critical Hits',     highlight:true },
+      { key:'nat20',      label:'Nat 20s' },
+      { key:'nat1',       label:'Nat 1s' },
+    ]
+  },
+  {
+    label: 'Damage',
+    stats: [
+      { key:'dmgDealt',   label:'Damage Dealt',      highlight:true },
+      { key:'dmgTaken',   label:'Damage Taken' },
+      { key:'bigHit',     label:'Biggest Single Hit' },
+    ]
+  },
+  {
+    label: 'Healing & Survival',
+    stats: [
+      { key:'healGiven',  label:'Healing Given' },
+      { key:'healRecv',   label:'Healing Received' },
+      { key:'downed',     label:"KO'd / Downed" },
+      { key:'dsMade',     label:'Death Saves Made' },
+      { key:'dsFailed',   label:'Death Saves Failed' },
+    ]
+  },
+  {
+    label: 'Abilities',
+    stats: [
+      { key:'spells',     label:'Spells Cast' },
+      { key:'abilities',  label:'Abilities Used' },
+      { key:'svMade',     label:'Saving Throws Made' },
+      { key:'svFailed',   label:'Saving Throws Failed' },
+    ]
+  },
+  {
+    label: 'Party Chaos',
+    stats: [
+      { key:'aura',       label:'Aura Farmed',       highlight:true },
+      { key:'gold',       label:'Gold Stolen',        highlight:true },
+      { key:'seduce',     label:'Seductions',         highlight:true },
+      { key:'mvp',        label:'MVP Votes' },
+    ]
+  },
+];
+
+const ALL_STATS = STAT_GROUPS.flatMap(g => g.stats);
+const DEFAULT_PLAYERS = ['Sean','Mateo','Greg','Gorkoh','Ben'];
+
+function emptySessionData() {
+  const d = {};
+  ALL_STATS.forEach(s => d[s.key] = 0);
+  return d;
+}
+
+let state = {
+  players: [...DEFAULT_PLAYERS],
+  current: DEFAULT_PLAYERS.reduce((obj, p) => { obj[p] = emptySessionData(); return obj; }, {}),
+  sessionNum: 6,
+  sessionDate: '',
+  sessionName: '',
+  history: [],
+};
+
+// Pre-fill sessions 1-5 from the images
+const PREFILLED = [
+  { num:1, date:'', name:'Session 1', data:{ Sean:{kills:0,finalBlows:0,crits:2,nat20:0,nat1:0,dmgDealt:68,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Mateo:{kills:1,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:6,dmgTaken:4,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:1,mvp:0}, Greg:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:0,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:14,seduce:0,mvp:0}, Gorkoh:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:0,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Ben:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:0,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0} } },
+  { num:2, date:'', name:'Session 2', data:{ Sean:{kills:3,finalBlows:0,crits:2,nat20:0,nat1:0,dmgDealt:83,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Mateo:{kills:1,finalBlows:0,crits:1,nat20:0,nat1:0,dmgDealt:12,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Greg:{kills:2,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:8,dmgTaken:5,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Gorkoh:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:0,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Ben:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:0,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0} } },
+  { num:3, date:'', name:'Session 3', data:{ Sean:{kills:3,finalBlows:0,crits:2,nat20:0,nat1:0,dmgDealt:68,dmgTaken:25,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Mateo:{kills:3,finalBlows:0,crits:1,nat20:0,nat1:0,dmgDealt:65,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:1,mvp:0}, Greg:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:30,dmgTaken:10,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:30,seduce:0,mvp:0}, Gorkoh:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:0,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Ben:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:0,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0} } },
+  { num:4, date:'', name:'Session 4', data:{ Sean:{kills:2,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:72,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:7,gold:0,seduce:0,mvp:0}, Mateo:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:3,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:1,mvp:0}, Greg:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:14,dmgTaken:6,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Gorkoh:{kills:3,finalBlows:0,crits:1,nat20:0,nat1:0,dmgDealt:57,dmgTaken:6,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Ben:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:0,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0} } },
+  { num:5, date:'', name:'Session 5', data:{ Sean:{kills:1,finalBlows:0,crits:4,nat20:0,nat1:0,dmgDealt:99,dmgTaken:21,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:1,gold:0,seduce:0,mvp:0}, Mateo:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:19,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Greg:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:24,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Gorkoh:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:5,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0}, Ben:{kills:0,finalBlows:0,crits:0,nat20:0,nat1:0,dmgDealt:0,dmgTaken:0,bigHit:0,healGiven:0,healRecv:0,downed:0,dsMade:0,dsFailed:0,spells:0,abilities:0,svMade:0,svFailed:0,aura:0,gold:0,seduce:0,mvp:0} } },
+];
+
+// ── PERSIST (Firebase + localStorage fallback) ──
+let _fbSaveTimer = null;
+let _listeningToFirebase = false;
+let _suppressUpdate = false;
+
+function setSyncStatus(msg, color) {
+  const el = document.getElementById('sync-status');
+  if (el) { el.textContent = msg; el.style.color = color || 'var(--text-dim)'; }
+}
+
+function save() {
+  // Always save to localStorage as backup
+  try { localStorage.setItem('dnd_tracker', JSON.stringify(state)); } catch(e) {}
+  // Debounce Firebase save
+  clearTimeout(_fbSaveTimer);
+  _fbSaveTimer = setTimeout(() => {
+    if (window._fbSet) {
+      window._fbSet('tracker', state)
+        .then(() => setSyncStatus('● Synced', 'var(--green-light)'))
+        .catch(() => setSyncStatus('● Sync failed', 'var(--red-light)'));
+      setSyncStatus('● Saving…', 'var(--gold)');
+    }
+  }, 400);
+}
+
+function load() {
+  // Load from localStorage immediately so UI isn't blank
+  try {
+    const raw = localStorage.getItem('dnd_tracker');
+    if (raw) { state = JSON.parse(raw); return; }
+  } catch(e) {}
+  // First load — pre-fill sessions 1-5
+  state.history = PREFILLED.map(s => ({ num:s.num, date:s.date, name:s.name, data:s.data }));
+  state.sessionNum = 6;
+}
+
+function startFirebaseSync() {
+  if (_listeningToFirebase) return;
+  _listeningToFirebase = true;
+  setSyncStatus('● Connecting…', 'var(--gold)');
+
+  window._fbListen('tracker', (data) => {
+    if (!data) {
+      // Nothing in Firebase yet — push our local state up
+      setSyncStatus('● Initializing…', 'var(--gold)');
+      window._fbSet('tracker', state);
+      setSyncStatus('● Live', 'var(--green-light)');
+      return;
+    }
+    // Merge incoming Firebase data into state
+    _suppressUpdate = true;
+    state = data;
+    // Ensure players array exists
+    if (!state.players) state.players = [...DEFAULT_PLAYERS];
+    if (!state.current) state.current = state.players.reduce((o,p)=>{o[p]=emptySessionData();return o;},{});
+    // Re-render everything
+    document.getElementById('session-num').value = state.sessionNum || 1;
+    document.getElementById('session-date').value = state.sessionDate || '';
+    document.getElementById('session-name').value = state.sessionName || '';
+    renderTable();
+    renderHistory();
+    // Save to localStorage as backup
+    try { localStorage.setItem('dnd_tracker', JSON.stringify(state)); } catch(e) {}
+    setSyncStatus('● Live — synced with party', 'var(--green-light)');
+    _suppressUpdate = false;
+  });
+}
+
+// ── GET/SET CURRENT VALUE ──
+function getVal(player, key) { return (state.current[player] && state.current[player][key]) || 0; }
+function setVal(player, key, val) {
+  if (!state.current[player]) state.current[player] = emptySessionData();
+  state.current[player][key] = Math.max(0, parseInt(val) || 0);
+  updateTotals(); save();
+}
+function changeVal(player, key, delta) {
+  setVal(player, key, getVal(player, key) + delta);
+  const inp = document.getElementById(`inp-${player}-${key}`);
+  if (inp) inp.value = getVal(player, key);
+  updateTotals();
+}
+
+// ── TOTALS ──
+function partyTotal(key) { return state.players.reduce((s, p) => s + getVal(p, key), 0); }
+function playerTotal(player) { return ALL_STATS.reduce((s, st) => s + getVal(player, st.key), 0); }
+
+// ── RENDER TABLE ──
+function renderTable() {
+  // Header row
+  const headerRow = document.getElementById('header-row');
+  const existingTh = headerRow.querySelectorAll('th.player-th');
+  existingTh.forEach(th => th.remove());
+  const partyTh = headerRow.querySelector('.party-header');
+  state.players.forEach(player => {
+    const th = document.createElement('th');
+    th.className = 'player-header player-th';
+    th.innerHTML = `<div class="player-name-cell">
+      <div class="player-name-display">${player}</div>
+    </div>`;
+    headerRow.insertBefore(th, partyTh);
+  });
+
+  // Body
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+
+  STAT_GROUPS.forEach(group => {
+    // Category row
+    const catTr = document.createElement('tr');
+    catTr.className = 'cat-row';
+    catTr.innerHTML = `<td colspan="${state.players.length + 2}">${group.label}</td>`;
+    tbody.appendChild(catTr);
+
+    // Stat rows
+    group.stats.forEach(stat => {
+      const tr = document.createElement('tr');
+      tr.className = 'stat-row';
+      let html = `<td class="stat-label ${stat.highlight ? 'highlight' : ''}">${stat.label}</td>`;
+      state.players.forEach(player => {
+        const val = getVal(player, stat.key);
+        html += `<td class="stat-cell">
+          <div class="stat-cell-inner">
+            <button class="val-btn" onclick="changeVal('${player}','${stat.key}',-1)">−</button>
+            <input class="val-input" id="inp-${player}-${stat.key}" type="number" value="${val}" min="0"
+              onchange="setVal('${player}','${stat.key}',this.value)"
+              onclick="this.select()">
+            <button class="val-btn" onclick="changeVal('${player}','${stat.key}',1)">+</button>
+          </div>
+        </td>`;
+      });
+      html += `<td class="total-cell" id="total-${stat.key}">${partyTotal(stat.key)}</td>`;
+      tr.innerHTML = html;
+      tbody.appendChild(tr);
+    });
+  });
+
+  // Derived stats row
+  const derivedTr = document.createElement('tr');
+  derivedTr.className = 'cat-row';
+  derivedTr.innerHTML = `<td colspan="${state.players.length + 2}">Derived Stats</td>`;
+  tbody.appendChild(derivedTr);
+
+  // Crit rate
+  const critTr = document.createElement('tr');
+  critTr.className = 'derived-row';
+  let critHtml = `<td class="stat-label">Crit Rate</td>`;
+  state.players.forEach(player => {
+    const crits = getVal(player, 'crits');
+    const dmg = getVal(player, 'dmgDealt');
+    const rate = dmg > 0 ? ((crits / (dmg / 10)) * 100).toFixed(1) + '%' : '—';
+    critHtml += `<td class="derived-cell">${rate}</td>`;
+  });
+  critHtml += `<td class="total-cell" id="total-derived-crit">—</td>`;
+  critTr.innerHTML = critHtml;
+  tbody.appendChild(critTr);
+
+  // K/D
+  const kdTr = document.createElement('tr');
+  kdTr.className = 'derived-row';
+  let kdHtml = `<td class="stat-label">K/D Ratio</td>`;
+  state.players.forEach(player => {
+    const kills = getVal(player, 'kills');
+    const downed = getVal(player, 'downed');
+    const kd = downed > 0 ? (kills / downed).toFixed(2) : kills > 0 ? '∞' : '—';
+    kdHtml += `<td class="derived-cell">${kd}</td>`;
+  });
+  kdHtml += `<td class="total-cell">—</td>`;
+  kdTr.innerHTML = kdHtml;
+  tbody.appendChild(kdTr);
+}
+
+function updateTotals() {
+  ALL_STATS.forEach(stat => {
+    const el = document.getElementById(`total-${stat.key}`);
+    if (el) el.textContent = partyTotal(stat.key);
+  });
+}
+
+// ── SESSION SAVE / LOAD ──
+function saveSession() {
+  const num = parseInt(document.getElementById('session-num').value) || state.sessionNum;
+  const date = document.getElementById('session-date').value;
+  const name = document.getElementById('session-name').value || `Session ${num}`;
+
+  // Deep copy current data
+  const data = {};
+  state.players.forEach(p => { data[p] = {...state.current[p]}; });
+
+  // Replace if same session num, else push
+  const idx = state.history.findIndex(s => s.num === num);
+  const entry = { num, date, name, data };
+  if (idx >= 0) state.history[idx] = entry;
+  else { state.history.push(entry); state.history.sort((a,b) => a.num - b.num); }
+
+  state.sessionNum = num + 1;
+  document.getElementById('session-num').value = state.sessionNum;
+  document.getElementById('session-date').value = '';
+  document.getElementById('session-name').value = '';
+
+  resetCurrentSession(false);
+  renderHistory();
+  save();
+  notify(`✦ Session ${num} saved!`);
+}
+
+function loadSession(num) {
+  const sess = state.history.find(s => s.num === num);
+  if (!sess) return;
+  state.current = {};
+  state.players.forEach(p => { state.current[p] = {...(sess.data[p] || emptySessionData())}; });
+  document.getElementById('session-num').value = sess.num;
+  document.getElementById('session-date').value = sess.date || '';
+  document.getElementById('session-name').value = sess.name || '';
+  renderTable();
+  notify(`Loaded session ${num}`);
+}
+
+function deleteSession(num) {
+  if (!confirm(`Delete session ${num}?`)) return;
+  state.history = state.history.filter(s => s.num !== num);
+  renderHistory(); save();
+  notify(`Session ${num} deleted`);
+}
+
+function resetCurrentSession(withConfirm = true) {
+  if (withConfirm && !confirm('Reset all current session stats to 0?')) return;
+  state.players.forEach(p => { state.current[p] = emptySessionData(); });
+  renderTable(); save();
+  if (withConfirm) notify('Session reset');
+}
+
+// ── HISTORY ──
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const count = document.getElementById('history-count');
+  count.textContent = state.history.length + ' session' + (state.history.length !== 1 ? 's' : '');
+
+  if (state.history.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim);font-family:\'Cinzel\',serif;font-size:12px;letter-spacing:0.1em;">No sessions saved yet</div>';
+    return;
+  }
+
+  list.innerHTML = [...state.history].reverse().map(sess => {
+    // Find top performer
+    const topKills = state.players.reduce((best, p) => {
+      const k = sess.data[p]?.kills || 0;
+      return k > (best.val||0) ? {name:p,val:k} : best;
+    }, {});
+    const topDmg = state.players.reduce((best, p) => {
+      const d = sess.data[p]?.dmgDealt || 0;
+      return d > (best.val||0) ? {name:p,val:d} : best;
+    }, {});
+    const highlights = [
+      topKills.val > 0 ? `⚔ ${topKills.name} led kills (${topKills.val})` : '',
+      topDmg.val > 0 ? `💥 ${topDmg.name} led damage (${topDmg.val})` : '',
+    ].filter(Boolean).join(' · ') || 'No combat data';
+
+    return `<div class="history-item" onclick="loadSession(${sess.num})">
+      <div class="history-sess">S${sess.num}</div>
+      <div>
+        <div style="font-size:14px;color:var(--text);font-weight:600;">${sess.name || 'Session ' + sess.num}</div>
+        <div class="history-date">${sess.date || 'No date'}</div>
+      </div>
+      <div class="history-highlights">${highlights}</div>
+      <div class="history-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-sm" onclick="loadSession(${sess.num})">Load</button>
+        <button class="btn btn-sm btn-red" onclick="deleteSession(${sess.num})">Del</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── LEADERBOARD ──
+function openLeaderboard() {
+  const grid = document.getElementById('lb-grid');
+  const lb_stats = [
+    { key:'kills', label:'Kills' },
+    { key:'crits', label:'Critical Hits' },
+    { key:'dmgDealt', label:'Damage Dealt' },
+    { key:'dmgTaken', label:'Damage Taken' },
+    { key:'healGiven', label:'Healing Given' },
+    { key:'downed', label:"Times Downed" },
+    { key:'nat20', label:'Nat 20s' },
+    { key:'nat1', label:'Nat 1s' },
+    { key:'aura', label:'Aura Farmed' },
+    { key:'gold', label:'Gold Stolen' },
+    { key:'seduce', label:'Seductions' },
+    { key:'mvp', label:'MVP Votes' },
+  ];
+
+  // Calculate campaign totals from history
+  const totals = {};
+  state.players.forEach(p => {
+    totals[p] = emptySessionData();
+    state.history.forEach(sess => {
+      ALL_STATS.forEach(st => {
+        totals[p][st.key] = (totals[p][st.key]||0) + (sess.data[p]?.[st.key]||0);
+      });
+    });
+  });
+
+  grid.innerHTML = lb_stats.map(st => {
+    const sorted = [...state.players].sort((a,b) => (totals[b][st.key]||0) - (totals[a][st.key]||0));
+    const ranks = ['r1','r2','r3'];
+    const medals = ['👑','🥈','🥉'];
+    return `<div class="lb-card">
+      <div class="lb-card-title">${st.label}</div>
+      ${sorted.slice(0,3).map((p,i) => `
+        <div class="lb-row">
+          <span class="lb-rank ${ranks[i]}">${medals[i]}</span>
+          <span class="lb-name">${p}</span>
+          <span class="lb-val">${totals[p][st.key]||0}</span>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+
+  document.getElementById('lb-modal').classList.add('open');
+}
+function closeLB() { document.getElementById('lb-modal').classList.remove('open'); }
+
+// ── IMPORT/EXPORT ──
+function openImportExport() { document.getElementById('ie-modal').classList.add('open'); }
+function closeIE() { document.getElementById('ie-modal').classList.remove('open'); }
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'session_tracker.json'; a.click();
+}
+function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try { state = JSON.parse(ev.target.result); init(); closeIE(); notify('Data loaded!'); }
+    catch { alert('Invalid file.'); }
+  };
+  reader.readAsText(file);
+}
+function resetAll() {
+  if (!confirm('Reset ALL data including history?')) return;
+  localStorage.removeItem('dnd_tracker');
+  state = { players:[...DEFAULT_PLAYERS], current:DEFAULT_PLAYERS.reduce((o,p)=>{o[p]=emptySessionData();return o;},{}), sessionNum:6, sessionDate:'', sessionName:'', history:[] };
+  init(); closeIE(); notify('Reset complete');
+}
+
+// ── NOTIFY ──
+function notify(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ── CLOSE MODALS ──
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ── INIT ──
+function init() {
+  document.getElementById('session-num').value = state.sessionNum || 6;
+  renderTable();
+  renderHistory();
+}
+
+load();
+init();
+
+// Start Firebase sync when ready
+document.addEventListener('firebase-ready', () => {
+  startFirebaseSync();
+});
+// Fallback if event already fired
+if (window._fbReady) startFirebaseSync();
+</script>
+</body>
+</html>
