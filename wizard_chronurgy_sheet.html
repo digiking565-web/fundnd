@@ -403,10 +403,14 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
         <div id="cantrips-list"></div>
         <div style="margin-top:8px;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;padding:10px;">
           <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--gold-bright);margin-bottom:8px;">ADD CANTRIP</div>
-          <div style="display:flex;gap:6px;margin-bottom:6px;">
-            <input type="text" id="new-cantrip" placeholder="Cantrip name..." style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:5px 8px;flex:1;">
+          <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:6px;">
+            <input type="text" id="new-cantrip" placeholder="Cantrip name..." style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:5px 8px;">
             <button class="btn btn-sm" onclick="addCantrip()">Add</button>
           </div>
+          <select id="new-cantrip-school" style="width:100%;margin-bottom:6px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:13px;padding:5px 8px;">
+            <option value="">School (optional)</option>
+            <option>Abjuration</option><option>Conjuration</option><option>Divination</option><option>Enchantment</option><option>Evocation</option><option>Illusion</option><option>Necromancy</option><option>Transmutation</option>
+          </select>
           <textarea id="new-cantrip-desc" placeholder="Description (optional)..." style="width:100%;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-family:'Crimson Text',serif;font-size:14px;padding:5px 8px;resize:vertical;min-height:50px;line-height:1.5;"></textarea>
         </div>
       </div>
@@ -817,9 +821,11 @@ function renderCantrips() {
   document.getElementById('cantrips-list').innerHTML = state.cantrips.map((c, i) => {
     const name = typeof c === 'string' ? c : c.name;
     const desc = typeof c === 'string' ? '' : (c.desc || '');
+    const school = typeof c === 'string' ? '' : (c.school || '');
     return `<div style="background:var(--ink-deep);border:1px solid var(--border);border-radius:4px;margin-bottom:4px;">
       <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
         <span class="spell-name" style="flex:1;">${name}</span>
+        ${school ? `<span class="spell-meta">${school}</span>` : ''}
         <span style="font-family:'Cinzel',serif;font-size:9px;color:#555;letter-spacing:0.1em;">CANTRIP</span>
         <span style="color:#555;font-size:11px;">▼</span>
       </div>
@@ -838,10 +844,12 @@ function addCantrip() {
   const name = document.getElementById('new-cantrip').value.trim();
   if (!name) return;
   const desc = document.getElementById('new-cantrip-desc').value.trim();
-  const entry = { name, desc };
+  const school = document.getElementById('new-cantrip-school').value;
+  const entry = { name, school, desc };
   if (editingCantripIdx >= 0) { state.cantrips[editingCantripIdx] = entry; editingCantripIdx = -1; }
   else state.cantrips.push(entry);
   document.getElementById('new-cantrip').value = '';
+  document.getElementById('new-cantrip-school').value = '';
   document.getElementById('new-cantrip-desc').value = '';
   renderCantrips(); saveState();
 }
@@ -849,6 +857,7 @@ function editCantrip(i) {
   editingCantripIdx = i;
   const c = state.cantrips[i];
   document.getElementById('new-cantrip').value = typeof c === 'string' ? c : (c.name || '');
+  document.getElementById('new-cantrip-school').value = typeof c === 'string' ? '' : (c.school || '');
   document.getElementById('new-cantrip-desc').value = typeof c === 'string' ? '' : (c.desc || '');
   document.getElementById('new-cantrip').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
