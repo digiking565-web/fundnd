@@ -393,6 +393,9 @@
     <tbody id="sharedInvBody"><tr><td colspan="5" class="empty-state">No shared items yet</td></tr></tbody>
   </table>
 
+  <h3 style="margin-top:24px;">Character Magic Items</h3>
+  <div id="invCharMagicList"><div class="empty-state">No character magic items yet</div></div>
+
   <h3 style="margin-top:24px;">Shared Magic Items</h3>
   <div id="invMagicList"><div class="empty-state">No shared magic items yet</div></div>
 
@@ -1360,18 +1363,20 @@ function renderSharedMagicItems() {
 
 // Re-render character magic items whenever party data updates
 function renderCharMagicItems() {
-  const list = document.getElementById('charMagicList');
-  if (!list) return;
   const sections = [];
   Object.entries(allPartyData).forEach(([k, c]) => {
     if (!c.relics || !c.relics.length) return;
     const owner = c.player || c.name || k;
     sections.push(`<div style="margin-bottom:16px;">
       <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);letter-spacing:1px;border-bottom:1px solid var(--border-light);padding-bottom:6px;margin-bottom:8px;">${esc(owner)}</div>
-      ${c.relics.map(r => renderMagicItemCard({ name:r.name, rarity:r.rarity, category:r.category, attunement:r.attuned, desc:r.desc, holder:owner }, null, false)).join('')}
+      ${c.relics.map(r => renderMagicItemCard({ name:r.name, rarity:r.rarity, category:r.category, attunement:r.attuned, desc:r.desc, qty:r.qty, holder:owner }, null, false)).join('')}
     </div>`);
   });
-  list.innerHTML = sections.length ? sections.join('') : '<div class="empty-state">No character magic items yet</div>';
+  const html = sections.length ? sections.join('') : '<div class="empty-state">No character magic items yet</div>';
+  ['charMagicList', 'invCharMagicList'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
 }
 
 function addPartyMagicItem() {
