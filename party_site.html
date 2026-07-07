@@ -490,6 +490,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
       <div><div class="field-label">Name</div><input class="si" id="mi-name" placeholder="Item name..."></div>
       <div><div class="field-label">Holder</div><input class="si" id="mi-holder" placeholder="Who carries it?"></div>
+      <div><div class="field-label">Quantity</div><input class="si" id="mi-qty" type="number" value="1" min="1"></div>
       <div><div class="field-label">Category</div>
         <select class="si" id="mi-cat">
           <option>Weapon</option><option>Armor</option><option>Wondrous Item</option><option>Ring</option><option>Rod</option><option>Staff</option><option>Potion</option><option>Scroll</option><option>Other</option>
@@ -1295,6 +1296,7 @@ function renderMagicItemCard(item, key, removable) {
   return `<div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;">
     <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
       <span style="font-family:'Cinzel',serif;font-size:1rem;color:var(--accent);flex:1;">${esc(item.name)}</span>
+      ${key ? `<input type="number" min="1" value="${item.qty||1}" title="Quantity" onclick="event.stopPropagation()" oninput="db.ref('partyMagicItems/${key}/qty').set(parseInt(this.value)||1)" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--gold-dim);font-family:'Cinzel',serif;font-size:0.85rem;width:52px;text-align:center;padding:2px 4px;">` : (item.qty && item.qty > 1 ? `<span style="font-size:0.85rem;color:var(--text-dim);">×${item.qty}</span>` : '')}
       ${item.holder ? `<span style="font-size:0.8rem;color:var(--text-dim);">${esc(item.holder)}</span>` : ''}
       <span style="font-size:0.75rem;padding:2px 8px;border-radius:3px;border:1px solid ${rc};color:${rc};">${esc(item.rarity||'Common')}</span>
       ${item.category ? `<span style="font-size:0.75rem;color:var(--text-faint);font-family:'Cinzel',serif;">${esc(item.category)}</span>` : ''}
@@ -1342,6 +1344,7 @@ function addPartyMagicItem() {
   if (!name) return;
   db.ref('partyMagicItems').push({
     name,
+    qty: parseInt(document.getElementById('mi-qty').value) || 1,
     holder: document.getElementById('mi-holder').value.trim(),
     category: document.getElementById('mi-cat').value,
     rarity: document.getElementById('mi-rarity').value,
@@ -1351,6 +1354,7 @@ function addPartyMagicItem() {
     time: Date.now()
   });
   document.getElementById('mi-name').value = '';
+  document.getElementById('mi-qty').value = '1';
   document.getElementById('mi-holder').value = '';
   document.getElementById('mi-desc').value = '';
   document.getElementById('mi-attune').checked = false;
