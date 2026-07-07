@@ -433,6 +433,14 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
     <div id="items-list"></div>
 
     <div class="section-header" style="margin-top:20px;">Magic Items</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+      <span style="font-size:10px;font-family:'Cinzel',serif;color:#666;letter-spacing:0.1em;">SORT BY</span>
+      <select id="relic-sort" onchange="renderRelics();" style="background:var(--ink-panel);border:1px solid var(--border);border-radius:3px;color:var(--gold-warm);font-size:11px;padding:2px 6px;font-family:'Cinzel',serif;cursor:pointer;">
+        <option value="name">Name</option>
+        <option value="qty">Quantity</option>
+        <option value="rarity">Rarity</option>
+      </select>
+    </div>
     <div id="relics-list"></div>
     <div style="margin-top:8px;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;padding:12px;">
       <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--gold-bright);margin-bottom:8px;">ADD MAGIC ITEM</div>
@@ -733,10 +741,18 @@ function addItem(){
   state.items.push({name,qty:parseInt(qel.value)||1});el.value='';qel.value='1';renderItems();saveState();
 }
 const RARITY_COLORS={Common:'#888',Uncommon:'#4A8A4A',Rare:'#4A6A8A','Very Rare':'#6A4A8A',Legendary:'#8A6A2A',Artifact:'#C8A000'};
+const RARITY_ORDER={Common:0,Uncommon:1,Rare:2,'Very Rare':3,Legendary:4,Artifact:5};
 function renderRelics(){
   const list=document.getElementById('relics-list');
   if(!state.relics||!state.relics.length){list.innerHTML='<div style="color:#444;font-size:13px;padding:4px;">No magic items yet.</div>';return;}
-  list.innerHTML=state.relics.map((r,i)=>`<div style="background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;margin-bottom:6px;overflow:hidden;"><div style="display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"><span style="font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--gold-pale);flex:1;">${r.name}</span><input type="number" min="1" value="${r.qty||1}" onclick="event.stopPropagation()" oninput="state.relics[${i}].qty=parseInt(this.value)||1;clearTimeout(window._st2);window._st2=setTimeout(saveState,600);" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:11px;width:50px;text-align:center;padding:1px 4px;"><span style="font-family:'Cinzel',serif;font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid ${RARITY_COLORS[r.rarity]||'#555'};color:${RARITY_COLORS[r.rarity]||'#555'};">${r.rarity||'Common'}</span>${r.category?'<span style="font-size:9px;color:#666;font-family:Cinzel,serif;letter-spacing:0.1em;">'+r.category+'</span>':''}${r.attuned?'<span style="font-size:9px;color:var(--gold-bright);font-family:Cinzel,serif;">✦ ATTUNED</span>':''}<span style="color:#555;font-size:12px;">▼</span></div><div style="display:none;padding:0 12px 10px;"><div style="font-size:13px;color:#AAA;line-height:1.6;margin-bottom:8px;">${r.desc||'No description.'}</div><div style="display:flex;gap:6px;align-items:center;"><label style="font-size:11px;color:#666;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ${r.attuned?'checked':''} onchange="state.relics[${i}].attuned=this.checked;renderRelics();saveState();" style="accent-color:var(--gold-bright);"> Attuned</label><button class="btn btn-sm" onclick="editRelic(${i})" style="font-size:9px;padding:2px 8px;">Edit</button><button class="btn-remove" onclick="state.relics.splice(${i},1);renderRelics();saveState();">×</button></div></div></div>`).join('');
+  const sortMode=document.getElementById('relic-sort')?.value||'name';
+  const sorted=state.relics.map((r,i)=>({r,i})).sort((a,b)=>{
+    if(sortMode==='name')return a.r.name.localeCompare(b.r.name);
+    if(sortMode==='qty')return(b.r.qty||1)-(a.r.qty||1);
+    if(sortMode==='rarity')return(RARITY_ORDER[b.r.rarity]||0)-(RARITY_ORDER[a.r.rarity]||0);
+    return 0;
+  });
+  list.innerHTML=sorted.map(({r,i})=>`<div style="background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;margin-bottom:6px;overflow:hidden;"><div style="display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"><span style="font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--gold-pale);flex:1;">${r.name}</span><input type="number" min="1" value="${r.qty||1}" onclick="event.stopPropagation()" oninput="state.relics[${i}].qty=parseInt(this.value)||1;clearTimeout(window._st2);window._st2=setTimeout(saveState,600);" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:11px;width:50px;text-align:center;padding:1px 4px;"><span style="font-family:'Cinzel',serif;font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid ${RARITY_COLORS[r.rarity]||'#555'};color:${RARITY_COLORS[r.rarity]||'#555'};">${r.rarity||'Common'}</span>${r.category?'<span style="font-size:9px;color:#666;font-family:Cinzel,serif;letter-spacing:0.1em;">'+r.category+'</span>':''}${r.attuned?'<span style="font-size:9px;color:var(--gold-bright);font-family:Cinzel,serif;">✦ ATTUNED</span>':''}<span style="color:#555;font-size:12px;">▼</span></div><div style="display:none;padding:0 12px 10px;"><div style="font-size:13px;color:#AAA;line-height:1.6;margin-bottom:8px;">${r.desc||'No description.'}</div><div style="display:flex;gap:6px;align-items:center;"><label style="font-size:11px;color:#666;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ${r.attuned?'checked':''} onchange="state.relics[${i}].attuned=this.checked;renderRelics();saveState();" style="accent-color:var(--gold-bright);"> Attuned</label><button class="btn btn-sm" onclick="editRelic(${i})" style="font-size:9px;padding:2px 8px;">Edit</button><button class="btn-remove" onclick="state.relics.splice(${i},1);renderRelics();saveState();">×</button></div></div></div>`).join('');
 }
 let editingRelicIdx=-1;
 function addRelic(){
