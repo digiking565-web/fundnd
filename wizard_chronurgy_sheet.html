@@ -401,9 +401,13 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
 
         <div class="section-header" style="margin-top:16px;">Cantrips</div>
         <div id="cantrips-list"></div>
-        <div style="display:flex;gap:6px;margin-top:8px;">
-          <input type="text" id="new-cantrip" placeholder="Cantrip name..." style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:5px 8px;flex:1;">
-          <button class="btn btn-sm" onclick="addCantrip()">Add</button>
+        <div style="margin-top:8px;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;padding:10px;">
+          <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--gold-bright);margin-bottom:8px;">ADD CANTRIP</div>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <input type="text" id="new-cantrip" placeholder="Cantrip name..." style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:5px 8px;flex:1;">
+            <button class="btn btn-sm" onclick="addCantrip()">Add</button>
+          </div>
+          <textarea id="new-cantrip-desc" placeholder="Description (optional)..." style="width:100%;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-family:'Crimson Text',serif;font-size:14px;padding:5px 8px;resize:vertical;min-height:50px;line-height:1.5;"></textarea>
         </div>
       </div>
       <div>
@@ -425,7 +429,9 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
           <div style="display:flex;gap:6px;margin-top:6px;align-items:center;">
             <label style="font-size:12px;color:#888;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="new-spell-conc" style="accent-color:var(--gold-bright);"> Conc.</label>
             <label style="font-size:12px;color:#888;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="new-spell-ritual" style="accent-color:var(--gold-bright);"> Ritual</label>
-            <span style="flex:1;"></span>
+          </div>
+          <textarea id="new-spell-desc" placeholder="Description (optional)..." style="width:100%;margin-top:6px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-family:'Crimson Text',serif;font-size:14px;padding:5px 8px;resize:vertical;min-height:60px;line-height:1.5;"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:6px;">
             <button class="btn btn-primary btn-sm" onclick="addSpell()">Add Spell</button>
           </div>
         </div>
@@ -808,16 +814,43 @@ function resetAllSlots() { state.slotsUsed = {}; state.arcaneRecoveryUsed = fals
 
 // ── Cantrips ──
 function renderCantrips() {
-  document.getElementById('cantrips-list').innerHTML = state.cantrips.map((c, i) => `
-    <div class="spell-card"><span class="spell-name" style="flex:1;">${c}</span>
-    <button class="btn-remove" onclick="state.cantrips.splice(${i},1);renderCantrips();saveState();">×</button></div>`).join('');
+  document.getElementById('cantrips-list').innerHTML = state.cantrips.map((c, i) => {
+    const name = typeof c === 'string' ? c : c.name;
+    const desc = typeof c === 'string' ? '' : (c.desc || '');
+    return `<div style="background:var(--ink-deep);border:1px solid var(--border);border-radius:4px;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span class="spell-name" style="flex:1;">${name}</span>
+        <span style="font-family:'Cinzel',serif;font-size:9px;color:#555;letter-spacing:0.1em;">CANTRIP</span>
+        <span style="color:#555;font-size:11px;">▼</span>
+      </div>
+      <div style="display:none;padding:0 12px 10px;">
+        ${desc ? `<div style="font-size:13px;color:#AAA;line-height:1.6;margin-bottom:8px;">${desc}</div>` : '<div style="font-size:12px;color:#555;font-style:italic;margin-bottom:8px;">No description.</div>'}
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" onclick="editCantrip(${i})" style="font-size:9px;padding:2px 8px;">Edit</button>
+          <button class="btn-remove" onclick="state.cantrips.splice(${i},1);renderCantrips();saveState();">×</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
+let editingCantripIdx = -1;
 function addCantrip() {
   const name = document.getElementById('new-cantrip').value.trim();
   if (!name) return;
-  state.cantrips.push(name);
+  const desc = document.getElementById('new-cantrip-desc').value.trim();
+  const entry = { name, desc };
+  if (editingCantripIdx >= 0) { state.cantrips[editingCantripIdx] = entry; editingCantripIdx = -1; }
+  else state.cantrips.push(entry);
   document.getElementById('new-cantrip').value = '';
+  document.getElementById('new-cantrip-desc').value = '';
   renderCantrips(); saveState();
+}
+function editCantrip(i) {
+  editingCantripIdx = i;
+  const c = state.cantrips[i];
+  document.getElementById('new-cantrip').value = typeof c === 'string' ? c : (c.name || '');
+  document.getElementById('new-cantrip-desc').value = typeof c === 'string' ? '' : (c.desc || '');
+  document.getElementById('new-cantrip').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ── Spellbook ──
@@ -825,39 +858,65 @@ function renderSpellbook() {
   const sorted = [...state.spellbook].sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
   let currentLevel = 0;
   let html = '';
-  sorted.forEach((spell, realIdx) => {
+  sorted.forEach((spell) => {
     const idx = state.spellbook.indexOf(spell);
     if (spell.level !== currentLevel) {
       currentLevel = spell.level;
       html += `<div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-warm);margin:12px 0 6px;">${currentLevel}${currentLevel===1?'ST':currentLevel===2?'ND':currentLevel===3?'RD':'TH'} LEVEL</div>`;
     }
-    html += `<div class="spell-card ${spell.prepared ? 'prepared' : ''}">
-      <div class="spell-prepared-dot ${spell.prepared ? 'active' : ''}" onclick="toggleSpellPrepared(${idx})" title="Toggle prepared"></div>
-      <div class="spell-info">
-        <div class="spell-name">${spell.name}</div>
-        <div class="spell-meta">${spell.school || ''}${spell.ritual ? ' · Ritual' : ''}</div>
+    html += `<div style="background:var(--ink-deep);border:1px solid ${spell.prepared?'var(--blood-red)':'var(--border)'};border-radius:4px;margin-bottom:4px;${spell.prepared?'background:rgba(26,74,139,0.15);':''}">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <div class="spell-prepared-dot ${spell.prepared?'active':''}" onclick="event.stopPropagation();toggleSpellPrepared(${idx})" title="Toggle prepared"></div>
+        <div class="spell-info" style="flex:1;">
+          <div class="spell-name">${spell.name}</div>
+          <div class="spell-meta">${spell.school||''}${spell.ritual?' · Ritual':''}</div>
+        </div>
+        ${spell.concentration?'<span class="spell-conc">CONC</span>':''}
+        <span style="color:#555;font-size:11px;">▼</span>
       </div>
-      ${spell.concentration ? '<span class="spell-conc">CONC</span>' : ''}
-      <button class="btn-remove" onclick="state.spellbook.splice(${idx},1);renderSpellbook();updateAll();saveState();">×</button>
+      <div style="display:none;padding:0 12px 10px;">
+        ${spell.desc?`<div style="font-size:13px;color:#AAA;line-height:1.6;margin-bottom:8px;">${spell.desc}</div>`:'<div style="font-size:12px;color:#555;font-style:italic;margin-bottom:8px;">No description.</div>'}
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" onclick="editSpell(${idx})" style="font-size:9px;padding:2px 8px;">Edit</button>
+          <button class="btn-remove" onclick="state.spellbook.splice(${idx},1);renderSpellbook();updateAll();saveState();">×</button>
+        </div>
+      </div>
     </div>`;
   });
   document.getElementById('spellbook-list').innerHTML = html || '<div style="color:#555;font-size:13px;">No spells in spellbook yet.</div>';
   setText('prepared-count', state.spellbook.filter(s => s.prepared).length);
 }
 function toggleSpellPrepared(idx) { state.spellbook[idx].prepared = !state.spellbook[idx].prepared; renderSpellbook(); updateAll(); saveState(); }
+let editingSpellIdx = -1;
 function addSpell() {
   const name = document.getElementById('new-spell-name').value.trim();
   if (!name) return;
-  state.spellbook.push({
+  const spell = {
     name, level: parseInt(document.getElementById('new-spell-level').value),
     school: document.getElementById('new-spell-school').value,
     concentration: document.getElementById('new-spell-conc').checked,
-    ritual: document.getElementById('new-spell-ritual').checked, prepared: false
-  });
+    ritual: document.getElementById('new-spell-ritual').checked,
+    desc: document.getElementById('new-spell-desc').value.trim(),
+    prepared: false
+  };
+  if (editingSpellIdx >= 0) { spell.prepared = state.spellbook[editingSpellIdx].prepared; state.spellbook[editingSpellIdx] = spell; editingSpellIdx = -1; }
+  else state.spellbook.push(spell);
   document.getElementById('new-spell-name').value = '';
   document.getElementById('new-spell-conc').checked = false;
   document.getElementById('new-spell-ritual').checked = false;
-  renderSpellbook(); saveState();
+  document.getElementById('new-spell-desc').value = '';
+  renderSpellbook(); updateAll(); saveState();
+}
+function editSpell(idx) {
+  editingSpellIdx = idx;
+  const s = state.spellbook[idx];
+  document.getElementById('new-spell-name').value = s.name || '';
+  document.getElementById('new-spell-level').value = s.level || 1;
+  document.getElementById('new-spell-school').value = s.school || 'Abjuration';
+  document.getElementById('new-spell-conc').checked = !!s.concentration;
+  document.getElementById('new-spell-ritual').checked = !!s.ritual;
+  document.getElementById('new-spell-desc').value = s.desc || '';
+  document.getElementById('new-spell-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ── Features ──

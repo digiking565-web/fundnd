@@ -367,9 +367,13 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
         <button class="btn btn-sm" onclick="resetAllSlots()" style="margin-top:8px;">Long Rest (All)</button>
         <div class="section-header" style="margin-top:16px;">Cantrips</div>
         <div id="cantrips-list"></div>
-        <div style="display:flex;gap:6px;margin-top:8px;">
-          <input type="text" id="new-cantrip" placeholder="Cantrip name..." style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:5px 8px;flex:1;">
-          <button class="btn btn-sm" onclick="addCantrip()">Add</button>
+        <div style="margin-top:8px;background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:6px;padding:10px;">
+          <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--gold-bright);margin-bottom:8px;">ADD CANTRIP</div>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <input type="text" id="new-cantrip" placeholder="Cantrip name..." style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:5px 8px;flex:1;">
+            <button class="btn btn-sm" onclick="addCantrip()">Add</button>
+          </div>
+          <textarea id="new-cantrip-desc" placeholder="Description (optional)..." style="width:100%;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-family:'Crimson Text',serif;font-size:14px;padding:5px 8px;resize:vertical;min-height:50px;line-height:1.5;"></textarea>
         </div>
       </div>
       <div>
@@ -389,7 +393,9 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
           <div style="display:flex;gap:6px;margin-top:6px;align-items:center;">
             <label style="font-size:12px;color:#888;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="new-spell-conc"> Conc.</label>
             <label style="font-size:12px;color:#888;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="new-spell-ritual"> Ritual</label>
-            <span style="flex:1;"></span>
+          </div>
+          <textarea id="new-spell-desc" placeholder="Description (optional)..." style="width:100%;margin-top:6px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-family:'Crimson Text',serif;font-size:14px;padding:5px 8px;resize:vertical;min-height:60px;line-height:1.5;"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:6px;">
             <button class="btn btn-primary btn-sm" onclick="addSpell()">Add</button>
           </div>
         </div>
@@ -621,11 +627,86 @@ function toggleSlot(l,i,t){const u=state.slotsUsed[l]||0;if(i>=t-u)state.slotsUs
 function resetAllSlots(){state.slotsUsed={};state.biUsed=0;state.usUsed=0;state.iiUsed=0;renderSpellSlots();renderBI();saveState();}
 
 // Cantrips & Spells
-function renderCantrips(){document.getElementById('cantrips-list').innerHTML=state.cantrips.map((c,i)=>`<div class="spell-card"><span class="spell-name" style="flex:1;">${c}</span><button class="btn-remove" onclick="state.cantrips.splice(${i},1);renderCantrips();saveState();">×</button></div>`).join('');}
-function addCantrip(){const n=document.getElementById('new-cantrip').value.trim();if(!n)return;state.cantrips.push(n);document.getElementById('new-cantrip').value='';renderCantrips();saveState();}
+function renderCantrips(){
+  document.getElementById('cantrips-list').innerHTML=state.cantrips.map((c,i)=>{
+    const name=typeof c==='string'?c:c.name;
+    const desc=typeof c==='string'?'':(c.desc||'');
+    return `<div style="background:var(--ink-deep);border:1px solid var(--border);border-radius:4px;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span class="spell-name" style="flex:1;">${name}</span>
+        <span style="font-family:'Cinzel',serif;font-size:9px;color:#555;letter-spacing:0.1em;">CANTRIP</span>
+        <span style="color:#555;font-size:11px;">▼</span>
+      </div>
+      <div style="display:none;padding:0 12px 10px;">
+        ${desc?`<div style="font-size:13px;color:#AAA;line-height:1.6;margin-bottom:8px;">${desc}</div>`:'<div style="font-size:12px;color:#555;font-style:italic;margin-bottom:8px;">No description.</div>'}
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" onclick="editCantrip(${i})" style="font-size:9px;padding:2px 8px;">Edit</button>
+          <button class="btn-remove" onclick="state.cantrips.splice(${i},1);renderCantrips();saveState();">×</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+let editingCantripIdx=-1;
+function addCantrip(){
+  const n=document.getElementById('new-cantrip').value.trim();if(!n)return;
+  const desc=document.getElementById('new-cantrip-desc').value.trim();
+  const entry={name:n,desc};
+  if(editingCantripIdx>=0){state.cantrips[editingCantripIdx]=entry;editingCantripIdx=-1;}
+  else state.cantrips.push(entry);
+  document.getElementById('new-cantrip').value='';document.getElementById('new-cantrip-desc').value='';
+  renderCantrips();saveState();
+}
+function editCantrip(i){
+  editingCantripIdx=i;const c=state.cantrips[i];
+  document.getElementById('new-cantrip').value=typeof c==='string'?c:(c.name||'');
+  document.getElementById('new-cantrip-desc').value=typeof c==='string'?'':(c.desc||'');
+  document.getElementById('new-cantrip').scrollIntoView({behavior:'smooth',block:'center'});
+}
 
-function renderSpells(){const sorted=[...state.spells].sort((a,b)=>a.level-b.level||a.name.localeCompare(b.name));let cl=0,h='';sorted.forEach(sp=>{const idx=state.spells.indexOf(sp);if(sp.level!==cl){cl=sp.level;h+=`<div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-warm);margin:12px 0 6px;">${cl}${cl===1?'ST':cl===2?'ND':cl===3?'RD':'TH'} LEVEL</div>`;}h+=`<div class="spell-card"><div class="spell-info"><div class="spell-name">${sp.name}</div><div class="spell-meta">${sp.school||''}${sp.ritual?' · Ritual':''}</div></div>${sp.concentration?'<span class="spell-conc">CONC</span>':''}<button class="btn-remove" onclick="state.spells.splice(${idx},1);renderSpells();updateAll();saveState();">×</button></div>`;});document.getElementById('spellbook-list').innerHTML=h||'<div style="color:#555;">No spells yet.</div>';setText('spells-known-count',state.spells.length);}
-function addSpell(){const n=document.getElementById('new-spell-name').value.trim();if(!n)return;state.spells.push({name:n,level:parseInt(document.getElementById('new-spell-level').value),school:document.getElementById('new-spell-school').value,concentration:document.getElementById('new-spell-conc').checked,ritual:document.getElementById('new-spell-ritual').checked});document.getElementById('new-spell-name').value='';document.getElementById('new-spell-conc').checked=false;document.getElementById('new-spell-ritual').checked=false;renderSpells();updateAll();saveState();}
+let editingSpellIdx=-1;
+function renderSpells(){
+  const sorted=[...state.spells].sort((a,b)=>a.level-b.level||a.name.localeCompare(b.name));
+  let cl=0,h='';
+  sorted.forEach(sp=>{
+    const idx=state.spells.indexOf(sp);
+    if(sp.level!==cl){cl=sp.level;h+=`<div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-warm);margin:12px 0 6px;">${cl}${cl===1?'ST':cl===2?'ND':cl===3?'RD':'TH'} LEVEL</div>`;}
+    h+=`<div style="background:var(--ink-deep);border:1px solid var(--border);border-radius:4px;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <div class="spell-info" style="flex:1;"><div class="spell-name">${sp.name}</div><div class="spell-meta">${sp.school||''}${sp.ritual?' · Ritual':''}</div></div>
+        ${sp.concentration?'<span class="spell-conc">CONC</span>':''}
+        <span style="color:#555;font-size:11px;">▼</span>
+      </div>
+      <div style="display:none;padding:0 12px 10px;">
+        ${sp.desc?`<div style="font-size:13px;color:#AAA;line-height:1.6;margin-bottom:8px;">${sp.desc}</div>`:'<div style="font-size:12px;color:#555;font-style:italic;margin-bottom:8px;">No description.</div>'}
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" onclick="editSpell(${idx})" style="font-size:9px;padding:2px 8px;">Edit</button>
+          <button class="btn-remove" onclick="state.spells.splice(${idx},1);renderSpells();updateAll();saveState();">×</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('spellbook-list').innerHTML=h||'<div style="color:#555;">No spells yet.</div>';
+  setText('spells-known-count',state.spells.length);
+}
+function addSpell(){
+  const n=document.getElementById('new-spell-name').value.trim();if(!n)return;
+  const spell={name:n,level:parseInt(document.getElementById('new-spell-level').value),school:document.getElementById('new-spell-school').value,concentration:document.getElementById('new-spell-conc').checked,ritual:document.getElementById('new-spell-ritual').checked,desc:document.getElementById('new-spell-desc').value.trim()};
+  if(editingSpellIdx>=0){state.spells[editingSpellIdx]=spell;editingSpellIdx=-1;}
+  else state.spells.push(spell);
+  document.getElementById('new-spell-name').value='';document.getElementById('new-spell-conc').checked=false;document.getElementById('new-spell-ritual').checked=false;document.getElementById('new-spell-desc').value='';
+  renderSpells();updateAll();saveState();
+}
+function editSpell(idx){
+  editingSpellIdx=idx;const s=state.spells[idx];
+  document.getElementById('new-spell-name').value=s.name||'';
+  document.getElementById('new-spell-level').value=s.level||1;
+  document.getElementById('new-spell-school').value=s.school||'Abjuration';
+  document.getElementById('new-spell-conc').checked=!!s.concentration;
+  document.getElementById('new-spell-ritual').checked=!!s.ritual;
+  document.getElementById('new-spell-desc').value=s.desc||'';
+  document.getElementById('new-spell-name').scrollIntoView({behavior:'smooth',block:'center'});
+}
 
 // Features
 function renderFeatures(){document.getElementById('features-list').innerHTML=FEATURES.map(f=>{const u=state.identity.level>=f.level;return`<div class="feature-card ${u?'':'locked'}" data-min-level="${f.level}"><div class="feature-header" onclick="this.nextElementSibling.classList.toggle('open')"><span class="feature-level-badge">Lv ${f.level}</span><span class="feature-title">${f.name}</span><span style="color:#555;font-size:12px;">▼</span></div><div class="feature-body">${f.body}</div></div>`;}).join('');}
