@@ -466,6 +466,13 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
       <input type="number" id="new-item-qty" value="1" min="1" style="width:50px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;text-align:center;">
       <button class="btn btn-sm btn-primary" onclick="addItem()">Add</button>
     </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+      <span style="font-size:10px;font-family:'Cinzel',serif;color:#666;letter-spacing:0.1em;">SORT BY</span>
+      <select id="item-sort" onchange="renderItems();" style="background:var(--ink-panel);border:1px solid var(--border);border-radius:3px;color:var(--gold-warm);font-size:11px;padding:2px 6px;font-family:'Cinzel',serif;cursor:pointer;">
+        <option value="name">Name</option>
+        <option value="qty">Quantity</option>
+      </select>
+    </div>
     <div id="items-list"></div>
 
     <div class="section-header" style="margin-top:20px;">Magic Items</div>
@@ -957,7 +964,10 @@ function renderFeatures() {
 function renderItems() {
   const list = document.getElementById('items-list');
   if (!state.items.length) { list.innerHTML = '<div style="color:#444;font-size:13px;padding:4px;">No items yet.</div>'; return; }
-  list.innerHTML = state.items.map((item, i) => `
+  const sm = document.getElementById('item-sort')?.value || 'name';
+  const sorted = state.items.map((item, i) => ({item, i})).sort((a, b) =>
+    sm === 'qty' ? (b.item.qty||1) - (a.item.qty||1) : a.item.name.localeCompare(b.item.name));
+  list.innerHTML = sorted.map(({item, i}) => `
     <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--ink-deep);border-radius:4px;margin-bottom:3px;border:1px solid var(--border);">
       <span style="flex:1;font-size:14px;">${item.name}</span>
       <input type="number" min="0" value="${item.qty||1}" title="Quantity" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:13px;width:52px;text-align:center;padding:2px 4px;" oninput="state.items[${i}].qty=parseInt(this.value)||0;clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);">
