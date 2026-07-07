@@ -393,6 +393,9 @@
     <tbody id="sharedInvBody"><tr><td colspan="5" class="empty-state">No shared items yet</td></tr></tbody>
   </table>
 
+  <h3 style="margin-top:24px;">Shared Magic Items</h3>
+  <div id="invMagicList"><div class="empty-state">No shared magic items yet</div></div>
+
   <h3 style="margin-top:24px;">Gold Log</h3>
   <div class="gold-log" id="goldLog"><div class="empty-state">No transactions yet</div></div>
 </div>
@@ -941,6 +944,7 @@ function adjustGold(sign) {
 
 // Shared party items (not from character sheets)
 let _sharedInvData = null;
+let _partyMagicData = null;
 db.ref('partyInventory').on('value', snap => {
   _sharedInvData = snap.val();
   renderSharedItems();
@@ -1337,14 +1341,22 @@ function renderMagicItemCard(item, key, removable) {
 }
 
 db.ref('partyMagicItems').on('value', snap => {
-  const data = snap.val();
-  const list = document.getElementById('partyMagicList');
-  if (!data) { list.innerHTML = '<div class="empty-state">No shared magic items yet</div>'; return; }
-  list.innerHTML = Object.entries(data)
-    .sort((a, b) => (b[1].time||0) - (a[1].time||0))
-    .map(([k, item]) => renderMagicItemCard(item, k, true))
-    .join('');
+  _partyMagicData = snap.val();
+  renderSharedMagicItems();
 });
+function renderSharedMagicItems() {
+  const data = _partyMagicData;
+  const empty = '<div class="empty-state">No shared magic items yet</div>';
+  ['partyMagicList', 'invMagicList'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!data) { el.innerHTML = empty; return; }
+    el.innerHTML = Object.entries(data)
+      .sort((a, b) => (b[1].time||0) - (a[1].time||0))
+      .map(([k, item]) => renderMagicItemCard(item, k, true))
+      .join('');
+  });
+}
 
 // Re-render character magic items whenever party data updates
 function renderCharMagicItems() {
