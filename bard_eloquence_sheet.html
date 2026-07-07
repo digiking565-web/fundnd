@@ -723,7 +723,7 @@ function renderFeatures(){document.getElementById('features-list').innerHTML=FEA
 function renderItems(){
   const list=document.getElementById('items-list');
   if(!state.items.length){list.innerHTML='<div style="color:#444;font-size:13px;padding:4px;">No items yet.</div>';return;}
-  list.innerHTML=state.items.map((it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--ink-deep);border-radius:4px;margin-bottom:3px;border:1px solid var(--border);"><span style="flex:1;font-size:14px;">${it.name}</span><span style="color:var(--gold-warm);font-size:13px;min-width:30px;text-align:center;">×${it.qty||1}</span><button class="btn-remove" onclick="state.items.splice(${i},1);renderItems();saveState();">×</button></div>`).join('');
+  list.innerHTML=state.items.map((it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--ink-deep);border-radius:4px;margin-bottom:3px;border:1px solid var(--border);"><span style="flex:1;font-size:14px;">${it.name}</span><input type="number" min="0" value="${it.qty||1}" title="Quantity" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:13px;width:52px;text-align:center;padding:2px 4px;" oninput="state.items[${i}].qty=parseInt(this.value)||0;clearTimeout(window._st2);window._st2=setTimeout(saveState,600);"><button class="btn-remove" onclick="state.items.splice(${i},1);renderItems();saveState();">×</button></div>`).join('');
 }
 function addItem(){
   const el=document.getElementById('new-item-name'),qel=document.getElementById('new-item-qty');

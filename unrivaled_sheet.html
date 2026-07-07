@@ -2149,7 +2149,7 @@ function renderItems() {
   list.innerHTML = state.items.map((item, i) => `
     <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--ink-deep);border-radius:4px;margin-bottom:3px;border:1px solid var(--border);">
       <span style="flex:1;font-size:14px;">${item.name}</span>
-      <span style="color:var(--gold-warm);font-size:13px;min-width:30px;text-align:center;">×${item.qty||1}</span>
+      <input type="number" min="0" value="${item.qty||1}" title="Quantity" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:13px;width:52px;text-align:center;padding:2px 4px;" oninput="state.items[${i}].qty=parseInt(this.value)||0;clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);">
       <button class="btn-remove" onclick="state.items.splice(${i},1);renderItems();saveState();">×</button>
     </div>`).join('');
 }
