@@ -1003,7 +1003,8 @@ db.ref('tracker').on('value', snap => {
 
   // Sessions tab
   const sessions = [...tracker.history].reverse();
-  sessionList.innerHTML = sessions.map(s => {
+  window._sessions = sessions;
+  sessionList.innerHTML = sessions.map((s, idx) => {
     const topStats = [];
     if (s.data) {
       Object.entries(s.data).forEach(([p, d]) => {
@@ -1013,9 +1014,14 @@ db.ref('tracker').on('value', snap => {
     }
     return `
     <div class="session-entry">
-      <div class="session-title">Session ${s.num || '?'}${s.name ? ': ' + esc(s.name) : ''}</div>
-      <div class="session-date">${esc(s.date || '')}</div>
-      ${topStats.length ? '<div style="color:var(--gold-dim);font-size:0.9rem;margin-top:6px;">' + topStats.slice(0, 4).join(' | ') + '</div>' : ''}
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div>
+          <div class="session-title">Session ${s.num || '?'}${s.name ? ': ' + esc(s.name) : ''}</div>
+          <div class="session-date">${esc(s.date || '')}</div>
+          ${topStats.length ? '<div style="color:var(--gold-dim);font-size:0.9rem;margin-top:6px;">' + topStats.slice(0, 4).join(' | ') + '</div>' : ''}
+        </div>
+        <button onclick="copySessionSummary(${idx})" style="flex-shrink:0;padding:5px 12px;background:var(--bg-field);border:1px solid var(--border);border-radius:5px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:0.75rem;cursor:pointer;white-space:nowrap;" title="Copy summary for Discord">📋 Discord</button>
+      </div>
     </div>`;
   }).join('');
 
@@ -1376,6 +1382,30 @@ function renderCharMagicItems() {
   ['charMagicList', 'invCharMagicList'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
+  });
+}
+
+function copySessionSummary(idx) {
+  const s = window._sessions && window._sessions[idx];
+  if (!s) return;
+  const title = `Session ${s.num || '?'}${s.name ? ': ' + s.name : ''}`;
+  const date = s.date ? ` | ${s.date}` : '';
+  const lines = [`📖 **${title}**${date}`];
+  if (s.recap) lines.push(`> ${s.recap}`);
+  lines.push('');
+  if (s.data) {
+    const LABELS = { kills:'⚔ Kills', finalBlows:'💀 Final Blows', crits:'🎯 Crits', nat20:'🎲 Nat 20s', nat1:'💔 Nat 1s', dmgDealt:'🗡 Damage Dealt', dmgTaken:'🛡 Damage Taken', bigHit:'💥 Biggest Hit', healGiven:'💚 Healing Given', healRecv:'💙 Healing Received', downed:'😵 KO\'d', spells:'✨ Spells Cast', abilities:'⚡ Abilities Used', aura:'👁 Aura Farmed', gold:'🪙 Gold Stolen', seduce:'😏 Seductions', mvp:'🏆 MVP Votes' };
+    LB_STATS.forEach(({ key, label }) => {
+      const entries = Object.entries(s.data)
+        .map(([p, d]) => d[key] ? `${p}: ${d[key]}` : null)
+        .filter(Boolean);
+      if (entries.length) lines.push(`${LABELS[key] || label} — ${entries.join(' | ')}`);
+    });
+  }
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelectorAll('.session-entry button')[idx];
+    if (btn) { const orig = btn.textContent; btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = orig, 1500); }
   });
 }
 
