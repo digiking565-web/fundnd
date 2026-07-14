@@ -57,13 +57,17 @@ body{background:var(--ink-void);color:var(--parchment);font-family:'Crimson Text
 .ability-score:focus{outline:none;color:var(--gold-bright);}
 .ability-mod{font-family:'Cinzel',serif;font-size:18px;font-weight:600;color:var(--gold-warm);margin-top:4px;background:var(--ink-mist);border-radius:4px;padding:2px 0;}
 .skills-list{display:flex;flex-direction:column;gap:2px;}
-.skill-row{display:grid;grid-template-columns:24px 24px 1fr 50px;align-items:center;gap:6px;padding:4px 8px;border-radius:4px;background:var(--ink-deep);border:1px solid transparent;}
+.skill-row{display:grid;grid-template-columns:24px 24px 1fr 50px 16px;align-items:center;gap:6px;padding:4px 8px;border-radius:4px;background:var(--ink-deep);border:1px solid transparent;}
 .skill-row:hover{border-color:var(--border);}
 .prof-toggle{width:18px;height:18px;border:1px solid #333;border-radius:3px;cursor:pointer;background:transparent;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;flex-shrink:0;}
 .prof-toggle.prof{border-color:var(--gold-warm);color:var(--gold-warm);background:rgba(200,112,96,.1);}
 .prof-toggle.expert{border-color:var(--gold-bright);color:var(--gold-bright);background:rgba(221,68,68,.15);}
 .skill-name{font-size:14px;}.skill-ability{font-size:10px;color:#555;font-family:'Cinzel',serif;}
 .skill-bonus{font-family:'Cinzel',serif;font-size:15px;font-weight:600;color:var(--gold-pale);text-align:right;}
+.note-toggle{font-size:11px;cursor:pointer;color:#444;padding:0 2px;user-select:none;line-height:1;}
+.note-toggle.has-note{color:var(--gold-warm);}
+.inline-note{padding:2px 0 4px 56px;}
+.note-input{background:var(--ink-mist);border:1px solid var(--border);border-radius:3px;color:#aaa;font-size:11px;padding:2px 6px;width:100%;font-family:inherit;box-sizing:border-box;}
 .saves-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
 .save-row{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--ink-deep);border-radius:4px;border:1px solid transparent;}
 .save-row.proficient{border-color:var(--blood-red);}
@@ -452,7 +456,7 @@ inspiration:0,deathSaves:{s:[false,false,false],f:[false,false,false]},skillProf
 saveProf:{STR:true,DEX:false,CON:true,INT:false,WIS:false,CHA:false},
 conditions:[],rageUsed:0,frenzyUsed:0,frUsed:0,rrUsed:0,
 weapons:[],items:[],relics:[],currency:{pp:0,gp:0,ep:0,sp:0,cp:0},
-notes:{backstory:'',personality:'',bonds:'',flaws:'',session:'',allies:'',misc:'',languages:'',armor:'Light armor, medium armor, shields, simple weapons, martial weapons'}};
+notes:{backstory:'',personality:'',bonds:'',flaws:'',session:'',allies:'',misc:'',languages:'',armor:'Light armor, medium armor, shields, simple weapons, martial weapons'},skillNotes:{},abilityNotes:{}};
 let state=JSON.parse(JSON.stringify(DS));
 
 function mod(s){return Math.floor((s-10)/2);}function fm(n){return n>=0?'+'+n:''+n;}
@@ -513,9 +517,10 @@ function updateAll(){
   document.querySelectorAll('.feature-card[data-min-level]').forEach(c=>c.classList.toggle('locked',l<parseInt(c.dataset.minLevel)));
 }
 
-function renderAbilities(){document.getElementById('ability-grid').innerHTML=AB.map(a=>`<div class="ability-block"><div class="ability-name">${a}</div><input class="ability-score" type="number" min="1" max="30" value="${state.abilities[a]}" oninput="state.abilities['${a}']=parseInt(this.value)||10;updateAll();clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);" onclick="this.select()"><div class="ability-mod" data-ab="${a}">${fm(mod(state.abilities[a]))}</div></div>`).join('');}
+function renderAbilities(){document.getElementById('ability-grid').innerHTML=AB.map(a=>{const note=(state.abilityNotes||{})[a]||'';const nid='an-'+a;return`<div class="ability-block"><div class="ability-name">${a}</div><input class="ability-score" type="number" min="1" max="30" value="${state.abilities[a]}" oninput="state.abilities['${a}']=parseInt(this.value)||10;updateAll();clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);" onclick="this.select()"><div class="ability-mod" data-ab="${a}">${fm(mod(state.abilities[a]))}</div><span class="note-toggle ${note?'has-note':''}" onclick="toggleNote('${nid}')" title="Add note">✎</span><div id="${nid}" class="inline-note" style="display:${note?'block':'none'}"><input type="text" value="${note.replace(/"/g,'&quot;')}" placeholder="Note…" class="note-input" oninput="if(!state.abilityNotes)state.abilityNotes={};state.abilityNotes['${a}']=this.value;clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);"></div></div>`;}).join('');}
+function toggleNote(id){const el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 function renderSaves(){document.getElementById('saves-grid').innerHTML=AB.map(a=>{const p=state.saveProf[a];return`<div class="save-row ${p?'proficient':''}"><div class="save-prof-dot ${p?'active':''}" onclick="state.saveProf['${a}']=!state.saveProf['${a}'];renderSaves();updateAll();saveState();"></div><span class="save-name">${a}</span><span class="save-bonus" data-save="${a}">${fm(mod(state.abilities[a])+(p?pb():0))}</span></div>`;}).join('');}
-function renderSkills(){document.getElementById('skills-list').innerHTML=Object.keys(SKA).map(sk=>{const p=state.skillProf[sk]||0;return`<div class="skill-row"><div class="prof-toggle ${p===2?'expert':p===1?'prof':''}" onclick="state.skillProf['${sk}']=((state.skillProf['${sk}']||0)+1)%3;renderSkills();updateAll();saveState();">${p===2?'E':p===1?'✦':''}</div><span class="skill-ability">${SKA[sk]}</span><span class="skill-name">${sk}${sk==='Intimidation'?' (STR)':''}</span><span class="skill-bonus" data-skill="${sk}">${fm(skBonus(sk))}</span></div>`;}).join('');}
+function renderSkills(){document.getElementById('skills-list').innerHTML=Object.keys(SKA).map(sk=>{const p=state.skillProf[sk]||0;const note=(state.skillNotes||{})[sk]||'';const nid='sn-'+sk.replace(/\s+/g,'-');return`<div><div class="skill-row"><div class="prof-toggle ${p===2?'expert':p===1?'prof':''}" onclick="state.skillProf['${sk}']=((state.skillProf['${sk}']||0)+1)%3;renderSkills();updateAll();saveState();">${p===2?'E':p===1?'✦':''}</div><span class="skill-ability">${SKA[sk]}</span><span class="skill-name">${sk}${sk==='Intimidation'?' (STR)':''}</span><span class="skill-bonus" data-skill="${sk}">${fm(skBonus(sk))}</span><span class="note-toggle ${note?'has-note':''}" onclick="toggleNote('${nid}')" title="Add note">✎</span></div><div id="${nid}" class="inline-note" style="display:${note?'block':'none'}"><input type="text" value="${note.replace(/"/g,'&quot;')}" placeholder="Note…" class="note-input" oninput="if(!state.skillNotes)state.skillNotes={};state.skillNotes['${sk}']=this.value;clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);"></div></div>`;}).join('');}
 
 // Trackers
 function makePips(id,max,used,type){const el=document.getElementById(id);if(!el)return;el.innerHTML=Array.from({length:max},(_,i)=>`<div class="use-pip ${i<used?'used':''}" onclick="toggle_${type}(${i})"></div>`).join('');}

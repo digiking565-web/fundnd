@@ -323,7 +323,7 @@ body {
 .skills-list { display: flex; flex-direction: column; gap: 2px; }
 .skill-row {
   display: grid;
-  grid-template-columns: 24px 24px 1fr 50px;
+  grid-template-columns: 24px 24px 1fr 50px 16px;
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
@@ -333,6 +333,10 @@ body {
   transition: border-color 0.15s;
 }
 .skill-row:hover { border-color: var(--border); }
+.note-toggle { font-size: 11px; cursor: pointer; color: #444; padding: 0 2px; user-select: none; line-height: 1; }
+.note-toggle.has-note { color: var(--gold-warm); }
+.inline-note { padding: 2px 0 4px 56px; }
+.note-input { background: var(--ink-mist); border: 1px solid var(--border); border-radius: 3px; color: #aaa; font-size: 11px; padding: 2px 6px; width: 100%; font-family: inherit; box-sizing: border-box; }
 .skill-row.proficient { background: #16161E; }
 .skill-row.expert { background: #1A1A12; border-color: var(--border-gold); }
 .prof-toggle {
@@ -1558,6 +1562,7 @@ const DEFAULT_STATE = {
   currency: { pp:0, gp:0, ep:0, sp:0, cp:0 },
   crownWins: 1,
   notes: { backstory:'', personality:'', bonds:'', flaws:'', session:'', misc:'' },
+  skillNotes: {}, abilityNotes: {},
 };
 
 let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -1776,17 +1781,25 @@ function renderAbilities() {
   const grid = document.getElementById('ability-grid');
   if (!grid) return;
   const ABILITIES = ['STR','DEX','CON','INT','WIS','CHA'];
-  grid.innerHTML = ABILITIES.map(ab => `
-    <div class="ability-block">
+  grid.innerHTML = ABILITIES.map(ab => {
+    const note = (state.abilityNotes || {})[ab] || '';
+    const nid = 'an-' + ab;
+    return `<div class="ability-block">
       <div class="ability-name">${ab}</div>
       <input class="ability-score" type="number" min="1" max="30" value="${state.abilities[ab]}"
         onchange="state.abilities['${ab}']=parseInt(this.value)||10; updateAll(); saveState();"
         onclick="this.select()">
       <div class="ability-mod" data-ab="${ab}">${fmtMod(mod(state.abilities[ab]))}</div>
       <div class="ability-mod-label">modifier</div>
-    </div>
-  `).join('');
+      <span class="note-toggle ${note?'has-note':''}" onclick="toggleNote('${nid}')" title="Add note">✎</span>
+      <div id="${nid}" class="inline-note" style="display:${note?'block':'none'}">
+        <input type="text" value="${note.replace(/"/g,'&quot;')}" placeholder="Note…" class="note-input"
+          oninput="if(!state.abilityNotes)state.abilityNotes={};state.abilityNotes['${ab}']=this.value;clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);">
+      </div>
+    </div>`;
+  }).join('');
 }
+function toggleNote(id){const el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
 // ── SAVES ──
 function renderSaves() {
@@ -1822,7 +1835,9 @@ function renderSkills() {
     const p = state.skillProf[skill] || 0;
     const bonus = skillBonus(skill, abilityMod);
     const cls = p === 2 ? 'expert' : p === 1 ? 'proficient' : '';
-    return `
+    const note = (state.skillNotes || {})[skill] || '';
+    const nid = 'sn-' + skill.replace(/\s+/g, '-');
+    return `<div>
       <div class="skill-row ${cls}">
         <div class="prof-toggle ${p===2?'expert':p===1?'prof':''}" onclick="cycleSkillProf('${skill}')"
           title="${p===0?'Click for proficient':p===1?'Click for expertise':'Click to remove'}">
@@ -1831,7 +1846,13 @@ function renderSkills() {
         <span class="skill-ability">${ability}</span>
         <span class="skill-name">${skill}</span>
         <span class="skill-bonus" data-skill="${skill}">${fmtMod(bonus)}</span>
-      </div>`;
+        <span class="note-toggle ${note?'has-note':''}" onclick="toggleNote('${nid}')" title="Add note">✎</span>
+      </div>
+      <div id="${nid}" class="inline-note" style="display:${note?'block':'none'}">
+        <input type="text" value="${note.replace(/"/g,'&quot;')}" placeholder="Note…" class="note-input"
+          oninput="if(!state.skillNotes)state.skillNotes={};state.skillNotes['${skill}']=this.value;clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);">
+      </div>
+    </div>`;
   }).join('');
 }
 
