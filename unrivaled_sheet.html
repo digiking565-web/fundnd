@@ -1141,7 +1141,12 @@ body {
 
         <div class="section-header" style="margin-top:16px;">Weapons</div>
         <div id="weapons-list" style="margin-bottom:8px;"></div>
-        <button class="btn btn-sm" onclick="addWeapon()">+ Add Weapon</button>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="btn btn-sm" onclick="addWeapon()">+ Add Weapon</button>
+          <select id="wpn-from-inv" onchange="if(this.value){addWeaponFromInv(this.value);this.value='';}" style="background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:#888;font-size:12px;padding:4px 8px;flex:1;">
+            <option value="">🔗 Add from inventory...</option>
+          </select>
+        </div>
       </div>
       <div>
         <div class="section-header">Focus Techniques</div>
@@ -2172,6 +2177,7 @@ function renderItems() {
       <input type="number" min="0" value="${item.qty||1}" title="Quantity" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:13px;width:52px;text-align:center;padding:2px 4px;" oninput="state.items[${i}].qty=parseInt(this.value)||0;clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);">
       <button class="btn-remove" onclick="state.items.splice(${i},1);renderItems();saveState();">×</button>
     </div>`).join('');
+  refreshWpnInvPicker();
 }
 function addItem() {
   const nameEl = document.getElementById('new-item-name');
@@ -2286,26 +2292,38 @@ function editRelic(i) {
 }
 
 // ── WEAPONS ──
+function refreshWpnInvPicker() {
+  const sel = document.getElementById('wpn-from-inv');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">🔗 Add from inventory...</option>' +
+    (state.items||[]).map(it => `<option value="${it.name.replace(/"/g,'&quot;')}">${it.name}</option>`).join('');
+  sel.value = cur;
+}
 function renderWeapons() {
   const list = document.getElementById('weapons-list');
   if (!list) return;
+  const invNames = new Set((state.items||[]).map(it => it.name));
   list.innerHTML = state.weapons.map((w, i) => `
-    <div style="background:var(--ink-panel);border:1px solid var(--border);border-radius:4px;padding:8px 12px;margin-bottom:6px;display:grid;grid-template-columns:1fr 70px 120px 1fr auto;gap:8px;align-items:center;">
+    <div style="background:var(--ink-panel);border:1px solid var(--border);border-radius:4px;padding:8px 12px;margin-bottom:6px;display:grid;grid-template-columns:auto 1fr 70px 120px 1fr auto;gap:8px;align-items:center;">
+      <span title="Linked to inventory" style="font-size:11px;color:var(--gold-warm);visibility:${invNames.has(w.name)?'visible':'hidden'};">🔗</span>
       <input value="${w.name}" placeholder="Weapon name" style="background:transparent;border:none;color:var(--gold-pale);font-family:'Crimson Text',serif;font-size:14px;"
-        onchange="state.weapons[${i}].name=this.value;saveState()">
+        onchange="state.weapons[${i}].name=this.value;renderWeapons();saveState()">
       <input value="${w.atk}" placeholder="Atk" style="background:transparent;border:none;color:var(--blood-light);font-family:'Cinzel',serif;font-size:14px;text-align:center;"
         onchange="state.weapons[${i}].atk=this.value;saveState()">
       <input value="${w.dmg}" placeholder="Damage" style="background:transparent;border:none;color:var(--parchment);font-family:'Crimson Text',serif;font-size:13px;"
         onchange="state.weapons[${i}].dmg=this.value;saveState()">
-      <input value="${w.notes}" placeholder="Notes" style="background:transparent;border:none;color:#888;font-family:'Crimson Text',serif;font-size:12px;"
+      <input value="${w.notes||''}" placeholder="Notes" style="background:transparent;border:none;color:#888;font-family:'Crimson Text',serif;font-size:12px;"
         onchange="state.weapons[${i}].notes=this.value;saveState()">
       <button class="btn-remove" onclick="removeWeapon(${i})">×</button>
     </div>`).join('');
+  refreshWpnInvPicker();
 }
-function addWeapon() {
-  state.weapons.push({ name:'', atk:'+0', dmg:'1d6', notes:'' });
+function addWeapon(name) {
+  state.weapons.push({ name: name||'', atk:'+0', dmg:'1d6', notes:'' });
   renderWeapons(); saveState();
 }
+function addWeaponFromInv(name) { addWeapon(name); }
 function removeWeapon(i) { state.weapons.splice(i,1); renderWeapons(); saveState(); }
 
 // ── FEATS ──
