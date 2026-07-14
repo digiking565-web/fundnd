@@ -153,6 +153,9 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
 
 .feature-card { background: var(--ink-panel); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
 .feature-card.locked { opacity: 0.4; }
+.feat-card { background: var(--ink-panel); border: 1px solid var(--border); border-left: 3px solid #A870C8; border-radius: 4px; padding: 10px 14px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start; }
+.feat-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; color: var(--gold-pale); }
+.feat-desc { font-size: 13px; color: #AAA; margin-top: 4px; line-height: 1.5; }
 .feature-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; }
 .feature-level-badge { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.1em; padding: 2px 6px; border-radius: 3px; background: var(--blood-red); color: var(--parchment); flex-shrink: 0; }
 .feature-title { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; color: var(--gold-pale); flex: 1; }
@@ -475,6 +478,13 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
 
   <!-- ═══ NOTES ═══ -->
   <div class="panel" id="panel-notes">
+    <div class="section-header">Feats</div>
+    <div id="feats-list" style="margin-bottom:8px;"></div>
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="field-group"><label>Feat Name</label><input type="text" id="new-feat-name" placeholder="e.g. Inspiring Leader"></div>
+      <div class="field-group"><label>Description</label><textarea id="new-feat-desc" placeholder="What does it do?" style="min-height:60px;"></textarea></div>
+      <button class="btn btn-sm" onclick="addFeat()">Add Feat</button>
+    </div>
     <div class="grid-2">
       <div>
         <div class="section-header">Backstory</div>
@@ -568,7 +578,7 @@ const DS = { identity:{name:'',level:1,race:'',background:'',alignment:'',player
   conditions:[], slotsUsed:{}, biUsed:0, usUsed:0, iiUsed:0, cantrips:[], spells:[], items:[], relics:[],
   currency:{pp:0,gp:0,ep:0,sp:0,cp:0},
   notes:{backstory:'',personality:'',bonds:'',flaws:'',session:'',allies:'',misc:'',languages:'Common',tools:'',armor:'Light armor, simple weapons, hand crossbows, longswords, rapiers, shortswords',instruments:''},
-  skillNotes:{}, abilityNotes:{}
+  skillNotes:{}, abilityNotes:{}, feats:[]
 };
 let state = JSON.parse(JSON.stringify(DS));
 
@@ -808,7 +818,10 @@ function syncIdentity(){
   ['backstory','personality','bonds','flaws','session','allies','misc','languages','tools','armor','instruments'].forEach(k=>{const el=document.getElementById('note-'+k);if(el)el.value=state.notes[k]||'';});
 }
 
-function initAll(){syncIdentity();renderAbilities();renderSaves();renderSkills();renderDS();renderConditions();renderBI();renderSpellSlots();renderCantrips();renderSpells();renderFeatures();renderItems();renderRelics();updateAll();}
+function renderFeats(){const list=document.getElementById('feats-list');if(!list)return;list.innerHTML=(state.feats||[]).map((f,i)=>`<div class="feat-card"><div style="flex:1;"><div class="feat-name">${f.name}</div><div class="feat-desc">${f.desc}</div></div><button class="btn-remove" onclick="removeFeat(${i})">×</button></div>`).join('');}
+function addFeat(){const n=document.getElementById('new-feat-name').value.trim();if(!n)return;if(!state.feats)state.feats=[];state.feats.push({name:n,desc:document.getElementById('new-feat-desc').value.trim()});document.getElementById('new-feat-name').value='';document.getElementById('new-feat-desc').value='';renderFeats();saveState();}
+function removeFeat(i){state.feats.splice(i,1);renderFeats();saveState();}
+function initAll(){syncIdentity();renderAbilities();renderSaves();renderSkills();renderDS();renderConditions();renderBI();renderSpellSlots();renderCantrips();renderSpells();renderFeatures();renderFeats();renderItems();renderRelics();updateAll();}
 
 document.addEventListener('DOMContentLoaded',()=>{
   loadState();initAll();loadFB();
