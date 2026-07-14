@@ -270,7 +270,6 @@
     <button onclick="showTab('shop',this)"><span class="icon">🪙</span> Shop</button>
     <button onclick="showTab('map',this)"><span class="icon">🗺</span> Map</button>
     <button onclick="showTab('npcs',this)"><span class="icon">🧑</span> NPCs</button>
-    <button onclick="showTab('magicitems',this)"><span class="icon">✦</span> Magic Items</button>
     <button onclick="showTab('chat',this)"><span class="icon">💬</span> Chat</button>
   </div>
   <div class="sidebar-presence">
@@ -399,6 +398,31 @@
   <h3 style="margin-top:24px;">Shared Magic Items</h3>
   <div id="invMagicList"><div class="empty-state">No shared magic items yet</div></div>
 
+  <div style="margin-top:16px;background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:20px;">
+    <h3 style="margin-top:0;">Add Shared Magic Item</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div><div class="field-label">Name</div><input class="si" id="mi-name" placeholder="Item name..."></div>
+      <div><div class="field-label">Holder</div><input class="si" id="mi-holder" placeholder="Who carries it?"></div>
+      <div><div class="field-label">Quantity</div><input class="si" id="mi-qty" type="number" value="1" min="1"></div>
+      <div><div class="field-label">Category</div>
+        <select class="si" id="mi-cat">
+          <option>Weapon</option><option>Armor</option><option>Wondrous Item</option><option>Ring</option><option>Rod</option><option>Staff</option><option>Potion</option><option>Scroll</option><option>Other</option>
+        </select>
+      </div>
+      <div><div class="field-label">Rarity</div>
+        <select class="si" id="mi-rarity">
+          <option>Common</option><option>Uncommon</option><option>Rare</option><option>Very Rare</option><option>Legendary</option><option>Artifact</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <input type="checkbox" id="mi-attune" style="accent-color:var(--accent);width:16px;height:16px;">
+      <label for="mi-attune" style="font-size:0.9rem;cursor:pointer;">Requires Attunement</label>
+    </div>
+    <div><div class="field-label">Description</div><textarea class="si" id="mi-desc" style="min-height:70px;resize:vertical;" placeholder="What does it do?"></textarea></div>
+    <button onclick="addPartyMagicItem()" style="margin-top:12px;padding:9px 24px;background:var(--accent);color:var(--bg-void);border:none;border-radius:6px;font-family:'Cinzel',serif;font-weight:700;cursor:pointer;">Add Item</button>
+  </div>
+
   <h3 style="margin-top:24px;">Gold Log</h3>
   <div class="gold-log" id="goldLog"><div class="empty-state">No transactions yet</div></div>
 </div>
@@ -498,41 +522,6 @@
   </div>
 </div>
 
-<!-- ═══ MAGIC ITEMS ═══ -->
-<div class="tab-content" id="tab-magicitems">
-  <h2>✦ Magic Items</h2>
-
-  <h3>Shared Party Items</h3>
-  <div id="partyMagicList"><div class="empty-state">No shared magic items yet</div></div>
-
-  <div style="margin-top:16px;background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:20px;">
-    <h3 style="margin-top:0;">Add Party Magic Item</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-      <div><div class="field-label">Name</div><input class="si" id="mi-name" placeholder="Item name..."></div>
-      <div><div class="field-label">Holder</div><input class="si" id="mi-holder" placeholder="Who carries it?"></div>
-      <div><div class="field-label">Quantity</div><input class="si" id="mi-qty" type="number" value="1" min="1"></div>
-      <div><div class="field-label">Category</div>
-        <select class="si" id="mi-cat">
-          <option>Weapon</option><option>Armor</option><option>Wondrous Item</option><option>Ring</option><option>Rod</option><option>Staff</option><option>Potion</option><option>Scroll</option><option>Other</option>
-        </select>
-      </div>
-      <div><div class="field-label">Rarity</div>
-        <select class="si" id="mi-rarity">
-          <option>Common</option><option>Uncommon</option><option>Rare</option><option>Very Rare</option><option>Legendary</option><option>Artifact</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-      <input type="checkbox" id="mi-attune" style="accent-color:var(--accent);width:16px;height:16px;">
-      <label for="mi-attune" style="font-size:0.9rem;cursor:pointer;">Requires Attunement</label>
-    </div>
-    <div><div class="field-label">Description</div><textarea class="si" id="mi-desc" style="min-height:70px;resize:vertical;" placeholder="What does it do?"></textarea></div>
-    <button onclick="addPartyMagicItem()" style="margin-top:12px;padding:9px 24px;background:var(--accent);color:var(--bg-void);border:none;border-radius:6px;font-family:'Cinzel',serif;font-weight:700;cursor:pointer;">Add Item</button>
-  </div>
-
-  <h3 style="margin-top:28px;">Character Magic Items</h3>
-  <div id="charMagicList"><div class="empty-state">No character magic items yet</div></div>
-</div>
 
 <!-- ═══ CHAT ═══ -->
 <div class="tab-content" id="tab-chat">
@@ -1356,7 +1345,7 @@ db.ref('partyMagicItems').on('value', snap => {
 function renderSharedMagicItems() {
   const data = _partyMagicData;
   const empty = '<div class="empty-state">No shared magic items yet</div>';
-  ['partyMagicList', 'invMagicList'].forEach(id => {
+  ['invMagicList'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     if (!data) { el.innerHTML = empty; return; }
@@ -1379,7 +1368,7 @@ function renderCharMagicItems() {
     </div>`);
   });
   const html = sections.length ? sections.join('') : '<div class="empty-state">No character magic items yet</div>';
-  ['charMagicList', 'invCharMagicList'].forEach(id => {
+  ['invCharMagicList'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
   });
