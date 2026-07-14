@@ -1407,7 +1407,9 @@ body {
 
   <!-- EXPORT BAR -->
   <div class="export-bar">
-    <span class="text-dim">Data auto-saves to this browser</span>
+    <span class="text-dim" id="sync-label">Data auto-saves to this browser</span>
+    <input type="text" id="username-input" placeholder="Username" style="background:var(--ink-panel);border:1px solid var(--border);border-radius:4px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:11px;padding:3px 8px;width:110px;" title="Your sync username — must match on every device">
+    <button class="btn btn-sm" onclick="setUsername()">Set</button>
     <button class="btn btn-sm" onclick="exportData()">Export JSON</button>
     <button class="btn btn-sm" onclick="document.getElementById('import-file').click()">Import JSON</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
@@ -2552,14 +2554,21 @@ function initAll() {
 }
 
 // ── AUTO-SAVE ON INPUT ──
+function setUsername(){
+  const val=document.getElementById('username-input').value.trim();
+  if(!val)return;
+  localStorage.setItem('fundnd_username',val);
+  location.reload();
+}
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
   initAll();
   initInkCanvas();
   loadFromFirebase();
 
-  // Presence & connection
+  const uInput=document.getElementById('username-input');
   const userName = localStorage.getItem('fundnd_username') || 'Sean';
+  if(uInput)uInput.value=userName;
   const presRef = db.ref('presence/' + userName);
   db.ref('.info/connected').on('value', snap => {
     const ind = document.getElementById('save-indicator');
