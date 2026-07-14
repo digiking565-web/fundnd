@@ -297,6 +297,7 @@ body{background:var(--ink-void);color:var(--parchment);font-family:'Crimson Text
         <div class="card mb-8">
           <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">FRENZY (Lv3)</div>
           <div style="font-size:13px;color:#CCC;line-height:1.6;">If you use <strong style="color:var(--gold-pale);">Reckless Attack</strong> while raging, deal extra damage to the first target hit on your turn with a STR attack. Roll <strong style="color:var(--gold-pale);">PB d6s</strong> — same damage type as the weapon.</div>
+          <div class="use-tracker" style="margin-top:10px;"><span class="use-label">FRENZY USES</span><div class="use-pips" id="frenzy-pips"></div><button class="btn btn-sm" onclick="resetFrenzy()">Reset</button></div>
         </div>
         <div id="mindless-card" style="display:none;" class="card mb-8">
           <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-warm);margin-bottom:6px;">MINDLESS RAGE (Lv6)</div>
@@ -510,7 +511,7 @@ function renderSaves(){document.getElementById('saves-grid').innerHTML=AB.map(a=
 function renderSkills(){document.getElementById('skills-list').innerHTML=Object.keys(SKA).map(sk=>{const p=state.skillProf[sk]||0;return`<div class="skill-row"><div class="prof-toggle ${p===2?'expert':p===1?'prof':''}" onclick="state.skillProf['${sk}']=((state.skillProf['${sk}']||0)+1)%3;renderSkills();updateAll();saveState();">${p===2?'E':p===1?'✦':''}</div><span class="skill-ability">${SKA[sk]}</span><span class="skill-name">${sk}${sk==='Intimidation'?' (STR)':''}</span><span class="skill-bonus" data-skill="${sk}">${fm(skBonus(sk))}</span></div>`;}).join('');}
 
 // Trackers
-function makePips(id,max,used,type){document.getElementById(id).innerHTML=Array.from({length:max},(_,i)=>`<div class="use-pip ${i<used?'used':''}" onclick="toggle_${type}(${i})"></div>`).join('');}
+function makePips(id,max,used,type){const el=document.getElementById(id);if(!el)return;el.innerHTML=Array.from({length:max},(_,i)=>`<div class="use-pip ${i<used?'used':''}" onclick="toggle_${type}(${i})"></div>`).join('');}
 function renderRage(){makePips('rage-pips',RAGE_USES[state.identity.level]||2,state.rageUsed,'rage');}
 window.toggle_rage=i=>{if(i<state.rageUsed)state.rageUsed--;else state.rageUsed++;renderRage();saveState();};
 function resetRage(){state.rageUsed=0;renderRage();saveState();}
