@@ -1571,6 +1571,7 @@ let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 
 // ── PERSISTENCE ──
 function saveState() {
+  if (!firebaseReady) return;
   // Collect identity
   state.identity.name = v('char-name');
   state.identity.level = parseInt(v('char-level')) || 3;
