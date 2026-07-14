@@ -508,7 +508,9 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
   </div>
 
   <div class="export-bar">
-    <span class="text-dim">Auto-saves to browser & Firebase</span>
+    <span class="text-dim" id="sync-label">Auto-saves to browser & Firebase</span>
+    <input type="text" id="username-input" placeholder="Username" style="background:var(--ink-panel);border:1px solid var(--border);border-radius:4px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:11px;padding:3px 8px;width:110px;" title="Your sync username — must match on every device">
+    <button class="btn btn-sm" onclick="setUsername()">Set</button>
     <button class="btn btn-sm" onclick="exportData()">Export JSON</button>
     <button class="btn btn-sm" onclick="document.getElementById('import-file').click()">Import JSON</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
@@ -823,9 +825,18 @@ function addFeat(){const n=document.getElementById('new-feat-name').value.trim()
 function removeFeat(i){state.feats.splice(i,1);renderFeats();saveState();}
 function initAll(){syncIdentity();renderAbilities();renderSaves();renderSkills();renderDS();renderConditions();renderBI();renderSpellSlots();renderCantrips();renderSpells();renderFeatures();renderFeats();renderItems();renderRelics();updateAll();}
 
+function setUsername(){
+  const val=document.getElementById('username-input').value.trim();
+  if(!val)return;
+  localStorage.setItem('fundnd_username',val);
+  location.reload();
+}
 document.addEventListener('DOMContentLoaded',()=>{
   loadState();initAll();loadFB();
   const un=localStorage.getItem('fundnd_username')||'';
+  const uInput=document.getElementById('username-input');
+  if(uInput)uInput.value=un;
+  if(!un){const lbl=document.getElementById('sync-label');if(lbl)lbl.textContent='⚠ Set a username to sync across devices';}
   if(un){const pr=db.ref('presence/'+un);db.ref('.info/connected').on('value',s=>{if(s.val()){pr.set(true);pr.onDisconnect().remove();}});}
   document.addEventListener('input',e=>{
     const id=e.target.id;

@@ -547,7 +547,9 @@ body { background: var(--ink-void); color: var(--parchment); font-family: 'Crims
   </div>
 
   <div class="export-bar">
-    <span class="text-dim">Auto-saves to browser & Firebase</span>
+    <span class="text-dim" id="sync-label">Auto-saves to browser & Firebase</span>
+    <input type="text" id="username-input" placeholder="Username" style="background:var(--ink-panel);border:1px solid var(--border);border-radius:4px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:11px;padding:3px 8px;width:110px;" title="Your sync username — must match on every device">
+    <button class="btn btn-sm" onclick="setUsername()">Set</button>
     <button class="btn btn-sm" onclick="exportData()">Export JSON</button>
     <button class="btn btn-sm" onclick="document.getElementById('import-file').click()">Import JSON</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
@@ -1158,13 +1160,24 @@ function renderFeats(){const list=document.getElementById('feats-list');if(!list
 function addFeat(){const n=document.getElementById('new-feat-name').value.trim();if(!n)return;if(!state.feats)state.feats=[];state.feats.push({name:n,desc:document.getElementById('new-feat-desc').value.trim()});document.getElementById('new-feat-name').value='';document.getElementById('new-feat-desc').value='';renderFeats();saveState();}
 function removeFeat(i){state.feats.splice(i,1);renderFeats();saveState();}
 
+function setUsername(){
+  const val=document.getElementById('username-input').value.trim();
+  if(!val)return;
+  localStorage.setItem('fundnd_username',val);
+  location.reload();
+}
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
   initAll();
   loadFromFirebase();
 
+  const uInput=document.getElementById('username-input');
+  const un=localStorage.getItem('fundnd_username')||'';
+  if(uInput)uInput.value=un;
+  if(!un){const lbl=document.getElementById('sync-label');if(lbl)lbl.textContent='⚠ Set a username to sync across devices';}
+
   // Presence
-  const userName = localStorage.getItem('fundnd_username') || '';
+  const userName = un;
   if (userName) {
     const presRef = db.ref('presence/' + userName);
     db.ref('.info/connected').on('value', snap => {
