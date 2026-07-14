@@ -287,11 +287,18 @@ body{background:var(--ink-void);color:var(--parchment);font-family:'Crimson Text
       <div>
         <div class="section-header">Weapons</div>
         <div id="weapons-list"></div>
-        <div style="display:flex;gap:6px;margin-top:8px;">
-          <input id="new-wpn-name" placeholder="Weapon name" style="flex:1;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;">
-          <input id="new-wpn-atk" placeholder="+5" style="width:50px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;text-align:center;">
-          <input id="new-wpn-dmg" placeholder="1d12+5" style="width:100px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;">
-          <button class="btn btn-sm btn-primary" onclick="addWeapon()">Add</button>
+        <div style="margin-top:8px;">
+          <div style="display:flex;gap:6px;margin-bottom:4px;">
+            <select id="wpn-from-inv" onchange="if(this.value){document.getElementById('new-wpn-name').value=this.value;this.value='';}" style="flex:1;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:#888;font-size:13px;padding:5px 8px;">
+              <option value="">🔗 Pick from inventory...</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <input id="new-wpn-name" placeholder="Weapon name" style="flex:1;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;">
+            <input id="new-wpn-atk" placeholder="+5" style="width:50px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;text-align:center;">
+            <input id="new-wpn-dmg" placeholder="1d12+5" style="width:100px;background:var(--ink-field);border:1px solid var(--border);border-radius:3px;color:var(--parchment);font-size:14px;padding:6px 8px;">
+            <button id="wpn-add-btn" class="btn btn-sm btn-primary" onclick="addWeapon()">Add</button>
+          </div>
         </div>
         <div class="section-header" style="margin-top:16px;">Berserker Features</div>
         <div class="card mb-8">
@@ -531,11 +538,42 @@ function resetRR(){state.rrUsed=0;renderRR();saveState();}
 function adjustInsp(d){state.inspiration=Math.max(0,(state.inspiration||0)+d);setText('insp-count',state.inspiration);saveState();}
 
 // Weapons
-function renderWeapons(){const l=document.getElementById('weapons-list');if(!state.weapons||!state.weapons.length){l.innerHTML='<div style="color:#444;font-size:13px;">No weapons.</div>';return;}l.innerHTML=state.weapons.map((w,i)=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 10px;background:var(--ink-deep);border:1px solid var(--border);border-radius:4px;margin-bottom:4px;"><span style="flex:1;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:13px;">${w.name}</span><span style="color:var(--blood-light);font-family:'Cinzel',serif;font-size:14px;">${w.atk}</span><span style="color:var(--parchment);font-size:13px;">${w.dmg}</span><button class="btn-remove" onclick="state.weapons.splice(${i},1);renderWeapons();saveState();">×</button></div>`).join('');}
-function addWeapon(){const n=document.getElementById('new-wpn-name').value.trim();if(!n)return;state.weapons.push({name:n,atk:document.getElementById('new-wpn-atk').value||'+0',dmg:document.getElementById('new-wpn-dmg').value||'1d6'});document.getElementById('new-wpn-name').value='';document.getElementById('new-wpn-atk').value='';document.getElementById('new-wpn-dmg').value='';renderWeapons();saveState();}
+function refreshWpnInvPicker(){const sel=document.getElementById('wpn-from-inv');if(!sel)return;const cur=sel.value;sel.innerHTML='<option value="">🔗 Pick from inventory...</option>'+(state.items||[]).map(it=>`<option value="${it.name.replace(/"/g,'&quot;')}">${it.name}</option>`).join('');sel.value=cur;}
+let editingWpnIdx=-1;
+function renderWeapons(){
+  const l=document.getElementById('weapons-list');
+  if(!state.weapons||!state.weapons.length){l.innerHTML='<div style="color:#444;font-size:13px;">No weapons.</div>';refreshWpnInvPicker();return;}
+  const invNames=new Set((state.items||[]).map(it=>it.name));
+  l.innerHTML=state.weapons.map((w,i)=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 10px;background:var(--ink-deep);border:1px solid var(--border);border-radius:4px;margin-bottom:4px;">
+    ${invNames.has(w.name)?`<span title="Linked to inventory" style="font-size:11px;color:var(--gold-warm);">🔗</span>`:''}
+    <span style="flex:1;color:var(--gold-pale);font-family:'Cinzel',serif;font-size:13px;">${w.name}</span>
+    <span style="color:var(--blood-light);font-family:'Cinzel',serif;font-size:14px;">${w.atk}</span>
+    <span style="color:var(--parchment);font-size:13px;">${w.dmg}</span>
+    <button class="btn btn-sm" onclick="editWeapon(${i})" style="font-size:9px;padding:2px 8px;">Edit</button>
+    <button class="btn-remove" onclick="state.weapons.splice(${i},1);renderWeapons();saveState();">×</button>
+  </div>`).join('');
+  refreshWpnInvPicker();
+}
+function editWeapon(i){
+  editingWpnIdx=i;
+  const w=state.weapons[i];
+  document.getElementById('new-wpn-name').value=w.name;
+  document.getElementById('new-wpn-atk').value=w.atk;
+  document.getElementById('new-wpn-dmg').value=w.dmg;
+  document.getElementById('wpn-add-btn').textContent='Save';
+  document.getElementById('new-wpn-name').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function addWeapon(){
+  const n=document.getElementById('new-wpn-name').value.trim();if(!n)return;
+  const w={name:n,atk:document.getElementById('new-wpn-atk').value||'+0',dmg:document.getElementById('new-wpn-dmg').value||'1d6'};
+  if(editingWpnIdx>=0){state.weapons[editingWpnIdx]=w;editingWpnIdx=-1;}else{state.weapons.push(w);}
+  document.getElementById('new-wpn-name').value='';document.getElementById('new-wpn-atk').value='';document.getElementById('new-wpn-dmg').value='';
+  document.getElementById('wpn-add-btn').textContent='Add';
+  renderWeapons();saveState();
+}
 
 // Items & Relics
-function renderItems(){const l=document.getElementById('items-list');if(!state.items.length){l.innerHTML='<div style="color:#444;font-size:13px;padding:4px;">No items.</div>';return;}const sm=document.getElementById('item-sort')?.value||'name';const sorted=state.items.map((it,i)=>({it,i})).sort((a,b)=>sm==='qty'?(b.it.qty||1)-(a.it.qty||1):a.it.name.localeCompare(b.it.name));l.innerHTML=sorted.map(({it,i})=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--ink-deep);border-radius:4px;margin-bottom:3px;border:1px solid var(--border);"><span style="flex:1;font-size:14px;">${it.name}</span><input type="number" min="0" value="${it.qty||1}" title="Quantity" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:13px;width:52px;text-align:center;padding:2px 4px;" oninput="state.items[${i}].qty=parseInt(this.value)||0;clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);"><button class="btn-remove" onclick="state.items.splice(${i},1);renderItems();saveState();">×</button></div>`).join('');}
+function renderItems(){const l=document.getElementById('items-list');if(!state.items.length){l.innerHTML='<div style="color:#444;font-size:13px;padding:4px;">No items.</div>';refreshWpnInvPicker();return;}const sm=document.getElementById('item-sort')?.value||'name';const sorted=state.items.map((it,i)=>({it,i})).sort((a,b)=>sm==='qty'?(b.it.qty||1)-(a.it.qty||1):a.it.name.localeCompare(b.it.name));l.innerHTML=sorted.map(({it,i})=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--ink-deep);border-radius:4px;margin-bottom:3px;border:1px solid var(--border);"><span style="flex:1;font-size:14px;">${it.name}</span><input type="number" min="0" value="${it.qty||1}" title="Quantity" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--gold-warm);font-family:'Cinzel',serif;font-size:13px;width:52px;text-align:center;padding:2px 4px;" oninput="state.items[${i}].qty=parseInt(this.value)||0;clearTimeout(window._saveTimer);window._saveTimer=setTimeout(saveState,600);"><button class="btn-remove" onclick="state.items.splice(${i},1);renderItems();saveState();">×</button></div>`).join('');refreshWpnInvPicker();}
 function addItem(){const el=document.getElementById('new-item-name'),qel=document.getElementById('new-item-qty'),name=el.value.trim();if(!name)return;state.items.push({name,qty:parseInt(qel.value)||1});el.value='';qel.value='1';renderItems();saveState();}
 
 const RC={Common:'#888',Uncommon:'#4A8A4A',Rare:'#4A6A8A','Very Rare':'#6A4A8A',Legendary:'#8A6A2A',Artifact:'#C8A000'};
