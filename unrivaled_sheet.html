@@ -2258,6 +2258,7 @@ function renderRelics() {
         </div>
       </div>
     </div>`).join('');
+  refreshWpnInvPicker();
 }
 
 let editingRelicIdx = -1;
@@ -2296,8 +2297,11 @@ function refreshWpnInvPicker() {
   const sel = document.getElementById('wpn-from-inv');
   if (!sel) return;
   const cur = sel.value;
+  const itemOpts = (state.items||[]).map(it => `<option value="${it.name.replace(/"/g,'&quot;')}">${it.name}</option>`).join('');
+  const relicOpts = (state.relics||[]).map(r => `<option value="${r.name.replace(/"/g,'&quot;')}">✦ ${r.name}</option>`).join('');
   sel.innerHTML = '<option value="">🔗 Add from inventory...</option>' +
-    (state.items||[]).map(it => `<option value="${it.name.replace(/"/g,'&quot;')}">${it.name}</option>`).join('');
+    (itemOpts ? `<optgroup label="Items">${itemOpts}</optgroup>` : '') +
+    (relicOpts ? `<optgroup label="Magic Items">${relicOpts}</optgroup>` : '');
   sel.value = cur;
 }
 function renderWeapons() {
